@@ -1,0 +1,42 @@
+[project]
+name = "david8"
+version = "0.dev.0"
+description = ""
+authors = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
+maintainers = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
+license = {text = "MIT license"}
+readme = "README.md"
+requires-python = ">=3.10, < 3.14"
+dependencies = [
+
+]
+
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Development Status :: 1 - Planning",
+  "Intended Audience :: Developers",
+  "Topic :: Database",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+
+
+[project.urls]
+Homepage = "https://github.com/d-ganchar/david8"
+Changelog = "https://github.com/d-ganchar/david8/releases"
+Issues = "https://github.com/d-ganchar/david8/issues"
+CI = "https://github.com/d-ganchar/david8/actions"
+
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
+[dependency-groups]
+dev = [
+    "ruff>=0.11",
+    "parameterized==0.9.0, < 1",
+    "pytest>=9",
+]

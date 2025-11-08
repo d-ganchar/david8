@@ -1,0 +1,94 @@
+name: Push commit
+on:
+  release:
+    types: [ created ]
+  push:
+    branches:
+      - '*'
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    env:
+      UV_PYTHON: 3.11
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: 3.11
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Check formatting with Ruff
+        run: ruff check david8
+
+      - name: Build
+        run: |
+          if [[ '${{ github.event_name }}' = 'release' ]]; then
+             sed -i -e "s/0.dev.0/$GITHUB_REF_NAME/g" pyproject.toml
+          fi
+          uv build
+          mkdir david8_build
+          mv ./dist ./david8_build
+      - name: Upload david8 package
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: david8_build
+          retention-days: 90
+
+  tests:
+    runs-on: ubuntu-22.04
+    permissions: write-all
+    needs: [ build ]
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.11", "3.12", "3.13" ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Download david8 dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+
+      - name: Install david8 from dist
+        run: uv pip install dist/$(ls ./dist/ | grep ".tar.gz")
+
+      - name: Test with python ${{ matrix.python-version }}
+        run: pytest tests
+  
+
+  publish_to_PyPi:
+    runs-on: ubuntu-22.04
+    needs: [ tests ]
+    if: github.event_name == 'release' && github.event.action == 'created'
+    environment:
+      name: pypi
+      url: https://pypi.org/p/david8
+    permissions:
+      id-token: write
+    steps:
+      - name: Download david8 package
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
