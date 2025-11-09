@@ -1,11 +1,16 @@
 from dataclasses import dataclass
 
-from ._dml.base_select import BaseSelect
-from ._protocols.dml import SelectProtocol
-from ._protocols.query_builder import QueryBuilderProtocol
+from .core.base_select import BaseSelect
+from .core.columns import WhereCondition
+from .protocols.dml import SelectProtocol
+from .protocols.query_builder import QueryBuilderProtocol
+from .protocols.sql_statement import ColumnProtocol
 
 
 @dataclass(slots=True)
 class BaseQueryBuilder(QueryBuilderProtocol):
     def select(self, *args) -> SelectProtocol:
-        return BaseSelect(_select_fields=args)
+        return BaseSelect(_select=args)
+
+    def cond(self) -> type[ColumnProtocol]:
+        return WhereCondition

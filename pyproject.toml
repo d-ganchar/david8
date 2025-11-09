@@ -52,7 +52,7 @@ lines-between-types = 1
 
 
 [tool.ruff]
-line-length = 88
+line-length = 118
 exclude = [
     ".bzr",
     ".direnv",
@@ -68,6 +68,7 @@ select = ["E", "F", "I", "UP", "N", "B", "W"]
 [tool.pytest.ini_options]
 testpaths = [
     "tests",
+    "--color=yes",
 ]
 
 addopts = [

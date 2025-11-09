@@ -1,4 +1,4 @@
-from .._protocols.sql_statement import SqlStatementProtocol
+from ..protocols.sql_statement import SqlStatementProtocol
 
 
 class SelectProtocol(SqlStatementProtocol):
@@ -12,4 +12,7 @@ class SelectProtocol(SqlStatementProtocol):
         pass
 
     def group_by(self, *args) -> 'SelectProtocol':
+        pass
+
+    def limit(self, value: int) -> 'SelectProtocol':
         pass
