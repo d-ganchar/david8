@@ -27,7 +27,7 @@ jobs:
         run: uv sync --dev
 
       - name: Check formatting with Ruff
-        run: ruff check david8
+        run: ruff check
 
       - name: Build
         run: |
@@ -55,6 +55,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            pyproject.toml
+            uv.lock
+            tests
+
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -72,11 +79,48 @@ jobs:
 
       - name: Test with python ${{ matrix.python-version }}
         run: pytest tests
+
+
+  benchmarks:
+    runs-on: ubuntu-22.04
+    permissions: write-all
+    needs: [ tests ]
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ "3.11", "3.12", "3.13" ]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            pyproject.toml
+            uv.lock
+            tests/test_benchmarks.py
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Download david8 dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+
+      - name: Install david8 from dist
+        run: uv pip install dist/$(ls ./dist/ | grep ".tar.gz")
+
+      - name: Benchmarks ${{ matrix.python-version }}
+        run: pytest tests/test_benchmarks.py
   
 
   publish_to_PyPi:
     runs-on: ubuntu-22.04
-    needs: [ tests ]
+    needs: [ benchmarks ]
     if: github.event_name == 'release' && github.event.action == 'created'
     environment:
       name: pypi

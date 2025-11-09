@@ -6,7 +6,7 @@ authors = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
 maintainers = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
 license = {text = "MIT license"}
 readme = "README.md"
-requires-python = ">=3.10, < 3.14"
+requires-python = ">=3.11, < 3.14"
 dependencies = [
 
 ]
@@ -36,7 +36,40 @@ build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 dev = [
-    "ruff>=0.11",
-    "parameterized==0.9.0, < 1",
-    "pytest>=9",
+    "ruff",
+    "parameterized",
+    "pytest",
+    "pytest-benchmark",
+]
+
+
+[lint.select]
+
+[lint.isort]
+known-third-party = ["pytest"]
+lines-after-imports = 2
+lines-between-types = 1
+
+
+[tool.ruff]
+line-length = 88
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    "**/.git",
+    "__pycache__",
+    "tests/fixtures/",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "N", "B", "W"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+]
+
+addopts = [
+    "--ignore=tests/test_benchmarks.py",
 ]
