@@ -1,26 +1,25 @@
 import dataclasses
 from dataclasses import dataclass
-from typing import Union
 
 from ..protocols.dialect import DialectProtocol
 from ..protocols.dml import SelectProtocol
-from ..protocols.sql_statement import PredicateProtocol
+from ..protocols.sql import AsExpressionProtocol, SqlExpressionProtocol
 
 
 @dataclass(slots=True)
 class BaseSelect(SelectProtocol):
     _dialect: DialectProtocol
-    _select: tuple = dataclasses.field(default_factory=tuple)
-    _where: tuple[PredicateProtocol, ...] = dataclasses.field(default_factory=tuple)
+    _select: tuple[str | AsExpressionProtocol, ...] = dataclasses.field(default_factory=tuple)
+    _where: tuple[SqlExpressionProtocol, ...] = dataclasses.field(default_factory=tuple)
     _group_by: tuple = dataclasses.field(default_factory=tuple)
     _from: str = ''
     _limit: int = None
 
-    def select(self, *args) -> 'SelectProtocol':
+    def select(self, *args: str | AsExpressionProtocol) -> 'SelectProtocol':
         self._select = args
         return self
 
-    def where(self, *args: PredicateProtocol) -> 'SelectProtocol':
+    def where(self, *args: SqlExpressionProtocol) -> 'SelectProtocol':
         self._where = args
         return self
 
@@ -42,14 +41,15 @@ class BaseSelect(SelectProtocol):
         for column in self._select:
             if isinstance(column, str):
                 columns.append(self._dialect.quote_ident(column))
+            else:
+                columns.append(column.get_sql(self._dialect))
 
         return ', '.join(columns)
 
     def _convert_where(self) -> str:
         where = []
         for predicate in self._where:
-            predicate.set_dialect(dialect=self._dialect)
-            where.append(predicate.get_sql())
+            where.append(predicate.get_sql(self._dialect))
 
         return f" WHERE {' AND '.join(where)}" if where else ''
 
@@ -65,5 +65,5 @@ class BaseSelect(SelectProtocol):
 
         return f'SELECT {columns}{_from}{where}{group_by}{limit}'
 
-    def get_parameters(self) -> Union[list, dict]:
+    def get_parameters(self) -> list | dict:
         return self._dialect.get_paramstyle().get_parameters()

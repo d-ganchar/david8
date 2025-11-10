@@ -1,17 +1,17 @@
 from parameterized import parameterized
 
 from david8 import get_qb
-from david8.core.predicates import eq_val
 from david8.core.dialects import (
-    PostgresDialect,
-    NumericParamStyle,
-    FormatParamStyle,
-    MySQLDialect,
     ClickhouseDialect,
     DuckDbDialect,
-    SqliteDialect,
+    FormatParamStyle,
+    MySQLDialect,
+    NumericParamStyle,
+    PostgresDialect,
     QMarkParamStyle,
+    SqliteDialect,
 )
+from david8.core.predicates import eq_val
 from tests.base_test import BaseTest
 
 

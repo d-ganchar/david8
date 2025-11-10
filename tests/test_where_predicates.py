@@ -1,15 +1,15 @@
 from david8 import get_qb
 from david8.core.dialects import ClickhouseDialect
 from david8.core.predicates import (
+    between_val,
+    col_is_null,
+    col_like,
     eq_val,
     ge_val,
     gt_val,
     le_val,
     lt_val,
     ne_val,
-    between_val,
-    col_is_null,
-    col_like,
 )
 from tests.base_test import BaseTest
 

@@ -3,6 +3,7 @@ from typing import Any
 
 from ..protocols.dialect import DialectProtocol, ParamStyleProtocol
 
+
 @dataclasses.dataclass(slots=True)
 class _BaseParams(ParamStyleProtocol):
     _params_bag: dict[str, Any] = dataclasses.field(default_factory=dict)

@@ -1,11 +1,12 @@
-from ..protocols.sql_statement import SqlStatementProtocol, PredicateProtocol
+
+from ..protocols.sql import QueryProtocol, SqlExpressionProtocol
 
 
-class SelectProtocol(SqlStatementProtocol):
-    def select(self, *args) -> 'SelectProtocol':
+class SelectProtocol(QueryProtocol):
+    def select(self, *args: str) -> 'SelectProtocol':
         pass
 
-    def where(self, *args) -> PredicateProtocol:
+    def where(self, *args) -> SqlExpressionProtocol:
         pass
 
     def from_table(self, table_name: str) -> 'SelectProtocol':
@@ -15,4 +16,7 @@ class SelectProtocol(SqlStatementProtocol):
         pass
 
     def limit(self, value: int) -> 'SelectProtocol':
+        pass
+
+    def get_parameters(self) -> list | dict:
         pass
