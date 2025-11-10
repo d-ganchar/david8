@@ -19,7 +19,7 @@ class BaseSelect(SelectProtocol):
         self._select = args
         return self
 
-    def where(self, *args: LogicalOperatorProtocol | SqlExpressionProtocol | ...) -> 'SelectProtocol':
+    def where(self, *args: LogicalOperatorProtocol | SqlExpressionProtocol) -> 'SelectProtocol':
         self._where = args
         return self
 
