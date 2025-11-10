@@ -115,7 +115,7 @@ jobs:
         run: uv pip install dist/$(ls ./dist/ | grep ".tar.gz")
 
       - name: Benchmarks ${{ matrix.python-version }}
-        run: pytest tests/test_benchmarks.py
+        run: pytest tests/test_benchmarks.py --color=yes
   
 
   publish_to_PyPi:

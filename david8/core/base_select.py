@@ -1,14 +1,17 @@
 import dataclasses
 from dataclasses import dataclass
+from typing import Union
 
-from ..core.columns import WhereCondition
+from ..protocols.dialect import DialectProtocol
 from ..protocols.dml import SelectProtocol
+from ..protocols.sql_statement import PredicateProtocol
 
 
 @dataclass(slots=True)
 class BaseSelect(SelectProtocol):
+    _dialect: DialectProtocol
     _select: tuple = dataclasses.field(default_factory=tuple)
-    _where: tuple[WhereCondition, ...] = dataclasses.field(default_factory=tuple)
+    _where: tuple[PredicateProtocol, ...] = dataclasses.field(default_factory=tuple)
     _group_by: tuple = dataclasses.field(default_factory=tuple)
     _from: str = ''
     _limit: int = None
@@ -17,7 +20,7 @@ class BaseSelect(SelectProtocol):
         self._select = args
         return self
 
-    def where(self, *args: WhereCondition) -> 'SelectProtocol':
+    def where(self, *args: PredicateProtocol) -> 'SelectProtocol':
         self._where = args
         return self
 
@@ -33,20 +36,34 @@ class BaseSelect(SelectProtocol):
         self._limit = value
         return self
 
-    def to_sql(self) -> tuple[str, list]:
-        parameters = []
-        fields = ', '.join([f'{f}' for f in self._select])
-        _from = f' FROM {self._from}' if self._from else ''
+    def _convert_columns(self) -> str:
+        columns = []
+
+        for column in self._select:
+            if isinstance(column, str):
+                columns.append(self._dialect.quote_ident(column))
+
+        return ', '.join(columns)
+
+    def _convert_where(self) -> str:
+        where = []
+        for predicate in self._where:
+            predicate.set_dialect(dialect=self._dialect)
+            where.append(predicate.get_sql())
+
+        return f" WHERE {' AND '.join(where)}" if where else ''
+
+    def get_sql(self) -> str:
+        self._dialect.get_paramstyle().reset_parameters()
+
+        _from = f' FROM {self._dialect.quote_ident(self._from)}' if self._from else ''
         group_by = ', '.join([f'{f}' for f in self._group_by])
         group_by = f' GROUP BY {group_by}' if group_by else ''
         limit = f' LIMIT {self._limit}' if self._limit else ''
+        columns = self._convert_columns()
+        where = self._convert_where()
 
-        where = []
-        for cond in self._where:
-            cond_str, cond_params = cond.to_sql()
-            parameters.extend(cond_params)
-            where.append(cond_str)
+        return f'SELECT {columns}{_from}{where}{group_by}{limit}'
 
-        where = f" WHERE {' AND '.join(where)}" if where else ''
-
-        return f'SELECT {fields}{_from}{where}{group_by}{limit}', parameters
+    def get_parameters(self) -> Union[list, dict]:
+        return self._dialect.get_paramstyle().get_parameters()

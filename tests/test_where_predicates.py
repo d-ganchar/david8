@@ -1,0 +1,59 @@
+from david8 import get_qb
+from david8.core.dialects import ClickhouseDialect
+from david8.core.predicates import (
+    eq_val,
+    ge_val,
+    gt_val,
+    le_val,
+    lt_val,
+    ne_val,
+    between_val,
+    col_is_null,
+    col_like,
+)
+from tests.base_test import BaseTest
+
+_qb = get_qb(ClickhouseDialect())
+
+
+class TestWherePredicates(BaseTest):
+    def test_where_predicates(self):
+        query = (
+            _qb
+            .select('*')
+            .from_table('cats')
+            .where(
+                eq_val('color', 'ginger'),
+                ge_val('age', 2),
+                le_val('age', 3),
+                gt_val('weight', 3.1),
+                lt_val('weight', 3.9),
+                ne_val('gender', 'f'),
+                between_val('last_visit', '2023', '2024'),
+                col_is_null('owner'),
+                col_is_null('illness', False),
+                col_like('description', '%hugs%')
+            )
+        )
+
+        query.get_sql()
+        self.assertEqual(
+            query.get_sql(),
+            "SELECT * FROM cats WHERE color = %(p1)s AND age >= %(p2)s AND age <= %(p3)s AND weight > %(p4)s AND "
+            "weight < %(p5)s AND gender != %(p6)s AND last_visit BETWEEN %(p7)s AND %(p8)s AND owner IS NULL AND "
+            "illness IS NOT NULL AND description LIKE '%hugs%'"
+        )
+
+        self.assertEqual(
+            {
+                'p1': 'ginger',
+                'p2': 2,
+                'p3': 3,
+                'p4': 3.1,
+                'p5': 3.9,
+                'p6': 'f',
+                'p7': '2023',
+                'p8': '2024',
+             },
+            query.get_parameters()
+        )

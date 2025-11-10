@@ -1,11 +1,11 @@
-from ..protocols.sql_statement import SqlStatementProtocol
+from ..protocols.sql_statement import SqlStatementProtocol, PredicateProtocol
 
 
 class SelectProtocol(SqlStatementProtocol):
     def select(self, *args) -> 'SelectProtocol':
         pass
 
-    def where(self, *args) -> 'SelectProtocol':
+    def where(self, *args) -> PredicateProtocol:
         pass
 
     def from_table(self, table_name: str) -> 'SelectProtocol':
