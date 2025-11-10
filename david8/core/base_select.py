@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 from ..protocols.dialect import DialectProtocol
 from ..protocols.dml import SelectProtocol
-from ..protocols.sql import AsExpressionProtocol, SqlExpressionProtocol
+from ..protocols.sql import AsExpressionProtocol, LogicalOperatorProtocol, SqlExpressionProtocol
 
 
 @dataclass(slots=True)
@@ -19,7 +19,7 @@ class BaseSelect(SelectProtocol):
         self._select = args
         return self
 
-    def where(self, *args: SqlExpressionProtocol) -> 'SelectProtocol':
+    def where(self, *args: LogicalOperatorProtocol | SqlExpressionProtocol | ...) -> 'SelectProtocol':
         self._where = args
         return self
 

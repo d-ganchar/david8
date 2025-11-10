@@ -1,12 +1,12 @@
 
-from ..protocols.sql import QueryProtocol, SqlExpressionProtocol
+from ..protocols.sql import LogicalOperatorProtocol, QueryProtocol, SqlExpressionProtocol
 
 
 class SelectProtocol(QueryProtocol):
     def select(self, *args: str) -> 'SelectProtocol':
         pass
 
-    def where(self, *args) -> SqlExpressionProtocol:
+    def where(self, *args: LogicalOperatorProtocol | SqlExpressionProtocol | ...) -> 'SelectProtocol':
         pass
 
     def from_table(self, table_name: str) -> 'SelectProtocol':

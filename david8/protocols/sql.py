@@ -16,3 +16,7 @@ class SqlExpressionProtocol:
 class AsExpressionProtocol(SqlExpressionProtocol):
     def as_(self, value: str | SqlExpressionProtocol, alias: str):
         pass
+
+
+class LogicalOperatorProtocol(SqlExpressionProtocol):
+    pass
