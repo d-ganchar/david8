@@ -33,3 +33,22 @@ class TestSelect(BaseTest):
 
         self.assertEqual(query.get_sql(), exp_sql)
         self.assertEqual({'p1': 'Giger'}, query.get_parameters())
+
+    @parameterized.expand([
+        (
+            get_qb(ClickhouseDialect()),
+            'SELECT * FROM art.pictures',
+        ),
+        (
+            get_qb(ClickhouseDialect(True)),
+            'SELECT "*" FROM "art"."pictures"',
+        )
+    ])
+    def test_from_db(self, qb, exp_sql):
+        query = (
+            qb
+            .select('*')
+            .from_table('pictures', 'art')
+        )
+
+        self.assertEqual(query.get_sql(), exp_sql)

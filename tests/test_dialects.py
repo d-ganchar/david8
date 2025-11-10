@@ -116,4 +116,3 @@ class TestDialects(BaseTest):
 
         self.assertEqual(query.get_sql(), exp_sql)
         self.assertEqual(query.get_parameters(), exp_params)
-

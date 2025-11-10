@@ -12,7 +12,8 @@ class BaseSelect(SelectProtocol):
     _select: tuple[str | AsExpressionProtocol, ...] = dataclasses.field(default_factory=tuple)
     _where: tuple[SqlExpressionProtocol, ...] = dataclasses.field(default_factory=tuple)
     _group_by: tuple = dataclasses.field(default_factory=tuple)
-    _from: str = ''
+    _from_table: str = ''
+    _from_db: str = ''
     _limit: int = None
 
     def select(self, *args: str | AsExpressionProtocol) -> 'SelectProtocol':
@@ -23,8 +24,9 @@ class BaseSelect(SelectProtocol):
         self._where = args
         return self
 
-    def from_table(self, table_name: str) -> 'SelectProtocol':
-        self._from = table_name
+    def from_table(self, table_name: str, db_name: str = '') -> 'SelectProtocol':
+        self._from_db = db_name
+        self._from_table = table_name
         return self
 
     def group_by(self, *args) -> 'SelectProtocol':
@@ -56,7 +58,16 @@ class BaseSelect(SelectProtocol):
     def get_sql(self) -> str:
         self._dialect.get_paramstyle().reset_parameters()
 
-        _from = f' FROM {self._dialect.quote_ident(self._from)}' if self._from else ''
+        if self._from_table:
+            _from = self._dialect.quote_ident(self._from_table)
+            if self._from_db:
+                from_db = self._dialect.quote_ident(self._from_db)
+                _from = f'{from_db}.{_from}'
+
+            _from = f' FROM {_from}'
+        else:
+            _from = ''
+
         group_by = ', '.join([f'{f}' for f in self._group_by])
         group_by = f' GROUP BY {group_by}' if group_by else ''
         limit = f' LIMIT {self._limit}' if self._limit else ''
