@@ -1,14 +1,21 @@
 from david8 import get_qb
 from david8.dialects import ClickhouseDialect
 from david8.predicates import (
+    between,
     between_val,
     col_is_null,
     col_like,
+    eq,
     eq_val,
+    ge,
     ge_val,
+    gt,
     gt_val,
+    le,
     le_val,
+    lt,
     lt_val,
+    ne,
     ne_val,
 )
 from tests.base_test import BaseTest
@@ -17,7 +24,7 @@ _qb = get_qb(ClickhouseDialect())
 
 
 class TestWherePredicates(BaseTest):
-    def test_where_predicates(self):
+    def test_where_val(self):
         query = (
             _qb
             .select('*')
@@ -56,3 +63,28 @@ class TestWherePredicates(BaseTest):
              },
             query.get_parameters()
         )
+
+    def test_where_static(self):
+        query = (
+            _qb
+            .select('*')
+            .from_table('cats')
+            .where(
+                eq('color', 'ginger'),
+                ge('age', 2),
+                le('age', 3),
+                gt('weight', 3.1),
+                lt('weight', 3.9),
+                ne('gender', 'f'),
+                between('last_visit', '2023-01-01', '2024-01-01'),
+                between('sociality', 69, 96),
+            )
+        )
+
+        self.assertEqual(
+            query.get_sql(),
+            "SELECT * FROM cats WHERE color = 'ginger' AND age >= 2 AND age <= 3 AND weight > 3.1 AND weight < 3.9 "
+            "AND gender != 'f' AND last_visit BETWEEN '2023-01-01' AND '2024-01-01' AND sociality BETWEEN 69 AND 96"
+        )
+
+        self.assertEqual({}, query.get_parameters())
