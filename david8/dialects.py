@@ -1,29 +1,9 @@
-import dataclasses
-from typing import Any
-
-from ..protocols.dialect import DialectProtocol, ParamStyleProtocol
-
-
-@dataclasses.dataclass(slots=True)
-class _BaseParams(ParamStyleProtocol):
-    _params_bag: dict[str, Any] = dataclasses.field(default_factory=dict)
-
-    def add_param(self, value: Any) -> str:
-        key = str(len(self._params_bag) + 1)
-        self._params_bag[key] = value
-        return self._render_param(key)
-
-    def reset_parameters(self):
-        self._params_bag.clear()
-
-    def get_parameters(self):
-        return self._params_bag
-
-    def _render_param(self, key: str) -> str:
-        raise NotImplementedError
+from ._core.base_dialect import BaseDialect
+from ._core.base_params import BaseParams
+from .protocols.dialect import ParamStyleProtocol
 
 
-class NumericParamStyle(_BaseParams):
+class NumericParamStyle(BaseParams):
     def _render_param(self, key: str) -> str:
         return f'${key}'
 
@@ -31,7 +11,7 @@ class NumericParamStyle(_BaseParams):
         return list(self._params_bag.values())
 
 
-class QMarkParamStyle(_BaseParams):
+class QMarkParamStyle(BaseParams):
     def _render_param(self, key: str) -> str:
         return '?'
 
@@ -39,7 +19,7 @@ class QMarkParamStyle(_BaseParams):
         return list(self._params_bag.values())
 
 
-class FormatParamStyle(_BaseParams):
+class FormatParamStyle(BaseParams):
     def _render_param(self, key: str) -> str:
         return '%s'
 
@@ -47,7 +27,7 @@ class FormatParamStyle(_BaseParams):
         return tuple(self._params_bag.values())
 
 
-class NamedParamStyle(_BaseParams):
+class NamedParamStyle(BaseParams):
     def _render_param(self, key: str) -> str:
         return f':p{key}'
 
@@ -58,7 +38,7 @@ class NamedParamStyle(_BaseParams):
         }
 
 
-class PyFormatParamStyle(_BaseParams):
+class PyFormatParamStyle(BaseParams):
     def _render_param(self, key: str) -> str:
         return f'%(p{key})s'
 
@@ -69,47 +49,31 @@ class PyFormatParamStyle(_BaseParams):
         }
 
 
-
-@dataclasses.dataclass(slots=True)
-class _BaseDialect(DialectProtocol):
-    _param_style: ParamStyleProtocol
-    _is_quote_mode: bool = False
-
-    def quote_ident(self, name: str) -> str:
-        if self._is_quote_mode:
-            return f'"{name}"'
-
-        return name
-
-    def get_paramstyle(self) -> ParamStyleProtocol:
-        return self._param_style
-
-
-class PostgresDialect(_BaseDialect):
+class PostgresDialect(BaseDialect):
     def __init__(self, is_quote_mode: bool = False, param_style: ParamStyleProtocol = None):
         self._is_quote_mode = is_quote_mode
         self._param_style = param_style or PyFormatParamStyle()
 
 
-class MySQLDialect(_BaseDialect):
+class MySQLDialect(BaseDialect):
     def __init__(self, is_quote_mode: bool = False):
         self._is_quote_mode = is_quote_mode
         self._param_style = FormatParamStyle()
 
 
-class ClickhouseDialect(_BaseDialect):
+class ClickhouseDialect(BaseDialect):
     def __init__(self, is_quote_mode: bool = False):
         self._is_quote_mode = is_quote_mode
         self._param_style = PyFormatParamStyle()
 
 
-class DuckDbDialect(_BaseDialect):
+class DuckDbDialect(BaseDialect):
     def __init__(self, is_quote_mode: bool = False):
         self._is_quote_mode = is_quote_mode
         self._param_style = QMarkParamStyle()
 
 
-class SqliteDialect(_BaseDialect):
+class SqliteDialect(BaseDialect):
     def __init__(self, is_quote_mode: bool = False, param_style: ParamStyleProtocol = None):
         self._is_quote_mode = is_quote_mode
         self._param_style = param_style or NamedParamStyle()

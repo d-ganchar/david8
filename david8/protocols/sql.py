@@ -1,10 +1,13 @@
 from typing import Protocol
 
-from david8.protocols.dialect import DialectProtocol
+from ..protocols.dialect import DialectProtocol
 
 
 class QueryProtocol(Protocol):
     def get_sql(self) -> str:
+        pass
+
+    def get_parameters(self) -> list | dict:
         pass
 
 

@@ -1,9 +1,7 @@
 from david8 import get_qb
-from david8.core.dialects import (
-    ClickhouseDialect,
-)
-from david8.core.logical_operators import and_, or_, xor
-from david8.core.predicates import eq_val
+from david8.dialects import ClickhouseDialect
+from david8.logical_operators import and_, or_, xor
+from david8.predicates import eq_val
 from tests.base_test import BaseTest
 
 _qb = get_qb(ClickhouseDialect())

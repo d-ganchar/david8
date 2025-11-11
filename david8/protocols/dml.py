@@ -17,5 +17,5 @@ class SelectProtocol(QueryProtocol):
     def limit(self, value: int) -> 'SelectProtocol':
         pass
 
-    def get_parameters(self) -> list | dict:
+    def order_by(self, *args: str | int) -> 'SelectProtocol':
         pass

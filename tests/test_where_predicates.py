@@ -1,6 +1,6 @@
 from david8 import get_qb
-from david8.core.dialects import ClickhouseDialect
-from david8.core.predicates import (
+from david8.dialects import ClickhouseDialect
+from david8.predicates import (
     between_val,
     col_is_null,
     col_like,
@@ -36,7 +36,6 @@ class TestWherePredicates(BaseTest):
             )
         )
 
-        query.get_sql()
         self.assertEqual(
             query.get_sql(),
             "SELECT * FROM cats WHERE color = %(p1)s AND age >= %(p2)s AND age <= %(p3)s AND weight > %(p4)s AND "

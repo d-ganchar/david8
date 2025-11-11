@@ -1,7 +1,7 @@
 from parameterized import parameterized
 
 from david8 import get_qb
-from david8.core.dialects import (
+from david8.dialects import (
     ClickhouseDialect,
     DuckDbDialect,
     FormatParamStyle,
@@ -11,7 +11,7 @@ from david8.core.dialects import (
     QMarkParamStyle,
     SqliteDialect,
 )
-from david8.core.predicates import eq_val
+from david8.predicates import eq_val
 from tests.base_test import BaseTest
 
 
