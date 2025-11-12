@@ -16,10 +16,18 @@ class SqlExpressionProtocol:
         pass
 
 
+class SqlPredicateProtocol(SqlExpressionProtocol):
+    pass
+
+
+class SqlFunctionProtocol(SqlExpressionProtocol):
+    pass
+
+
 class AsExpressionProtocol(SqlExpressionProtocol):
-    def as_(self, value: str | SqlExpressionProtocol, alias: str):
+    def as_(self, value: str | int | float | SqlExpressionProtocol | SqlPredicateProtocol, alias: str):
         pass
 
 
-class LogicalOperatorProtocol(SqlExpressionProtocol):
+class SqlLogicalOperatorProtocol(SqlExpressionProtocol):
     pass

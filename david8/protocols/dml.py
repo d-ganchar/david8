@@ -1,11 +1,11 @@
-from ..protocols.sql import AsExpressionProtocol, LogicalOperatorProtocol, QueryProtocol, SqlExpressionProtocol
+from ..protocols.sql import AsExpressionProtocol, QueryProtocol, SqlLogicalOperatorProtocol, SqlPredicateProtocol
 
 
 class SelectProtocol(QueryProtocol):
     def select(self, *args: str | AsExpressionProtocol) -> 'SelectProtocol':
         pass
 
-    def where(self, *args: LogicalOperatorProtocol | SqlExpressionProtocol) -> 'SelectProtocol':
+    def where(self, *args: SqlLogicalOperatorProtocol | SqlPredicateProtocol) -> 'SelectProtocol':
         pass
 
     def from_table(self, table_name: str, db_name: str = '') -> 'SelectProtocol':
@@ -18,4 +18,7 @@ class SelectProtocol(QueryProtocol):
         pass
 
     def order_by(self, *args: str | int) -> 'SelectProtocol':
+        pass
+
+    def union(self, *args: 'SelectProtocol', all_flag: bool = True) -> 'SelectProtocol':
         pass

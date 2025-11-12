@@ -4,7 +4,12 @@ from copy import deepcopy
 
 from ..protocols.dialect import DialectProtocol
 from ..protocols.dml import SelectProtocol
-from ..protocols.sql import AsExpressionProtocol, LogicalOperatorProtocol, SqlExpressionProtocol
+from ..protocols.sql import (
+    AsExpressionProtocol,
+    SqlExpressionProtocol,
+    SqlLogicalOperatorProtocol,
+    SqlPredicateProtocol,
+)
 
 
 @dataclasses.dataclass(slots=True)
@@ -48,15 +53,17 @@ class BaseSelect(SelectProtocol):
         group_by: tuple = None,
         with_queries: tuple[tuple[str, 'SelectProtocol'], ...] = None,
     ):
-        self._dialect = dialect
         self._select = select or ()
         self._where = where or ()
         self._order_by = order_by or ()
         self._group_by = group_by or ()
+        self._with_queries = with_queries or ()
+        self._unions: tuple[tuple[str, SelectProtocol], ...] = ()  # (('ALL', query1), ('', query2))
+
         self._from_table = from_table
         self._from_db = from_db
         self._limit = limit
-        self._with_queries = with_queries or ()
+        self._dialect = dialect
         self.reset_query_params: bool = True  # see: QueryParamsProvider
         self._query_params_provider = QueryParamsProvider(_dialect=dialect)
         self._query_parameters = deepcopy(dialect.get_paramstyle().get_parameters())
@@ -68,7 +75,7 @@ class BaseSelect(SelectProtocol):
         self._select = args
         return self
 
-    def where(self, *args: LogicalOperatorProtocol | SqlExpressionProtocol) -> 'SelectProtocol':
+    def where(self, *args: SqlLogicalOperatorProtocol | SqlPredicateProtocol) -> 'SelectProtocol':
         self._where = args
         return self
 
@@ -178,4 +185,7 @@ class BaseSelect(SelectProtocol):
 
     def order_by(self, *args: str | int) -> 'SelectProtocol':
         self._order_by = args
+        return self
+
+    def union(self, *args: SelectProtocol, all_flag: bool = True) -> 'SelectProtocol':
         return self

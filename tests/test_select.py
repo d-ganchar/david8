@@ -4,7 +4,7 @@ from david8 import get_qb
 from david8.dialects import (
     ClickhouseDialect,
 )
-from david8.expressions import as_
+from david8.expressions import Column, as_
 from david8.predicates import eq_val
 from tests.base_test import BaseTest
 
@@ -25,7 +25,7 @@ class TestSelect(BaseTest):
             qb
             .select(
                 'name',
-                as_('creator', 'painter'),
+                as_(Column('creator'), 'painter'),
                 as_(eq_val('painter', 'Giger'), 'is_giger'),
             )
             .from_table('pictures')
