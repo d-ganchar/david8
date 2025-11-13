@@ -1,7 +1,6 @@
 import codecs
 
 import pandas as pd
-from rich.align import Align
 from rich.console import Console
 from rich.style import Style
 from rich.table import Table
@@ -60,7 +59,6 @@ table = Table(
     title='[bold yellow]psrecord Report[/bold yellow]',
     border_style='magenta',
     header_style='blue',
-    width=100,
 )
 
 table.add_column('Package', justify='left')
@@ -91,4 +89,4 @@ for r in records:
         style=Style()
     )
 
-console.print(Align.center(table))
+console.print(table)
