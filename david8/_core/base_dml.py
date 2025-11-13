@@ -52,8 +52,8 @@ class BaseSelect(SelectProtocol):
         self._from_table = table_name
         return self
 
-    def group_by(self, *args) -> 'SelectProtocol':
-        self._group_by = args
+    def group_by(self, *args: str | int) -> 'SelectProtocol':
+        self._group_by += args
         return self
 
     def limit(self, value: int) -> 'SelectProtocol':
@@ -141,6 +141,17 @@ class BaseSelect(SelectProtocol):
 
         return f" {' '.join(union_parts)}"
 
+    def _group_by_to_sql(self) -> str:
+        if not self._group_by:
+            return ''
+
+        group_by = ', '.join([
+            f'{self._dialect.quote_ident(f) if isinstance(f, str) else f}'
+            for f in self._group_by
+        ])
+
+        return f' GROUP BY {group_by}'
+
     def get_sql(self, dialect: DialectProtocol = None) -> str:
         if dialect is None:
             self._dialect.get_paramstyle().reset_parameters()
@@ -151,8 +162,7 @@ class BaseSelect(SelectProtocol):
         order_by = self._order_by_to_sql()
         table = self._from_table_to_sql()
 
-        group_by = ', '.join([f'{f}' for f in self._group_by])
-        group_by = f' GROUP BY {group_by}' if group_by else ''
+        group_by = self._group_by_to_sql()
         limit = f' LIMIT {self._limit}' if self._limit else ''
         union = self._union_to_sql()
 

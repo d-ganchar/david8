@@ -11,7 +11,7 @@ class SelectProtocol(QueryProtocol):
     def from_table(self, table_name: str, db_name: str = '') -> 'SelectProtocol':
         pass
 
-    def group_by(self, *args) -> 'SelectProtocol':
+    def group_by(self, *args: str | int) -> 'SelectProtocol':
         pass
 
     def limit(self, value: int) -> 'SelectProtocol':
