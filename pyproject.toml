@@ -30,12 +30,12 @@ CI = "https://github.com/d-ganchar/david8/actions"
 
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.0.0"]
 build-backend = "setuptools.build_meta"
 
 
-[tool.setuptools]
-package-dir = {"" = "david8"}
+[tool.setuptools.packages]
+find = { include = ["david8", "david8.*"] }
 
 
 [dependency-groups]
