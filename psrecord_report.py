@@ -55,7 +55,7 @@ min_real_mb = df['real_mb'].min()
 min_cpu = df['cpu_percent'].min()
 min_elapsed_time = df['elapsed_time'].min()
 
-console = Console()
+console = Console(force_terminal=True)
 table = Table(
     title='[bold yellow]psrecord Report[/bold yellow]',
     border_style='magenta',
