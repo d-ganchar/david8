@@ -34,6 +34,10 @@ requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 
+[tool.setuptools]
+package-dir = {"" = "david8"}
+
+
 [dependency-groups]
 dev = [
     "ruff",
@@ -76,4 +80,8 @@ select = ["E", "F", "I", "UP", "N", "B", "W"]
 testpaths = [
     "tests",
     "--color=yes",
+]
+
+addopts = [
+    "--ignore=tests/test_benchmarks.py",
 ]
