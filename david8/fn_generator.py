@@ -18,7 +18,7 @@ class StrArgsFunction(SqlFunctionProtocol):
     def get_sql(self, dialect: DialectProtocol) -> str:
         items = []
         for item in self._args:
-            if isinstance(item, (str, float, int)):
+            if isinstance(item, str | float | int):
                 items.append(f"'{item}'")
                 continue
 

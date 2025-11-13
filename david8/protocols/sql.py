@@ -4,7 +4,7 @@ from ..protocols.dialect import DialectProtocol
 
 
 class QueryProtocol(Protocol):
-    def get_sql(self) -> str:
+    def get_sql(self, dialect: DialectProtocol = None) -> str:
         pass
 
     def get_parameters(self) -> list | dict:

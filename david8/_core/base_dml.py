@@ -1,5 +1,4 @@
 import dataclasses
-from collections.abc import Iterable
 from copy import deepcopy
 
 from ..protocols.dialect import DialectProtocol
@@ -10,33 +9,6 @@ from ..protocols.sql import (
     SqlLogicalOperatorProtocol,
     SqlPredicateProtocol,
 )
-
-
-@dataclasses.dataclass(slots=True)
-class QueryParamsProvider:
-    """
-    Calculates all query parameters from query and subqueries
-    """
-    _dialect: DialectProtocol
-    _subqueries: tuple['BaseSelect', ...] = dataclasses.field(default_factory=tuple)
-
-    def add_subqueries(self, subqueries: Iterable['BaseSelect']):
-        for query in subqueries:
-            self._subqueries += (query,)
-            query.reset_query_params = False
-
-    def add_subquery(self, query: 'BaseSelect'):
-        self._subqueries += (query,)
-        query.reset_query_params = False
-
-    def get_parameters(self):
-        query_parameters = deepcopy(self._dialect.get_paramstyle().get_parameters())
-        self._dialect.get_paramstyle().reset_parameters()
-        for query in self._subqueries:
-            query.reset_query_params = True
-
-        self._subqueries = ()
-        return query_parameters
 
 
 @dataclasses.dataclass(slots=True)
@@ -58,18 +30,14 @@ class BaseSelect(SelectProtocol):
         self._order_by = order_by or ()
         self._group_by = group_by or ()
         self._with_queries = with_queries or ()
-        self._unions: tuple[tuple[str, SelectProtocol], ...] = ()  # (('ALL', query1), ('', query2))
+        self._unions: tuple[tuple[str, SelectProtocol], ...] = ()  # ((True, query1), (False, query2))
 
         self._from_table = from_table
         self._from_db = from_db
         self._limit = limit
         self._dialect = dialect
-        self.reset_query_params: bool = True  # see: QueryParamsProvider
-        self._query_params_provider = QueryParamsProvider(_dialect=dialect)
         self._query_parameters = deepcopy(dialect.get_paramstyle().get_parameters())
 
-        for _, query in self._with_queries:
-            self._query_params_provider.add_subquery(query)
 
     def select(self, *args: str | AsExpressionProtocol) -> 'SelectProtocol':
         self._select = args
@@ -146,7 +114,7 @@ class BaseSelect(SelectProtocol):
             return ''
 
         with_items = ', '.join(
-            f'{self._dialect.quote_ident(alias)} AS ({query.get_sql()})'
+            f'{self._dialect.quote_ident(alias)} AS ({query.get_sql(self._dialect)})'
             for alias, query in self._with_queries
         )
 
@@ -163,7 +131,20 @@ class BaseSelect(SelectProtocol):
 
         return f' FROM {_from}'
 
-    def get_sql(self) -> str:
+    def _union_to_sql(self) -> str:
+        if not self._unions:
+            return ''
+
+        union_parts = []
+        for union_type, query in self._unions:
+            union_parts.append(f"UNION{' ALL' if union_type else ''} {query.get_sql(self._dialect)}")
+
+        return f" {' '.join(union_parts)}"
+
+    def get_sql(self, dialect: DialectProtocol = None) -> str:
+        if dialect is None:
+            self._dialect.get_paramstyle().reset_parameters()
+
         with_query = self._with_queries_to_sql()
         columns = self._columns_to_sql()
         where = self._where_to_sql()
@@ -173,19 +154,21 @@ class BaseSelect(SelectProtocol):
         group_by = ', '.join([f'{f}' for f in self._group_by])
         group_by = f' GROUP BY {group_by}' if group_by else ''
         limit = f' LIMIT {self._limit}' if self._limit else ''
+        union = self._union_to_sql()
 
-        sql = f'{with_query}SELECT {columns}{table}{where}{group_by}{order_by}{limit}'
-        if self.reset_query_params:
-            self._query_parameters = self._query_params_provider.get_parameters()
-
+        sql = f'{with_query}SELECT {columns}{table}{where}{group_by}{order_by}{limit}{union}'
+        self._query_parameters = deepcopy(self._dialect.get_paramstyle().get_parameters())
         return sql
 
     def get_parameters(self) -> list | dict:
-        return self._query_parameters
+        return deepcopy(self._query_parameters)
 
     def order_by(self, *args: str | int) -> 'SelectProtocol':
         self._order_by = args
         return self
 
     def union(self, *args: SelectProtocol, all_flag: bool = True) -> 'SelectProtocol':
+        for select in args:
+            self._unions += (all_flag, select, ),
+
         return self

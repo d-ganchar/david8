@@ -30,7 +30,7 @@ class _AsExpression(AsExpressionProtocol):
         alias = dialect.quote_ident(self._alias)
         if isinstance(self._value, str):
             return f"'{self._value}' AS {alias}"
-        elif isinstance(self._value, (int, float)):
+        elif isinstance(self._value, int | float):
             return f'{self._value} AS {alias}'
 
         return f'{self._value.get_sql(dialect)} AS {alias}'
