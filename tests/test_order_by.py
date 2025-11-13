@@ -18,13 +18,8 @@ class TestOrderBy(BaseTest):
         )
     ])
     def test_order_by_int(self, qb, exp_sql):
-        query = (
-            qb
-            .select('name', 'height')
-            .from_table('trees')
-            .order_by(1, 2)
-        )
-
+        query = qb.select('name', 'height').from_table('trees').order_by(1)
+        query.order_by(2)
         self.assertEqual(query.get_sql(), exp_sql)
 
     @parameterized.expand([
@@ -38,11 +33,7 @@ class TestOrderBy(BaseTest):
         )
     ])
     def test_order_by_str(self, qb, exp_sql):
-        query = (
-            qb
-            .select('name', 'height', 'style')
-            .from_table('trees')
-            .order_by('height desc', 'style asc', 'name')
-        )
+        query = qb.select('name', 'height', 'style').from_table('trees').order_by('height desc', 'style asc')
+        query.order_by('name')
 
         self.assertEqual(query.get_sql(), exp_sql)

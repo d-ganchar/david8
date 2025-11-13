@@ -164,7 +164,7 @@ class BaseSelect(SelectProtocol):
         return deepcopy(self._query_parameters)
 
     def order_by(self, *args: str | int) -> 'SelectProtocol':
-        self._order_by = args
+        self._order_by += args
         return self
 
     def union(self, *args: SelectProtocol, all_flag: bool = True) -> 'SelectProtocol':
