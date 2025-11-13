@@ -37,11 +37,15 @@ class TestWherePredicates(BaseTest):
                 lt_val('weight', 3.9),
                 ne_val('gender', 'f'),
                 between_val('last_visit', '2023', '2024'),
-                col_is_null('owner'),
-                col_is_null('illness', False),
-                col_like('description', '%hugs%')
             )
         )
+
+        for predicate in [
+            col_is_null('owner'),
+            col_is_null('illness', False),
+            col_like('description', '%hugs%')
+        ]:
+            query.where(predicate)
 
         self.assertEqual(
             query.get_sql(),
@@ -65,21 +69,19 @@ class TestWherePredicates(BaseTest):
         )
 
     def test_where_static(self):
-        query = (
-            _qb
-            .select('*')
-            .from_table('cats')
-            .where(
-                eq('color', 'ginger'),
-                ge('age', 2),
-                le('age', 3),
-                gt('weight', 3.1),
-                lt('weight', 3.9),
-                ne('gender', 'f'),
-                between('last_visit', '2023-01-01', '2024-01-01'),
-                between('sociality', 69, 96),
-            )
-        )
+        query = _qb.select('*').from_table('cats')
+
+        for predicate in [
+            eq('color', 'ginger'),
+            ge('age', 2),
+            le('age', 3),
+            gt('weight', 3.1),
+            lt('weight', 3.9),
+            ne('gender', 'f'),
+            between('last_visit', '2023-01-01', '2024-01-01'),
+            between('sociality', 69, 96),
+        ]:
+            query.where(predicate)
 
         self.assertEqual(
             query.get_sql(),

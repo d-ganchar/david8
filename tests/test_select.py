@@ -21,15 +21,12 @@ class TestSelect(BaseTest):
         )
     ])
     def test_as_expression(self, qb, exp_sql):
-        query = (
-            qb
-            .select(
-                'name',
-                as_(Column('creator'), 'painter'),
-                as_(eq_val('painter', 'Giger'), 'is_giger'),
-            )
-            .from_table('pictures')
-         )
+        query = qb.select('name').from_table('pictures')
+        for col in [
+            as_(Column('creator'), 'painter'),
+            as_(eq_val('painter', 'Giger'), 'is_giger'),
+        ]:
+            query.select(col)
 
         self.assertEqual(query.get_sql(), exp_sql)
         self.assertEqual({'p1': 'Giger'}, query.get_parameters())

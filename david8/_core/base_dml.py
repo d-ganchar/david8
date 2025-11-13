@@ -40,11 +40,11 @@ class BaseSelect(SelectProtocol):
 
 
     def select(self, *args: str | AsExpressionProtocol) -> 'SelectProtocol':
-        self._select = args
+        self._select += args
         return self
 
     def where(self, *args: SqlLogicalOperatorProtocol | SqlPredicateProtocol) -> 'SelectProtocol':
-        self._where = args
+        self._where += args
         return self
 
     def from_table(self, table_name: str, db_name: str = '') -> 'SelectProtocol':
