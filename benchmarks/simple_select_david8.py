@@ -23,3 +23,6 @@ def generate_sql():
         .order_by('total_spent DESC', 'order_type_count DESC')
         .limit(100)
     ).get_sql()
+
+
+generate_sql()

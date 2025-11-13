@@ -27,3 +27,6 @@ def generate_sql():
     builder = builder.orderby(Field("order_type_count"), order=Order.desc)
     builder = builder.limit(100)
     return builder.get_sql()
+
+
+generate_sql()

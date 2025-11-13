@@ -29,3 +29,6 @@ def generate_sql():
     ).sql()
 
     return query
+
+
+generate_sql()
