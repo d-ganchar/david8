@@ -40,6 +40,12 @@ dev = [
     "parameterized",
     "pytest",
     "pytest-benchmark",
+    "sqlalchemy>=2.0.44",
+    "pypika>=0.48.9",
+    "peewee>=3.18.3",
+    "psrecord>=1.4",
+    "pandas>=2.3.3",
+    "rich>=14.2.0",
 ]
 
 
@@ -60,6 +66,7 @@ exclude = [
     "**/.git",
     "__pycache__",
     "tests/fixtures/",
+    "benchmarks/"
 ]
 
 [tool.ruff.lint]
@@ -69,8 +76,4 @@ select = ["E", "F", "I", "UP", "N", "B", "W"]
 testpaths = [
     "tests",
     "--color=yes",
-]
-
-addopts = [
-    "--ignore=tests/test_benchmarks.py",
 ]
