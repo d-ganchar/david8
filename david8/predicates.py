@@ -1,12 +1,12 @@
 import dataclasses
 
 from .protocols.dialect import DialectProtocol
-from .protocols.sql import SqlPredicateProtocol
+from .protocols.sql import SqlExpressionProtocol, SqlPredicateProtocol
 
 
 @dataclasses.dataclass(slots=True)
 class _ValSqlPredicate(SqlPredicateProtocol):
-    column: str
+    column: str | SqlExpressionProtocol
     value: int | float | str
     operator: str
     add_param: bool = True
@@ -19,7 +19,12 @@ class _ValSqlPredicate(SqlPredicateProtocol):
         else:
             placeholder = self.value
 
-        return f'{dialect.quote_ident(self.column)} {self.operator} {placeholder}'
+        if isinstance(self.column, str):
+            col = dialect.quote_ident(self.column)
+        else:
+            col = self.column.get_sql(dialect)
+
+        return f'{col} {self.operator} {placeholder}'
 
 
 @dataclasses.dataclass(slots=True)
@@ -67,22 +72,22 @@ class _ColLikeSqlPredicate(SqlPredicateProtocol):
         return f"{column} LIKE '{self.value}'"
 
 
-def eq_val(column: str, value: int | float | str) -> SqlPredicateProtocol:
+def eq_val(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
     return _ValSqlPredicate(column, value, '=')
 
-def gt_val(column: str, value: int | float | str) -> SqlPredicateProtocol:
+def gt_val(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
     return _ValSqlPredicate(column, value, '>')
 
-def ge_val(column: str, value: int | float | str) -> SqlPredicateProtocol:
+def ge_val(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
     return _ValSqlPredicate(column, value, '>=')
 
-def lt_val(column: str, value: int | float | str) -> SqlPredicateProtocol:
+def lt_val(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
     return _ValSqlPredicate(column, value, '<')
 
-def le_val(column: str, value: int | float | str) -> SqlPredicateProtocol:
+def le_val(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
     return _ValSqlPredicate(column, value, '<=')
 
-def ne_val(column: str, value: int | float | str) -> SqlPredicateProtocol:
+def ne_val(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
     return _ValSqlPredicate(column, value, '!=')
 
 def between_val(column: str, start: str | float | int, end: str | float | int) -> SqlPredicateProtocol:
@@ -97,22 +102,23 @@ def col_is_null(column: str, is_null: bool = True) -> SqlPredicateProtocol:
 def col_like(column: str, value: str) -> SqlPredicateProtocol:
     return _ColLikeSqlPredicate(column, value)
 
-def eq(column: str, value: int | float | str) -> SqlPredicateProtocol:
+
+def eq(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
     return _ValSqlPredicate(column, value, '=', False)
 
-def gt(column: str, value: int | float | str) -> SqlPredicateProtocol:
+def gt(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
     return _ValSqlPredicate(column, value, '>', False)
 
-def ge(column: str, value: int | float | str) -> SqlPredicateProtocol:
+def ge(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
     return _ValSqlPredicate(column, value, '>=', False)
 
-def lt(column: str, value: int | float | str) -> SqlPredicateProtocol:
+def lt(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
     return _ValSqlPredicate(column, value, '<', False)
 
-def le(column: str, value: int | float | str) -> SqlPredicateProtocol:
+def le(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
     return _ValSqlPredicate(column, value, '<=', False)
 
-def ne(column: str, value: int | float | str) -> SqlPredicateProtocol:
+def ne(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
     return _ValSqlPredicate(column, value, '!=', False)
 
 def between(column: str, start: str | float | int, end: str | float | int) -> SqlPredicateProtocol:

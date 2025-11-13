@@ -25,3 +25,37 @@ class StrArgsFunction(SqlFunctionProtocol):
             items.append(item.get_sql(dialect))
 
         return f"{self._name}({', '.join(items)})"
+
+
+@dataclasses.dataclass(slots=True)
+class AggDistinctFunction(SqlFunctionProtocol):
+    """
+    SUM(DISTINCT price)
+    AVG(DISTINCT quantity)
+    STDDEV(DISTINCT score)
+    """
+    _name: str
+    _column: str = ''
+    _distinct: bool = False
+
+    def __call__(self, column: str, distinct: bool = False) -> SqlFunctionProtocol:
+        self._column = column
+        self._distinct = distinct
+        return deepcopy(self)
+
+    def get_sql(self, dialect: DialectProtocol) -> str:
+        name = f"{self._name}({'DISTINCT ' if self._distinct else ''}"
+        return f"{name}{dialect.quote_ident(self._column)})"
+
+
+@dataclasses.dataclass(slots=True)
+class CountFunction(AggDistinctFunction):
+    """
+    COUNT()
+    """
+    _name: str = 'count'
+    _column: str = ''
+    _distinct: bool = False
+
+    def __call__(self, column: str = '', distinct: bool = False) -> SqlFunctionProtocol:
+        return AggDistinctFunction.__call__(self, column=column, distinct=distinct)

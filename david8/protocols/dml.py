@@ -22,3 +22,6 @@ class SelectProtocol(QueryProtocol):
 
     def union(self, *args: 'SelectProtocol', all_flag: bool = True) -> 'SelectProtocol':
         pass
+
+    def having(self, *args: SqlPredicateProtocol) -> 'SelectProtocol':
+        pass

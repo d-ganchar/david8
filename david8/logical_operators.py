@@ -15,13 +15,13 @@ class _SqlLogicalOperator(SqlLogicalOperatorProtocol):
         return f'({conditions})'
 
 
-def or_(*args: Union[SqlExpressionProtocol, 'SqlLogicalOperatorProtocol']):
+def or_(*args: SqlExpressionProtocol | SqlLogicalOperatorProtocol):
     return _SqlLogicalOperator(_name='OR', _conditions=args)
 
 
-def and_(*args: Union[SqlExpressionProtocol, 'SqlLogicalOperatorProtocol']):
+def and_(*args: SqlExpressionProtocol | SqlLogicalOperatorProtocol):
     return _SqlLogicalOperator(_name='AND', _conditions=args)
 
 
-def xor(*args: Union[SqlExpressionProtocol, 'SqlLogicalOperatorProtocol']):
+def xor(*args: SqlExpressionProtocol | SqlLogicalOperatorProtocol):
     return _SqlLogicalOperator(_name='XOR', _conditions=args)
