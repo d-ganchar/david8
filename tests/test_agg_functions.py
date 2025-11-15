@@ -6,7 +6,8 @@ from david8.predicates import eq
 from tests.base_test import BaseTest
 
 _qb = get_qb(ClickhouseDialect())
-
+# JetBrains bug?
+# noinspection PyArgumentList
 class TestAggFunctions(BaseTest):
 
     def test_agg_functions(self):
