@@ -7,8 +7,6 @@ from david8.functions import concat
 from tests.base_test import BaseTest
 
 
-# JetBrains bug?
-# noinspection PyArgumentList
 class TestFunctions(BaseTest):
 
     @parameterized.expand([

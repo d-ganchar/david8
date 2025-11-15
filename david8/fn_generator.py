@@ -1,5 +1,4 @@
 import dataclasses
-from typing import cast
 
 from david8.expressions import Column, Parameter
 from david8.protocols.dialect import DialectProtocol
@@ -7,7 +6,7 @@ from david8.protocols.sql import SqlFunctionProtocol
 
 
 @dataclasses.dataclass(slots=True)
-class _StrArgsFunction:
+class _StrArgsFunction(SqlFunctionProtocol):
     name: str
     args: tuple
 
@@ -29,11 +28,11 @@ class StrArgsCallableFactory:
     name: str
 
     def __call__(self, *args: SqlFunctionProtocol | int | float | str | Column | Parameter) -> SqlFunctionProtocol:
-        return cast(SqlFunctionProtocol, _StrArgsFunction(self.name, args))
+        return _StrArgsFunction(self.name, args)
 
 
 @dataclasses.dataclass(slots=True)
-class _AggDistinctFunction:
+class _AggDistinctFunction(SqlFunctionProtocol):
     """
     SUM(DISTINCT price)
     AVG(DISTINCT quantity)
@@ -53,4 +52,4 @@ class AggDistinctCallableFactory:
     name: str
 
     def __call__(self, column: str, distinct: bool = False) -> SqlFunctionProtocol:
-        return cast(SqlFunctionProtocol, _AggDistinctFunction(self.name, column, distinct))
+        return _AggDistinctFunction(self.name, column, distinct)
