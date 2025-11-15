@@ -57,38 +57,26 @@ class BaseSelect(SelectProtocol):
         return self
 
     def _columns_to_sql(self) -> str:
-        columns = []
-
-        for column in self._select:
-            if isinstance(column, str):
-                columns.append(self._dialect.quote_ident(column))
-            else:
-                columns.append(column.get_sql(self._dialect))
-
-        return ', '.join(columns)
+        return ', '.join(
+            self._dialect.quote_ident(column)
+            if isinstance(column, str) else column.get_sql(self._dialect)
+            for column in self._select
+        )
 
     def _where_to_sql(self) -> str:
         if not self._where:
             return ''
 
-        where = []
-        for predicate in self._where:
-            where.append(predicate.get_sql(self._dialect))
-
-        return f" WHERE {' AND '.join(where)}" if where else ''
+        return f" WHERE {' AND '.join(predicate.get_sql(self._dialect) for predicate in self._where)}"
 
     def _order_by_to_sql(self) -> str:
         if not self._order_by:
             return ''
 
-        order_items = []
-        for value, ordr_type in self._order_by:
-            if isinstance(value, int):
-                column = value
-            else:
-                column = self._dialect.quote_ident(value)
-
-            order_items.append(f'{column}{ordr_type}')
+        order_items = tuple(
+            f'{(value if isinstance(value, int) else self._dialect.quote_ident(value))}{ordr_type}'
+            for value, ordr_type in self._order_by
+        )
 
         return f" ORDER BY {', '.join(order_items)}"
 
@@ -118,29 +106,25 @@ class BaseSelect(SelectProtocol):
         if not self._unions:
             return ''
 
-        union_parts = []
-        for union_type, query in self._unions:
-            union_parts.append(f"UNION{' ALL' if union_type else ''} {query.get_sql(self._dialect)}")
-
-        return f" {' '.join(union_parts)}"
+        return ' ' + ' '.join(
+            f"UNION{' ALL' if union_type else ''} {query.get_sql(self._dialect)}"
+            for union_type, query in self._unions
+        )
 
     def _group_by_to_sql(self) -> str:
         if not self._group_by:
             return ''
 
-        group_by = ', '.join([
-            f'{self._dialect.quote_ident(f) if isinstance(f, str) else f}'
+        return ' GROUP BY ' + ', '.join(
+            f"{self._dialect.quote_ident(f) if isinstance(f, str) else str(f)}"
             for f in self._group_by
-        ])
-
-        return f' GROUP BY {group_by}'
+        )
 
     def _having_to_sql(self) -> str:
         if not self._having:
             return ''
 
-        having = [p.get_sql(self._dialect) for p in self._having]
-        return f" HAVING {' AND '.join(having)}"
+        return f" HAVING {' AND '.join(p.get_sql(self._dialect) for p in self._having)}"
 
     def get_sql(self, dialect: DialectProtocol = None) -> str:
         if dialect is None:

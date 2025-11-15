@@ -16,13 +16,13 @@ class StrArgsFunction(SqlFunctionProtocol):
         return deepcopy(self)
 
     def get_sql(self, dialect: DialectProtocol) -> str:
-        items = []
+        items = ()
         for item in self._args:
             if isinstance(item, str | float | int):
-                items.append(f"'{item}'")
+                items += (f"'{item}'",)
                 continue
 
-            items.append(item.get_sql(dialect))
+            items += (item.get_sql(dialect),)
 
         return f"{self._name}({', '.join(items)})"
 
