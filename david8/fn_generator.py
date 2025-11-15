@@ -1,11 +1,13 @@
-from typing import NamedTuple, cast
+import dataclasses
+from typing import cast
 
 from david8.expressions import Column, Parameter
 from david8.protocols.dialect import DialectProtocol
 from david8.protocols.sql import SqlFunctionProtocol
 
 
-class _StrArgsFunction(NamedTuple):
+@dataclasses.dataclass(slots=True)
+class _StrArgsFunction:
     name: str
     args: tuple
 
@@ -22,14 +24,16 @@ class _StrArgsFunction(NamedTuple):
         return f"{self.name}({', '.join(items)})"
 
 
-class StrArgsCallableFactory(NamedTuple):
+@dataclasses.dataclass(slots=True)
+class StrArgsCallableFactory:
     name: str
 
     def __call__(self, *args: SqlFunctionProtocol | int | float | str | Column | Parameter) -> SqlFunctionProtocol:
         return cast(SqlFunctionProtocol, _StrArgsFunction(self.name, args))
 
 
-class _AggDistinctFunction(NamedTuple):
+@dataclasses.dataclass(slots=True)
+class _AggDistinctFunction:
     """
     SUM(DISTINCT price)
     AVG(DISTINCT quantity)
@@ -44,7 +48,8 @@ class _AggDistinctFunction(NamedTuple):
         return f"{name}{dialect.quote_ident(self.column)})"
 
 
-class AggDistinctCallableFactory(NamedTuple):
+@dataclasses.dataclass(slots=True)
+class AggDistinctCallableFactory:
     name: str
 
     def __call__(self, column: str, distinct: bool = False) -> SqlFunctionProtocol:
