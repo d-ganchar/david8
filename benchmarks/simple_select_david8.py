@@ -20,7 +20,7 @@ def generate_sql():
         .where(ne('order_type', 'canceled'), ne('seller_type', 'unknown'))
         .group_by('order_type', 'seller_type')
         .having(gt(sum_('total_spent'), 1000))
-        .order_by('total_spent DESC', 'order_type_count DESC')
+        .order_by_desc('total_spent', 'order_type_countC')
         .limit(100)
     ).get_sql()
 

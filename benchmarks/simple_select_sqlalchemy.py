@@ -11,7 +11,6 @@ def generate_sql():
         column("created_at")
     )
 
-
     query = (
         select(
             orders.c.order_type,

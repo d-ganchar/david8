@@ -16,28 +16,21 @@ class BaseSelect(SelectProtocol):
     def __init__(
         self,
         dialect: DialectProtocol,
-        from_table: str = '',
-        from_db: str = '',
-        limit: int = None,
-        where: tuple[SqlExpressionProtocol, ...] = None,
-        having: tuple[SqlExpressionProtocol, ...] = None,
         select: tuple[str | AsExpressionProtocol, ...] = None,
-        order_by: tuple[str | int, ...] = None,
-        group_by: tuple = None,
         with_queries: tuple[tuple[str, SelectProtocol], ...] = None,
     ):
         self._select = select or ()
-        self._where = where or ()
-        self._order_by = order_by or ()
-        self._group_by = group_by or ()
+        self._where: tuple[SqlExpressionProtocol, ...] = ()
+        self._order_by: tuple[tuple[str | int, str], ...] = ()
+        self._group_by: tuple = ()
         self._with_queries = with_queries or ()
-        self._having = having or ()
+        self._having: tuple[SqlExpressionProtocol, ...] = ()
         # True = UNION ALL
         self._unions: tuple[tuple[str, SelectProtocol], ...] = ()  # ((True, query1), (False, query2))
 
-        self._from_table = from_table
-        self._from_db = from_db
-        self._limit = limit
+        self._from_table = ''
+        self._from_db = ''
+        self._limit: int | None = None
         self._dialect = dialect
         self._query_parameters = deepcopy(dialect.get_paramstyle().get_parameters())
 
@@ -85,32 +78,19 @@ class BaseSelect(SelectProtocol):
         return f" WHERE {' AND '.join(where)}" if where else ''
 
     def _order_by_to_sql(self) -> str:
+        if not self._order_by:
+            return ''
+
         order_items = []
-        for item in self._order_by:
-            if isinstance(item, int):
-                order_items.append(str(item))
-                continue
+        for value, ordr_type in self._order_by:
+            if isinstance(value, int):
+                column = value
+            else:
+                column = self._dialect.quote_ident(value)
 
-            clean_item = item.strip()
-            lower_item = clean_item.lower()
+            order_items.append(f'{column}{ordr_type}')
 
-            if lower_item.endswith(' desc'):
-                column = clean_item[:-5]
-                column = self._dialect.quote_ident(column)
-                order_items.append(f'{column} DESC')
-                continue
-            elif lower_item.endswith(' asc'):
-                column = clean_item[:-4]
-                column = self._dialect.quote_ident(column)
-                order_items.append(f'{column} ASC')
-                continue
-
-            order_items.append(self._dialect.quote_ident(clean_item))
-
-        if order_items:
-            return f' ORDER BY {", ".join(order_items)}'
-
-        return ''
+        return f" ORDER BY {', '.join(order_items)}"
 
     def _with_queries_to_sql(self) -> str:
         if not self._with_queries:
@@ -184,8 +164,16 @@ class BaseSelect(SelectProtocol):
     def get_parameters(self) -> list | dict:
         return deepcopy(self._query_parameters)
 
+    def _add_to_order_by(self, *args: str | int, desc: bool = False):
+        for arg in args:
+            self._order_by += ((arg, ' DESC' if desc else ''), )
+
     def order_by(self, *args: str | int) -> SelectProtocol:
-        self._order_by += args
+        self._add_to_order_by(*args)
+        return self
+
+    def order_by_desc(self, *args: str | int) -> 'SelectProtocol':
+        self._add_to_order_by(*args, desc=True)
         return self
 
     def union(self, *args: SelectProtocol, all_flag: bool = True) -> SelectProtocol:

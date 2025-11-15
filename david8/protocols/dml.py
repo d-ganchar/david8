@@ -20,6 +20,9 @@ class SelectProtocol(QueryProtocol):
     def order_by(self, *args: str | int) -> 'SelectProtocol':
         pass
 
+    def order_by_desc(self, *args: str | int) -> 'SelectProtocol':
+        pass
+
     def union(self, *args: 'SelectProtocol', all_flag: bool = True) -> 'SelectProtocol':
         pass
 

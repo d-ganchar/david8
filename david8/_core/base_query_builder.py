@@ -16,4 +16,4 @@ class BaseQueryBuilder(QueryBuilderProtocol):
         return BaseSelect(select=args, dialect=self._dialect)
 
     def with_(self, *args: tuple[str, SelectProtocol]) -> SelectProtocol:  # type: ignore[override]
-        return BaseSelect(select=(), with_queries=args, dialect=self._dialect)
+        return BaseSelect(with_queries=args, dialect=self._dialect)

@@ -1,6 +1,6 @@
 from parameterized import parameterized
 
-from david8 import get_qb
+from david8 import QueryBuilderProtocol, get_qb
 from david8.dialects import ClickhouseDialect
 from tests.base_test import BaseTest
 
@@ -25,15 +25,15 @@ class TestOrderBy(BaseTest):
     @parameterized.expand([
         (
             get_qb(ClickhouseDialect()),
-            'SELECT name, height, style FROM trees ORDER BY height DESC, style ASC, name',
+            'SELECT name, height, style FROM trees ORDER BY height DESC, style, name',
         ),
         (
             get_qb(ClickhouseDialect(True)),
-            'SELECT "name", "height", "style" FROM "trees" ORDER BY "height" DESC, "style" ASC, "name"',
+            'SELECT "name", "height", "style" FROM "trees" ORDER BY "height" DESC, "style", "name"',
         )
     ])
-    def test_order_by_str(self, qb, exp_sql):
-        query = qb.select('name', 'height', 'style').from_table('trees').order_by('height desc', 'style asc')
+    def test_order_by_str(self, qb: QueryBuilderProtocol, exp_sql: str):
+        query = qb.select('name', 'height', 'style').from_table('trees').order_by_desc('height').order_by('style')
         query.order_by('name')
 
         self.assertEqual(query.get_sql(), exp_sql)
