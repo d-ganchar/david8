@@ -67,6 +67,7 @@ def group_by_max(records):
 def print_table():
     raw_data = get_report_data()
     grouped = group_by_max(raw_data)
+    grouped = sorted(grouped, key=lambda r: r["real_mb"])
 
     min_real_mb = min(r["real_mb"] for r in grouped)
     min_virtual_mb = min(r["virtual_mb"] for r in grouped)
