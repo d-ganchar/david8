@@ -28,6 +28,18 @@ class _ValPredicate(PredicateProtocol):
 
 
 @dataclasses.dataclass(slots=True)
+class _ColPredicate(PredicateProtocol):
+    _left_column: str
+    _right_column: str
+    _operator: str
+
+    def get_sql(self, dialect: DialectProtocol) -> str:
+        left_col = dialect.quote_ident(self._left_column)
+        right_col = dialect.quote_ident(self._right_column)
+        return f'{left_col} {self._operator} {right_col}'
+
+
+@dataclasses.dataclass(slots=True)
 class _BetweenPredicate(PredicateProtocol):
     column: str
     start: str
@@ -71,7 +83,7 @@ class _ColLikePredicate(PredicateProtocol):
         column = dialect.quote_ident(self.column)
         return f"{column} LIKE '{self.value}'"
 
-
+# values as SQL parameters
 def eq_val(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
     return _ValPredicate(column, value, '=')
 
@@ -102,7 +114,7 @@ def col_is_null(column: str, is_null: bool = True) -> PredicateProtocol:
 def col_like(column: str, value: str) -> PredicateProtocol:
     return _ColLikePredicate(column, value)
 
-
+# values as columns
 def eq(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
     return _ValPredicate(column, value, '=', False)
 
@@ -123,3 +135,6 @@ def ne(column: str | ExprProtocol, value: int | float | str) -> PredicateProtoco
 
 def between(column: str, start: str | float | int, end: str | float | int) -> PredicateProtocol:
     return _BetweenPredicate(column, start, end, False)
+
+def eq_col(left_column: str, right_column: str) -> PredicateProtocol:
+    return _ColPredicate(left_column, right_column, '=')

@@ -116,7 +116,7 @@ jobs:
       - name: Install david8 from dist
         run: uv pip install dist/$(ls ./dist/ | grep ".tar.gz")
 
-      - name: Simple SQL-query Benchmarks ${{ matrix.python-version }}
+      - name: Benchmarks ${{ matrix.python-version }}
         run: |
           psrecord "python3 benchmarks/simple_select_david8.py" --interval 0.001 --include-children > psrecord_reports/david8.txt 2>&1
           psrecord "python3 benchmarks/simple_select_peewee.py" --interval 0.001 --include-children > psrecord_reports/peewee.txt 2>&1

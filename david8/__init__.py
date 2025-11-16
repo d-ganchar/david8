@@ -1,4 +1,4 @@
-from ._core.base_query_builder import BaseQueryBuilder
+from .core.base_query_builder import BaseQueryBuilder
 from .protocols.dialect import DialectProtocol
 from .protocols.query_builder import QueryBuilderProtocol
 

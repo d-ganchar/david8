@@ -31,3 +31,30 @@ class SelectProtocol(QueryProtocol):
 
     def having(self, *args: PredicateProtocol) -> 'SelectProtocol':
         pass
+
+    def inner_join(
+        self,
+        table: str,
+        on: list[LogicalOperatorProtocol | PredicateProtocol],
+        alias: str = '',
+        db_name: str = '',
+    ) -> 'SelectProtocol':
+        pass
+
+    def left_join(
+        self,
+        table: str,
+        on: list[LogicalOperatorProtocol | PredicateProtocol],
+        alias: str = '',
+        db_name: str = '',
+    ) -> 'SelectProtocol':
+        pass
+
+    def right_join(
+        self,
+        table: str,
+        on: list[LogicalOperatorProtocol | PredicateProtocol],
+        alias: str = '',
+        db_name: str = '',
+    ) -> 'SelectProtocol':
+        pass

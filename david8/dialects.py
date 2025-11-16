@@ -1,5 +1,5 @@
-from ._core.base_dialect import BaseDialect
-from ._core.base_params import BaseParams
+from .core.base_dialect import BaseDialect
+from .core.base_params import BaseParams
 from .protocols.dialect import ParamStyleProtocol
 
 

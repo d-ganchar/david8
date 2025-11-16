@@ -6,9 +6,31 @@ from ..protocols.dml import SelectProtocol
 from ..protocols.sql import (
     AsExprProtocol,
     ExprProtocol,
+    JoinProtocol,
     LogicalOperatorProtocol,
     PredicateProtocol,
 )
+
+
+@dataclasses.dataclass(slots=True)
+class Join(JoinProtocol):
+    _join_type: str
+    _on: list[LogicalOperatorProtocol | PredicateProtocol]
+    _alias: str = ''
+    _from: tuple[str, str] | SelectProtocol = dataclasses.field(default_factory=tuple)  # ('table', 'db') | Query
+
+    def get_sql(self, dialect: DialectProtocol) -> str:
+        on = f"{' AND '.join(on.get_sql(dialect) for on in self._on)}"
+        alias = f' AS {self._alias}' if self._alias else ''
+        if isinstance(self._from, SelectProtocol):
+            source = self._from.get_sql(dialect)
+        else:
+            table, db = self._from
+            source = dialect.quote_ident(table)
+            if db:
+                source = '.'.join([source, dialect.quote_ident(db)])
+
+        return f'{self._join_type} JOIN {source}{alias} ON ({on})'
 
 
 @dataclasses.dataclass(slots=True)
@@ -27,6 +49,7 @@ class BaseSelect(SelectProtocol):
         self._having: tuple[ExprProtocol, ...] = ()
         # True = UNION ALL
         self._unions: tuple[tuple[str, SelectProtocol], ...] = ()  # ((True, query1), (False, query2))
+        self._joins: tuple[Join, ...] = ()
 
         self._from_table = ''
         self._from_db = ''
@@ -141,26 +164,50 @@ class BaseSelect(SelectProtocol):
 
         return f" HAVING {' AND '.join(p.get_sql(self._dialect) for p in self._having)}"
 
+    def _joins_to_sql(self) -> str:
+        if not self._joins:
+            return ''
+
+        return ' ' + ' '.join(
+            join.get_sql(self._dialect)
+            for join in self._joins
+        )
+
     def get_sql(self, dialect: DialectProtocol = None) -> str:
         """
         Don't forget about a query rendering sequence. You can break the sequence of query parameters, see:
         self._dialect.get_paramstyle().reset_parameters()
+
+        [ WITH [ RECURSIVE ] <with_list> ]
+        SELECT [ DISTINCT | ALL ]
+               <select_list>
+        FROM   <table_reference_list>
+        [ WHERE <search_condition> ]
+        [ JOIN <join_condition> ]
+        [ GROUP BY <grouping_element_list> ]
+        [ HAVING <search_condition> ]
+        [ WINDOW <window_definition_list> ]
+        [ { UNION | INTERSECT | EXCEPT } [ ALL | DISTINCT ] <query_expression> ]
+        [ ORDER BY <sort_specification_list> ]
+        [ OFFSET <offset> ]
+        [ FETCH { FIRST | NEXT } <n> { ROW | ROWS } ONLY ]
         """
         if dialect is None:
             self._dialect.get_paramstyle().reset_parameters()
 
         with_query = self._with_queries_to_sql()
-        columns = self._columns_to_sql()
-        order_by = self._order_by_to_sql()
-        source = self._from_to_sql(dialect)
+        select = self._columns_to_sql()
+        from_ref = self._from_to_sql(dialect)
+        joins = self._joins_to_sql()
         where = self._where_to_sql()
-
         group_by = self._group_by_to_sql()
         having = self._having_to_sql()
-        limit = f' LIMIT {self._limit}' if self._limit else ''
         union = self._union_to_sql()
+        order_by = self._order_by_to_sql()
 
-        sql = f'{with_query}SELECT {columns}{source}{where}{group_by}{order_by}{having}{limit}{union}'
+        limit = f' LIMIT {self._limit}' if self._limit else ''
+        sql = f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{limit}{union}'
+
         self._query_parameters = deepcopy(self._dialect.get_paramstyle().get_parameters())
         return sql
 
@@ -188,3 +235,41 @@ class BaseSelect(SelectProtocol):
     def having(self, *args: PredicateProtocol | LogicalOperatorProtocol) -> SelectProtocol:
         self._having += args
         return self
+
+    def _join_table(
+        self,
+        join_type: str,
+        table: str,
+        on: list[LogicalOperatorProtocol | PredicateProtocol],
+        alias: str = '',
+        db_name: str = '',
+    ) -> SelectProtocol:
+        self._joins += (Join(join_type, on, alias, (table, db_name,)), )
+        return self
+
+    def inner_join(
+        self,
+        table: str,
+        on: list[LogicalOperatorProtocol | PredicateProtocol],
+        alias: str = '',
+        db_name: str = '',
+    ) -> 'SelectProtocol':
+        return self._join_table('INNER', table, on, alias, db_name)
+
+    def left_join(
+        self,
+        table: str,
+        on: list[LogicalOperatorProtocol | PredicateProtocol],
+        alias: str = '',
+        db_name: str = '',
+    ) -> 'SelectProtocol':
+        return self._join_table('LEFT', table, on, alias, db_name)
+
+    def right_join(
+        self,
+        table: str,
+        on: list[LogicalOperatorProtocol | PredicateProtocol],
+        alias: str = '',
+        db_name: str = '',
+    ) -> 'SelectProtocol':
+        return self._join_table('RIGHT', table, on, alias, db_name)
