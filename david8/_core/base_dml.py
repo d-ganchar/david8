@@ -30,6 +30,7 @@ class BaseSelect(SelectProtocol):
 
         self._from_table = ''
         self._from_db = ''
+        self._from_query: SelectProtocol | None = None
         self._alias = ''
         self._limit: int | None = None
         self._dialect = dialect
@@ -48,6 +49,14 @@ class BaseSelect(SelectProtocol):
         self._from_db = db_name
         self._from_table = table_name
         self._alias = alias
+        self._from_query = None
+        return self
+
+    def from_query(self, query: 'SelectProtocol', alias: str = '') -> 'SelectProtocol':
+        self._from_query = query
+        self._alias = alias
+        self._from_db = ''
+        self._from_table = ''
         return self
 
     def group_by(self, *args: str | int) -> SelectProtocol:
@@ -93,17 +102,20 @@ class BaseSelect(SelectProtocol):
 
         return f'WITH {with_items} '
 
-    def _from_table_to_sql(self) -> str:
-        if not self._from_table:
-            return ''
-
-        _from = self._dialect.quote_ident(self._from_table)
-        if self._from_db:
-            from_db = self._dialect.quote_ident(self._from_db)
-            _from = f'{from_db}.{_from}'
+    def _from_to_sql(self, dialect: DialectProtocol = None) -> str:
+        source = ''
+        if self._from_query:
+            source = f'({self._from_query.get_sql(self._dialect)})'
+        elif self._from_table:
+            source = self._dialect.quote_ident(self._from_table)
+            if self._from_db:
+                from_db = self._dialect.quote_ident(self._from_db)
+                source = f'{from_db}.{source}'
+        else:
+            return source
 
         alias = f' AS {self._dialect.quote_ident(self._alias)}' if self._alias else ''
-        return f' FROM {_from}{alias}'
+        return f' FROM {source}{alias}'
 
     def _union_to_sql(self) -> str:
         if not self._unions:
@@ -130,21 +142,25 @@ class BaseSelect(SelectProtocol):
         return f" HAVING {' AND '.join(p.get_sql(self._dialect) for p in self._having)}"
 
     def get_sql(self, dialect: DialectProtocol = None) -> str:
+        """
+        Don't forget about a query rendering sequence. You can break the sequence of query parameters, see:
+        self._dialect.get_paramstyle().reset_parameters()
+        """
         if dialect is None:
             self._dialect.get_paramstyle().reset_parameters()
 
         with_query = self._with_queries_to_sql()
         columns = self._columns_to_sql()
-        where = self._where_to_sql()
         order_by = self._order_by_to_sql()
-        table = self._from_table_to_sql()
+        source = self._from_to_sql(dialect)
+        where = self._where_to_sql()
 
         group_by = self._group_by_to_sql()
         having = self._having_to_sql()
         limit = f' LIMIT {self._limit}' if self._limit else ''
         union = self._union_to_sql()
 
-        sql = f'{with_query}SELECT {columns}{table}{where}{group_by}{order_by}{having}{limit}{union}'
+        sql = f'{with_query}SELECT {columns}{source}{where}{group_by}{order_by}{having}{limit}{union}'
         self._query_parameters = deepcopy(self._dialect.get_paramstyle().get_parameters())
         return sql
 

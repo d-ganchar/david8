@@ -80,3 +80,23 @@ class TestSelect(BaseTest):
         )
 
         self.assertEqual(query.get_sql(), db_tabl_sql)
+
+    def test_select_from_query(self):
+        query = (
+            _qb_q
+            .select('*')
+            .from_query(
+                _qb_q
+                .select('*')
+                .from_table('music')
+                .where(eq_val('band', 'Port-Royal')),
+            )
+            .where(eq_val('EPs', 'Anya: Sehnsucht EP'))
+        )
+
+        self.assertEqual(
+            query.get_sql(),
+            'SELECT * FROM (SELECT * FROM music WHERE band = %(p1)s) WHERE EPs = %(p2)s'
+        )
+
+        self.assertEqual(query.get_parameters(), {'p1': 'Port-Royal', 'p2': 'Anya: Sehnsucht EP'})
