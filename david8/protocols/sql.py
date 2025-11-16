@@ -41,8 +41,3 @@ class AsExprProtocol(ExprProtocol):
 
 class LogicalOperatorProtocol(ExprProtocol):
     pass
-
-
-class JoinProtocol(ExprProtocol):
-    # TODO: thing and change JOIN interface
-    pass

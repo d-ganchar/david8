@@ -1,4 +1,19 @@
 from ..protocols.sql import AsExprProtocol, LogicalOperatorProtocol, PredicateProtocol, QueryProtocol
+from .sql import ExprProtocol
+
+
+class JoinProtocol(ExprProtocol):
+    def on(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'JoinProtocol':
+        pass
+
+    def table(self, name: str, db: str = '') -> 'JoinProtocol':
+        pass
+
+    def query(self, query: 'SelectProtocol') -> 'JoinProtocol':
+        return self
+
+    def as_(self, alias: str) -> 'JoinProtocol':
+        return self
 
 
 class SelectProtocol(QueryProtocol):
@@ -32,29 +47,5 @@ class SelectProtocol(QueryProtocol):
     def having(self, *args: PredicateProtocol) -> 'SelectProtocol':
         pass
 
-    def inner_join(
-        self,
-        table: str,
-        on: list[LogicalOperatorProtocol | PredicateProtocol],
-        alias: str = '',
-        db_name: str = '',
-    ) -> 'SelectProtocol':
-        pass
-
-    def left_join(
-        self,
-        table: str,
-        on: list[LogicalOperatorProtocol | PredicateProtocol],
-        alias: str = '',
-        db_name: str = '',
-    ) -> 'SelectProtocol':
-        pass
-
-    def right_join(
-        self,
-        table: str,
-        on: list[LogicalOperatorProtocol | PredicateProtocol],
-        alias: str = '',
-        db_name: str = '',
-    ) -> 'SelectProtocol':
+    def join(self, join: JoinProtocol) -> 'SelectProtocol':
         pass

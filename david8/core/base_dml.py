@@ -2,35 +2,9 @@ import dataclasses
 from copy import deepcopy
 
 from ..protocols.dialect import DialectProtocol
-from ..protocols.dml import SelectProtocol
-from ..protocols.sql import (
-    AsExprProtocol,
-    ExprProtocol,
-    JoinProtocol,
-    LogicalOperatorProtocol,
-    PredicateProtocol,
-)
-
-
-@dataclasses.dataclass(slots=True)
-class Join(JoinProtocol):
-    _join_type: str
-    _on: list[LogicalOperatorProtocol | PredicateProtocol]
-    _alias: str = ''
-    _from: tuple[str, str] | SelectProtocol = dataclasses.field(default_factory=tuple)  # ('table', 'db') | Query
-
-    def get_sql(self, dialect: DialectProtocol) -> str:
-        on = f"{' AND '.join(on.get_sql(dialect) for on in self._on)}"
-        alias = f' AS {self._alias}' if self._alias else ''
-        if isinstance(self._from, SelectProtocol):
-            source = self._from.get_sql(dialect)
-        else:
-            table, db = self._from
-            source = dialect.quote_ident(table)
-            if db:
-                source = '.'.join([source, dialect.quote_ident(db)])
-
-        return f'{self._join_type} JOIN {source}{alias} ON ({on})'
+from ..protocols.dml import JoinProtocol, SelectProtocol
+from ..protocols.sql import AsExprProtocol, ExprProtocol, LogicalOperatorProtocol, PredicateProtocol
+from .base_join import BaseJoin
 
 
 @dataclasses.dataclass(slots=True)
@@ -49,7 +23,7 @@ class BaseSelect(SelectProtocol):
         self._having: tuple[ExprProtocol, ...] = ()
         # True = UNION ALL
         self._unions: tuple[tuple[str, SelectProtocol], ...] = ()  # ((True, query1), (False, query2))
-        self._joins: tuple[Join, ...] = ()
+        self._joins: tuple[JoinProtocol, ...] = ()
 
         self._from_table = ''
         self._from_db = ''
@@ -182,6 +156,7 @@ class BaseSelect(SelectProtocol):
         SELECT [ DISTINCT | ALL ]
                <select_list>
         FROM   <table_reference_list>
+        [ JOIN <join_expression> ]
         [ WHERE <search_condition> ]
         [ JOIN <join_condition> ]
         [ GROUP BY <grouping_element_list> ]
@@ -244,32 +219,9 @@ class BaseSelect(SelectProtocol):
         alias: str = '',
         db_name: str = '',
     ) -> SelectProtocol:
-        self._joins += (Join(join_type, on, alias, (table, db_name,)), )
+        self._joins += (BaseJoin(join_type, on, alias, (table, db_name,)), )
         return self
 
-    def inner_join(
-        self,
-        table: str,
-        on: list[LogicalOperatorProtocol | PredicateProtocol],
-        alias: str = '',
-        db_name: str = '',
-    ) -> 'SelectProtocol':
-        return self._join_table('INNER', table, on, alias, db_name)
-
-    def left_join(
-        self,
-        table: str,
-        on: list[LogicalOperatorProtocol | PredicateProtocol],
-        alias: str = '',
-        db_name: str = '',
-    ) -> 'SelectProtocol':
-        return self._join_table('LEFT', table, on, alias, db_name)
-
-    def right_join(
-        self,
-        table: str,
-        on: list[LogicalOperatorProtocol | PredicateProtocol],
-        alias: str = '',
-        db_name: str = '',
-    ) -> 'SelectProtocol':
-        return self._join_table('RIGHT', table, on, alias, db_name)
+    def join(self, join: JoinProtocol) -> SelectProtocol:
+        self._joins += (join,)
+        return self
