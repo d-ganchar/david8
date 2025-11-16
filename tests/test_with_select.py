@@ -1,9 +1,6 @@
 from parameterized import parameterized
 
-from david8 import QueryBuilderProtocol, get_qb
-from david8.dialects import (
-    ClickhouseDialect,
-)
+from david8 import QueryBuilderProtocol
 from david8.predicates import eq_val
 from tests.base_test import BaseTest
 
@@ -12,12 +9,12 @@ class TestWith(BaseTest):
 
     @parameterized.expand([
         (
-            get_qb(ClickhouseDialect()),
+            BaseTest.qb,
             'WITH alias1 AS (SELECT * FROM legacy_table WHERE bad_category = %(p1)s), alias2 AS '
             '(SELECT * FROM new_table WHERE category = %(p2)s) SELECT * FROM legacy_table',
         ),
         (
-            get_qb(ClickhouseDialect(True)),
+            BaseTest.qb_w,
             'WITH "alias1" AS (SELECT "*" FROM "legacy_table" WHERE "bad_category" = %(p1)s), "alias2" AS '
             '(SELECT "*" FROM "new_table" WHERE "category" = %(p2)s) SELECT "*" FROM "legacy_table"',
         )
@@ -37,14 +34,14 @@ class TestWith(BaseTest):
 
     @parameterized.expand([
         (
-            get_qb(ClickhouseDialect()),
+            BaseTest.qb,
             'WITH alias1 AS (SELECT * FROM legacy_table WHERE bad_category = %(p1)s), alias2 AS '
             '(SELECT * FROM new_table WHERE category = %(p2)s) SELECT * FROM legacy_table',
             'SELECT * FROM legacy_table WHERE bad_category = %(p1)s',
             'SELECT * FROM new_table WHERE category = %(p1)s',
         ),
         (
-            get_qb(ClickhouseDialect(True)),
+            BaseTest.qb_w,
             'WITH "alias1" AS (SELECT "*" FROM "legacy_table" WHERE "bad_category" = %(p1)s), "alias2" AS '
             '(SELECT "*" FROM "new_table" WHERE "category" = %(p2)s) SELECT "*" FROM "legacy_table"',
             'SELECT "*" FROM "legacy_table" WHERE "bad_category" = %(p1)s',

@@ -4,13 +4,11 @@ from david8 import get_qb
 from david8.dialects import (
     ClickhouseDialect,
     DuckDbDialect,
-    FormatParamStyle,
     MySQLDialect,
-    NumericParamStyle,
     PostgresDialect,
-    QMarkParamStyle,
     SqliteDialect,
 )
+from david8.param_styles import NumericParamStyle, QMarkParamStyle, FormatParamStyle
 from david8.predicates import eq_val
 from tests.base_test import BaseTest
 

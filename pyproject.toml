@@ -1,7 +1,7 @@
 [project]
 name = "david8"
 version = "0.dev.0"
-description = ""
+description = "Lightweight Python SQL query builder with support for multiple dialects: ClickHouse, DuckDB, Postgres, MySQL and SQLite."
 authors = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
 maintainers = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
 license = {text = "MIT license"}
@@ -12,13 +12,15 @@ dependencies = [
 ]
 
 classifiers = [
-  "License :: OSI Approved :: MIT License",
-  "Development Status :: 1 - Planning",
-  "Intended Audience :: Developers",
-  "Topic :: Database",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
+    "Development Status :: 2 - Pre-Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Database",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 
 
@@ -27,6 +29,8 @@ Homepage = "https://github.com/d-ganchar/david8"
 Changelog = "https://github.com/d-ganchar/david8/releases"
 Issues = "https://github.com/d-ganchar/david8/issues"
 CI = "https://github.com/d-ganchar/david8/actions"
+Documentation = "https://github.com/d-ganchar/david8/wiki"
+Source = "https://github.com/d-ganchar/david8"
 
 
 [build-system]
@@ -62,7 +66,7 @@ lines-between-types = 1
 
 
 [tool.ruff]
-line-length = 118
+line-length = 120
 exclude = [
     ".bzr",
     ".direnv",

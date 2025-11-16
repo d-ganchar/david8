@@ -11,13 +11,13 @@ class TestFunctions(BaseTest):
 
     @parameterized.expand([
         (
-            get_qb(ClickhouseDialect()),
+            BaseTest.qb,
             "SELECT concat('static-value1', col1, %(p1)s, '1', '1.5', "
             "concat('static-value2', col2, %(p2)s, '2', '2.5')), concat(col3, %(p3)s, "
             "'static-value3') AS alias FROM test",
         ),
         (
-            get_qb(ClickhouseDialect(True)),
+            BaseTest.qb_w,
             'SELECT concat(\'static-value1\', "col1", %(p1)s, \'1\', \'1.5\', '
             'concat(\'static-value2\', "col2", %(p2)s, \'2\', \'2.5\')), concat("col3", '
             '%(p3)s, \'static-value3\') AS "alias" FROM "test"'

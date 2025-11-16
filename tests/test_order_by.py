@@ -1,7 +1,6 @@
 from parameterized import parameterized
 
-from david8 import QueryBuilderProtocol, get_qb
-from david8.dialects import ClickhouseDialect
+from david8 import QueryBuilderProtocol
 from tests.base_test import BaseTest
 
 
@@ -9,11 +8,11 @@ class TestOrderBy(BaseTest):
 
     @parameterized.expand([
         (
-            get_qb(ClickhouseDialect()),
+            BaseTest.qb,
             'SELECT name, height FROM trees ORDER BY 1, 2',
         ),
         (
-            get_qb(ClickhouseDialect(True)),
+            BaseTest.qb_w,
             'SELECT "name", "height" FROM "trees" ORDER BY 1, 2',
         )
     ])
@@ -24,11 +23,11 @@ class TestOrderBy(BaseTest):
 
     @parameterized.expand([
         (
-            get_qb(ClickhouseDialect()),
+            BaseTest.qb,
             'SELECT name, height, style FROM trees ORDER BY height DESC, style, name',
         ),
         (
-            get_qb(ClickhouseDialect(True)),
+            BaseTest.qb_w,
             'SELECT "name", "height", "style" FROM "trees" ORDER BY "height" DESC, "style", "name"',
         )
     ])

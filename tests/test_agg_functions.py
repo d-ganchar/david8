@@ -1,17 +1,14 @@
-from david8 import get_qb
 from david8.agg_functions import avg, count, max_, min_, sum_
-from david8.dialects import ClickhouseDialect
 from david8.logical_operators import and_, or_, xor
 from david8.predicates import eq
 from tests.base_test import BaseTest
 
-_qb = get_qb(ClickhouseDialect())
 
 class TestAggFunctions(BaseTest):
 
     def test_agg_functions(self):
         query = (
-            _qb
+            self.qb
             .select('*')
             .from_table('test')
             .having(eq(count('*'), 1))
@@ -41,7 +38,7 @@ class TestAggFunctions(BaseTest):
 
     def test_agg_logical_operators(self):
         query = (
-            _qb
+            self.qb
             .select('*')
             .from_table('test')
             .having(

@@ -1,15 +1,12 @@
-from david8 import get_qb
-from david8.dialects import ClickhouseDialect
 from david8.logical_operators import and_, or_, xor
 from david8.predicates import eq_val
 from tests.base_test import BaseTest
 
-_qb = get_qb(ClickhouseDialect())
 
 class TestLogicalOperators(BaseTest):
     def test_or(self):
         query = (
-            _qb
+            self.qb
             .select('*')
             .from_table('logical_operators')
             .where(
@@ -35,7 +32,7 @@ class TestLogicalOperators(BaseTest):
 
     def test_xor(self):
         query = (
-            _qb
+            self.qb
             .select('*')
             .from_table('logical_operators')
             .where(
@@ -61,7 +58,7 @@ class TestLogicalOperators(BaseTest):
 
     def test_and(self):
         query = (
-            _qb
+            self.qb
             .select('*')
             .from_table('logical_operators')
             .where(

@@ -1,5 +1,3 @@
-from david8 import get_qb
-from david8.dialects import ClickhouseDialect
 from david8.predicates import (
     between,
     between_val,
@@ -20,13 +18,11 @@ from david8.predicates import (
 )
 from tests.base_test import BaseTest
 
-_qb = get_qb(ClickhouseDialect())
-
 
 class TestWherePredicates(BaseTest):
     def test_where_val(self):
         query = (
-            _qb
+            self.qb
             .select('*')
             .from_table('cats')
             .where(
@@ -69,7 +65,7 @@ class TestWherePredicates(BaseTest):
         )
 
     def test_where_static(self):
-        query = _qb.select('*').from_table('cats')
+        query = self.qb.select('*').from_table('cats')
 
         for predicate in [
             eq('color', 'ginger'),

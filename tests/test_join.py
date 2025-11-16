@@ -1,16 +1,12 @@
-from david8 import get_qb
-from david8.dialects import PostgresDialect
 from david8.joins import inner, left, right
 from david8.predicates import eq_col
 from tests.base_test import BaseTest
 
-_qb_q = get_qb(PostgresDialect())      # quote mode
-_qb_wq = get_qb(PostgresDialect(True)) # without quotes
 
 class TestJoin(BaseTest):
     def test_simple_left_join(self):
         query = (
-            _qb_q
+            self.qb
             .select('*')
             .from_table('users', 'u')
             .join(left().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o'))
@@ -22,7 +18,7 @@ class TestJoin(BaseTest):
         )
 
         query = (
-            _qb_wq
+            self.qb_w
             .select('*')
             .from_table('users', 'u')
             .join(left().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o'))
@@ -35,7 +31,7 @@ class TestJoin(BaseTest):
 
     def test_simple_right_join(self):
         query = (
-            _qb_q
+            self.qb
             .select('*')
             .from_table('users', 'u')
             .join(right().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o'))
@@ -47,7 +43,7 @@ class TestJoin(BaseTest):
         )
 
         query = (
-            _qb_wq
+            self.qb_w
             .select('*')
             .from_table('users', 'u')
             .join(right().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o'))
@@ -60,7 +56,7 @@ class TestJoin(BaseTest):
 
     def test_simple_inner_join(self):
         query = (
-            _qb_q
+            self.qb
             .select('*')
             .from_table('users', 'u')
             .join(inner().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o'))
@@ -72,7 +68,7 @@ class TestJoin(BaseTest):
         )
 
         query = (
-            _qb_wq
+            self.qb_w
             .select('*')
             .from_table('users', 'u')
             .join(inner().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o'))

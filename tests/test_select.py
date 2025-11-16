@@ -1,24 +1,19 @@
 from parameterized import parameterized
 
-from david8 import QueryBuilderProtocol, get_qb
-from david8.dialects import (
-    ClickhouseDialect,
-)
+from david8 import QueryBuilderProtocol
 from david8.expressions import Column, as_
 from david8.predicates import eq_val
 from tests.base_test import BaseTest
 
-_qb_q = get_qb(ClickhouseDialect())      # quote mode
-_qb_wq = get_qb(ClickhouseDialect(True)) # without quotes
 
 class TestSelect(BaseTest):
     @parameterized.expand([
         (
-            _qb_q,
+            BaseTest.qb,
             'SELECT name, creator AS painter, painter = %(p1)s AS is_giger FROM pictures',
         ),
         (
-            _qb_wq,
+            BaseTest.qb_w,
             'SELECT "name", "creator" AS "painter", "painter" = %(p1)s AS "is_giger" FROM "pictures"',
         )
     ])
@@ -35,11 +30,11 @@ class TestSelect(BaseTest):
 
     @parameterized.expand([
         (
-            _qb_q,
+            BaseTest.qb,
             'SELECT * FROM art.pictures',
         ),
         (
-            _qb_wq,
+            BaseTest.qb_w,
             'SELECT "*" FROM "art"."pictures"',
         )
     ])
@@ -54,12 +49,12 @@ class TestSelect(BaseTest):
 
     @parameterized.expand([
         (
-            _qb_q,
+            BaseTest.qb,
             'SELECT * FROM pictures AS virtual_table',
             'SELECT * FROM legacy_db.pictures AS virtual_db_table',
         ),
         (
-            _qb_wq,
+            BaseTest.qb_w,
             'SELECT "*" FROM "pictures" AS "virtual_table"',
             'SELECT "*" FROM "legacy_db"."pictures" AS "virtual_db_table"'
         )
@@ -83,10 +78,10 @@ class TestSelect(BaseTest):
 
     def test_select_from_query(self):
         query = (
-            _qb_q
+            BaseTest.qb
             .select('*')
             .from_query(
-                _qb_q
+                BaseTest.qb
                 .select('*')
                 .from_table('music')
                 .where(eq_val('band', 'Port-Royal')),
