@@ -1,11 +1,11 @@
 import dataclasses
 
 from .protocols.dialect import DialectProtocol
-from .protocols.sql import AsExpressionProtocol, SqlExpressionProtocol, SqlFunctionProtocol, SqlPredicateProtocol
+from .protocols.sql import AsExprProtocol, ExprProtocol, FunctionProtocol, PredicateProtocol
 
 
 @dataclasses.dataclass(slots=True)
-class Column(SqlExpressionProtocol):
+class Column(ExprProtocol):
     name: str
 
     def get_sql(self, dialect: DialectProtocol) -> str:
@@ -13,7 +13,7 @@ class Column(SqlExpressionProtocol):
 
 
 @dataclasses.dataclass(slots=True)
-class Parameter(SqlExpressionProtocol):
+class Parameter(ExprProtocol):
     value: str | int | float
 
     def get_sql(self, dialect: DialectProtocol) -> str:
@@ -22,8 +22,8 @@ class Parameter(SqlExpressionProtocol):
 
 
 @dataclasses.dataclass(slots=True)
-class _AsExpression(AsExpressionProtocol):
-    _value: str | int | float | SqlExpressionProtocol | SqlPredicateProtocol | Column | Parameter
+class _AsExpression(AsExprProtocol):
+    _value: str | int | float | ExprProtocol | PredicateProtocol | Column | Parameter
     _alias: str
 
     def get_sql(self, dialect: DialectProtocol) -> str:
@@ -37,7 +37,7 @@ class _AsExpression(AsExpressionProtocol):
 
 
 def as_(
-    value: str | int | float | SqlFunctionProtocol | SqlPredicateProtocol | Column | Parameter,
+    value: str | int | float | FunctionProtocol | PredicateProtocol | Column | Parameter,
     alias: str
-) -> AsExpressionProtocol:
+) -> AsExprProtocol:
     return _AsExpression(value, alias)

@@ -4,6 +4,9 @@ from ..protocols.dialect import DialectProtocol
 
 
 class QueryProtocol(Protocol):
+    """
+    Full SQL query
+    """
     def get_sql(self, dialect: DialectProtocol = None) -> str:
         pass
 
@@ -11,23 +14,30 @@ class QueryProtocol(Protocol):
         pass
 
 
-class SqlExpressionProtocol:
+class ExprProtocol:
+    """
+    Common SQL expression
+    """
     def get_sql(self, dialect: DialectProtocol) -> str:
         pass
 
 
-class SqlPredicateProtocol(SqlExpressionProtocol):
+class PredicateProtocol(ExprProtocol):
     pass
 
 
-class SqlFunctionProtocol(SqlExpressionProtocol):
+class FunctionProtocol(ExprProtocol):
     pass
 
 
-class AsExpressionProtocol(SqlExpressionProtocol):
-    def as_(self, value: str | int | float | SqlExpressionProtocol | SqlPredicateProtocol, alias: str):
+class AsExprProtocol(ExprProtocol):
+    # TODO: ?
+    # class AliasedProtocol(ExpressionProtocol):
+    #     def as_(self, alias: str) -> ExpressionProtocol:
+    #         pass
+    def as_(self, value: str | int | float | ExprProtocol | PredicateProtocol, alias: str):
         pass
 
 
-class SqlLogicalOperatorProtocol(SqlExpressionProtocol):
+class LogicalOperatorProtocol(ExprProtocol):
     pass

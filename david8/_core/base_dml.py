@@ -4,10 +4,10 @@ from copy import deepcopy
 from ..protocols.dialect import DialectProtocol
 from ..protocols.dml import SelectProtocol
 from ..protocols.sql import (
-    AsExpressionProtocol,
-    SqlExpressionProtocol,
-    SqlLogicalOperatorProtocol,
-    SqlPredicateProtocol,
+    AsExprProtocol,
+    ExprProtocol,
+    LogicalOperatorProtocol,
+    PredicateProtocol,
 )
 
 
@@ -16,36 +16,38 @@ class BaseSelect(SelectProtocol):
     def __init__(
         self,
         dialect: DialectProtocol,
-        select: tuple[str | AsExpressionProtocol, ...] = None,
+        select: tuple[str | AsExprProtocol, ...] = None,
         with_queries: tuple[tuple[str, SelectProtocol], ...] = None,
     ):
         self._select = select or ()
-        self._where: tuple[SqlExpressionProtocol, ...] = ()
+        self._where: tuple[ExprProtocol, ...] = ()
         self._order_by: tuple[tuple[str | int, str], ...] = ()
         self._group_by: tuple = ()
         self._with_queries = with_queries or ()
-        self._having: tuple[SqlExpressionProtocol, ...] = ()
+        self._having: tuple[ExprProtocol, ...] = ()
         # True = UNION ALL
         self._unions: tuple[tuple[str, SelectProtocol], ...] = ()  # ((True, query1), (False, query2))
 
         self._from_table = ''
         self._from_db = ''
+        self._alias = ''
         self._limit: int | None = None
         self._dialect = dialect
         self._query_parameters = deepcopy(dialect.get_paramstyle().get_parameters())
 
 
-    def select(self, *args: str | AsExpressionProtocol) -> SelectProtocol:
+    def select(self, *args: str | AsExprProtocol) -> SelectProtocol:
         self._select += args
         return self
 
-    def where(self, *args: SqlLogicalOperatorProtocol | SqlPredicateProtocol) -> SelectProtocol:
+    def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> SelectProtocol:
         self._where += args
         return self
 
-    def from_table(self, table_name: str, db_name: str = '') -> SelectProtocol:
+    def from_table(self, table_name: str, alias: str = '', db_name: str = '') -> SelectProtocol:
         self._from_db = db_name
         self._from_table = table_name
+        self._alias = alias
         return self
 
     def group_by(self, *args: str | int) -> SelectProtocol:
@@ -100,7 +102,8 @@ class BaseSelect(SelectProtocol):
             from_db = self._dialect.quote_ident(self._from_db)
             _from = f'{from_db}.{_from}'
 
-        return f' FROM {_from}'
+        alias = f' AS {self._dialect.quote_ident(self._alias)}' if self._alias else ''
+        return f' FROM {_from}{alias}'
 
     def _union_to_sql(self) -> str:
         if not self._unions:
@@ -166,6 +169,6 @@ class BaseSelect(SelectProtocol):
 
         return self
 
-    def having(self, *args: SqlPredicateProtocol | SqlLogicalOperatorProtocol) -> SelectProtocol:
+    def having(self, *args: PredicateProtocol | LogicalOperatorProtocol) -> SelectProtocol:
         self._having += args
         return self

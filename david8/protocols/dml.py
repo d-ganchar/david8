@@ -1,14 +1,14 @@
-from ..protocols.sql import AsExpressionProtocol, QueryProtocol, SqlLogicalOperatorProtocol, SqlPredicateProtocol
+from ..protocols.sql import AsExprProtocol, LogicalOperatorProtocol, PredicateProtocol, QueryProtocol
 
 
 class SelectProtocol(QueryProtocol):
-    def select(self, *args: str | AsExpressionProtocol) -> 'SelectProtocol':
+    def select(self, *args: str | AsExprProtocol) -> 'SelectProtocol':
         pass
 
-    def where(self, *args: SqlLogicalOperatorProtocol | SqlPredicateProtocol) -> 'SelectProtocol':
+    def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'SelectProtocol':
         pass
 
-    def from_table(self, table_name: str, db_name: str = '') -> 'SelectProtocol':
+    def from_table(self, table_name: str, alias: str = '', db_name: str = '') -> 'SelectProtocol':
         pass
 
     def group_by(self, *args: str | int) -> 'SelectProtocol':
@@ -26,5 +26,5 @@ class SelectProtocol(QueryProtocol):
     def union(self, *args: 'SelectProtocol', all_flag: bool = True) -> 'SelectProtocol':
         pass
 
-    def having(self, *args: SqlPredicateProtocol) -> 'SelectProtocol':
+    def having(self, *args: PredicateProtocol) -> 'SelectProtocol':
         pass

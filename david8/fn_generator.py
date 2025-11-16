@@ -2,11 +2,11 @@ import dataclasses
 
 from david8.expressions import Column, Parameter
 from david8.protocols.dialect import DialectProtocol
-from david8.protocols.sql import SqlFunctionProtocol
+from david8.protocols.sql import FunctionProtocol
 
 
 @dataclasses.dataclass(slots=True)
-class _StrArgsFunction(SqlFunctionProtocol):
+class _StrArgsFunction(FunctionProtocol):
     name: str
     args: tuple
 
@@ -27,12 +27,12 @@ class _StrArgsFunction(SqlFunctionProtocol):
 class StrArgsCallableFactory:
     name: str
 
-    def __call__(self, *args: SqlFunctionProtocol | int | float | str | Column | Parameter) -> SqlFunctionProtocol:
+    def __call__(self, *args: FunctionProtocol | int | float | str | Column | Parameter) -> FunctionProtocol:
         return _StrArgsFunction(self.name, args)
 
 
 @dataclasses.dataclass(slots=True)
-class _AggDistinctFunction(SqlFunctionProtocol):
+class _AggDistinctFunction(FunctionProtocol):
     """
     SUM(DISTINCT price)
     AVG(DISTINCT quantity)
@@ -51,5 +51,5 @@ class _AggDistinctFunction(SqlFunctionProtocol):
 class AggDistinctCallableFactory:
     name: str
 
-    def __call__(self, column: str, distinct: bool = False) -> SqlFunctionProtocol:
+    def __call__(self, column: str, distinct: bool = False) -> FunctionProtocol:
         return _AggDistinctFunction(self.name, column, distinct)

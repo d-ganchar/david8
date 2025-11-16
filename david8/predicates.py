@@ -1,12 +1,12 @@
 import dataclasses
 
 from .protocols.dialect import DialectProtocol
-from .protocols.sql import SqlExpressionProtocol, SqlPredicateProtocol
+from .protocols.sql import ExprProtocol, PredicateProtocol
 
 
 @dataclasses.dataclass(slots=True)
-class _ValSqlPredicate(SqlPredicateProtocol):
-    column: str | SqlExpressionProtocol
+class _ValPredicate(PredicateProtocol):
+    column: str | ExprProtocol
     value: int | float | str
     operator: str
     add_param: bool = True
@@ -28,7 +28,7 @@ class _ValSqlPredicate(SqlPredicateProtocol):
 
 
 @dataclasses.dataclass(slots=True)
-class _BetweenSqlPredicate(SqlPredicateProtocol):
+class _BetweenPredicate(PredicateProtocol):
     column: str
     start: str
     end: str
@@ -52,7 +52,7 @@ class _BetweenSqlPredicate(SqlPredicateProtocol):
 
 
 @dataclasses.dataclass(slots=True)
-class _IsNullSqlPredicate(SqlPredicateProtocol):
+class _IsNullPredicate(PredicateProtocol):
     column: str
     is_null: bool
 
@@ -63,7 +63,7 @@ class _IsNullSqlPredicate(SqlPredicateProtocol):
 
 
 @dataclasses.dataclass(slots=True)
-class _ColLikeSqlPredicate(SqlPredicateProtocol):
+class _ColLikePredicate(PredicateProtocol):
     column: str
     value: str
 
@@ -72,54 +72,54 @@ class _ColLikeSqlPredicate(SqlPredicateProtocol):
         return f"{column} LIKE '{self.value}'"
 
 
-def eq_val(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
-    return _ValSqlPredicate(column, value, '=')
+def eq_val(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
+    return _ValPredicate(column, value, '=')
 
-def gt_val(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
-    return _ValSqlPredicate(column, value, '>')
+def gt_val(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
+    return _ValPredicate(column, value, '>')
 
-def ge_val(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
-    return _ValSqlPredicate(column, value, '>=')
+def ge_val(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
+    return _ValPredicate(column, value, '>=')
 
-def lt_val(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
-    return _ValSqlPredicate(column, value, '<')
+def lt_val(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
+    return _ValPredicate(column, value, '<')
 
-def le_val(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
-    return _ValSqlPredicate(column, value, '<=')
+def le_val(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
+    return _ValPredicate(column, value, '<=')
 
-def ne_val(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
-    return _ValSqlPredicate(column, value, '!=')
+def ne_val(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
+    return _ValPredicate(column, value, '!=')
 
-def between_val(column: str, start: str | float | int, end: str | float | int) -> SqlPredicateProtocol:
-    return _BetweenSqlPredicate(column, start, end)
+def between_val(column: str, start: str | float | int, end: str | float | int) -> PredicateProtocol:
+    return _BetweenPredicate(column, start, end)
 
-def col_is_null(column: str, is_null: bool = True) -> SqlPredicateProtocol:
+def col_is_null(column: str, is_null: bool = True) -> PredicateProtocol:
     """
     is_null=False => IS NOT NULL
     """
-    return _IsNullSqlPredicate(column, is_null)
+    return _IsNullPredicate(column, is_null)
 
-def col_like(column: str, value: str) -> SqlPredicateProtocol:
-    return _ColLikeSqlPredicate(column, value)
+def col_like(column: str, value: str) -> PredicateProtocol:
+    return _ColLikePredicate(column, value)
 
 
-def eq(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
-    return _ValSqlPredicate(column, value, '=', False)
+def eq(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
+    return _ValPredicate(column, value, '=', False)
 
-def gt(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
-    return _ValSqlPredicate(column, value, '>', False)
+def gt(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
+    return _ValPredicate(column, value, '>', False)
 
-def ge(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
-    return _ValSqlPredicate(column, value, '>=', False)
+def ge(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
+    return _ValPredicate(column, value, '>=', False)
 
-def lt(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
-    return _ValSqlPredicate(column, value, '<', False)
+def lt(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
+    return _ValPredicate(column, value, '<', False)
 
-def le(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
-    return _ValSqlPredicate(column, value, '<=', False)
+def le(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
+    return _ValPredicate(column, value, '<=', False)
 
-def ne(column: str | SqlExpressionProtocol, value: int | float | str) -> SqlPredicateProtocol:
-    return _ValSqlPredicate(column, value, '!=', False)
+def ne(column: str | ExprProtocol, value: int | float | str) -> PredicateProtocol:
+    return _ValPredicate(column, value, '!=', False)
 
-def between(column: str, start: str | float | int, end: str | float | int) -> SqlPredicateProtocol:
-    return _BetweenSqlPredicate(column, start, end, False)
+def between(column: str, start: str | float | int, end: str | float | int) -> PredicateProtocol:
+    return _BetweenPredicate(column, start, end, False)
