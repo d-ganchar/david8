@@ -48,7 +48,6 @@ dev = [
     "pypika>=0.48.9",
     "peewee>=3.18.3",
     "psrecord>=1.4",
-    "pandas>=2.3.3",
     "rich>=14.2.0",
     "pytest-cov>=7.0.0",
 ]
