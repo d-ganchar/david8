@@ -1,3 +1,3 @@
-from david8.fn_generator import StrArgsCallableFactory
+from david8.core.fn_generator import StrArgsCallableFactory as _StrArgsCallableFactory
 
-concat = StrArgsCallableFactory('concat')
+concat = _StrArgsCallableFactory('concat')

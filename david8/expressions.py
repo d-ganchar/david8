@@ -1,32 +1,14 @@
-from .core.base_aliased import BaseAliased
-from .protocols.dialect import DialectProtocol
+from david8.core.base_aliased import Column as _Column
+from david8.core.base_aliased import Parameter as _Parameter
+from david8.core.base_aliased import Value as _Value
+from david8.protocols.sql import AliasedProtocol
 
 
-class Column(BaseAliased):
-    def __init__(self, name: str) -> None:
-        super().__init__()
-        self._name = name
+def val(value: str | int | float) -> AliasedProtocol:
+    return _Value(value)
 
-    def _get_sql(self, dialect: DialectProtocol) -> str:
-        return f'{dialect.quote_ident(self._name)}'
+def col(name: str) -> _Column:
+    return _Column(name)
 
-
-class Parameter(BaseAliased):
-    def __init__(self, value: str | int | float) -> None:
-        super().__init__()
-        self._value = value
-
-    def _get_sql(self, dialect: DialectProtocol) -> str:
-        value = dialect.get_paramstyle().add_param(self._value)
-        return value
-
-
-class Value(BaseAliased):
-    def __init__(self, value: str | int | float) -> None:
-        super().__init__()
-        self._value = value
-
-    def _get_sql(self, dialect: DialectProtocol) -> str:
-        if isinstance(self._value, str):
-            return f"'{self._value}'"
-        return f'{self._value}'
+def param(value: str | int | float, fixed_name: bool = False) -> _Parameter:
+    return _Parameter(value, fixed_name)

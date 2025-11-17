@@ -88,7 +88,6 @@ source = { editable = "." }
 [package.dev-dependencies]
 dev = [
     { name = "parameterized" },
-    { name = "peewee" },
     { name = "psrecord" },
     { name = "pypika" },
     { name = "pytest" },
@@ -104,7 +103,6 @@ dev = [
 [package.metadata.requires-dev]
 dev = [
     { name = "parameterized" },
-    { name = "peewee", specifier = ">=3.18.3" },
     { name = "psrecord", specifier = ">=1.4" },
     { name = "pypika", specifier = ">=0.48.9" },
     { name = "pytest" },
@@ -203,12 +201,6 @@ sdist = { url = "https://files.pythonhosted.org/packages/ea/49/00c0c0cc24ff42660
 wheels = [
     { url = "https://files.pythonhosted.org/packages/00/2f/804f58f0b856ab3bf21617cccf5b39206e6c4c94c2cd227bde125ea6105f/parameterized-0.9.0-py2.py3-none-any.whl", hash = "sha256:4e0758e3d41bea3bbd05ec14fc2c24736723f243b28d702081aef438c9372b1b", size = 20475 },
 ]
-
-[[package]]
-name = "peewee"
-version = "3.18.3"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/6f/60/58e7a307a24044e0e982b99042fcd5a58d0cd928d9c01829574d7553ee8d/peewee-3.18.3.tar.gz", hash = "sha256:62c3d93315b1a909360c4b43c3a573b47557a1ec7a4583a71286df2a28d4b72e", size = 3026296 }
 
 [[package]]
 name = "pluggy"

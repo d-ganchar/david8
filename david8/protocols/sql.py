@@ -27,6 +27,10 @@ class AliasedProtocol(ExprProtocol):
         pass
 
 
+class ParameterProtocol(AliasedProtocol):
+    pass
+
+
 class PredicateProtocol(AliasedProtocol):
     pass
 

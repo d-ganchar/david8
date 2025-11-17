@@ -1,7 +1,7 @@
 from parameterized import parameterized
 
 from david8 import QueryBuilderProtocol
-from david8.expressions import Column, Parameter
+from david8.expressions import col, param
 from david8.functions import concat
 from tests.base_test import BaseTest
 
@@ -28,19 +28,19 @@ class TestFunctions(BaseTest):
             .select(
                 concat(
                     'static-value1',
-                    Column('col1'),
-                    Parameter('value1'),
+                    col('col1'),
+                    param('value1'),
                     1,
                     1.5,
                     concat(
                         'static-value2',
-                        Column('col2'),
-                        Parameter('value2'),
+                        col('col2'),
+                        param('value2'),
                         2,
                         2.5,
                     ),
                 ),
-                concat(Column('col3'), Parameter('value3'), 'static-value3').as_('alias')
+                concat(col('col3'), param('value3'), 'static-value3').as_('alias')
             )
             .from_table('test')
         )

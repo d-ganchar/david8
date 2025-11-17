@@ -4,7 +4,7 @@ from ..protocols.dialect import DialectProtocol
 from ..protocols.dml import SelectProtocol
 from ..protocols.query_builder import QueryBuilderProtocol
 from ..protocols.sql import AliasedProtocol, ExprProtocol, FunctionProtocol
-from .base_dml import BaseSelect
+from .base_dml import BaseSelect as _BaseSelect
 
 
 @dataclass(slots=True)
@@ -13,7 +13,7 @@ class BaseQueryBuilder(QueryBuilderProtocol):
         self._dialect = dialect
 
     def select(self, *args: str | AliasedProtocol | ExprProtocol | FunctionProtocol) -> SelectProtocol:
-        return BaseSelect(select=args, dialect=self._dialect)
+        return _BaseSelect(select=args, dialect=self._dialect)
 
     def with_(self, *args: tuple[str, SelectProtocol]) -> SelectProtocol:
-        return BaseSelect(with_queries=args, dialect=self._dialect)
+        return _BaseSelect(with_queries=args, dialect=self._dialect)

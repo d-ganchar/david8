@@ -1,7 +1,7 @@
 [project]
 name = "david8"
 version = "0.dev.0"
-description = "Lightweight Python SQL query builder with support for multiple dialects: ClickHouse, DuckDB, Postgres, MySQL and SQLite."
+description = "Lightweight Python SQL query builder with support for multiple dialects: ClickHouse, DuckDB and Postgres"
 authors = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
 maintainers = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
 license = {text = "MIT license"}
@@ -50,7 +50,6 @@ dev = [
     "pytest-benchmark",
     "sqlalchemy>=2.0.44",
     "pypika>=0.48.9",
-    "peewee>=3.18.3",
     "psrecord>=1.4",
     "rich>=14.2.0",
     "pytest-cov>=7.0.0",

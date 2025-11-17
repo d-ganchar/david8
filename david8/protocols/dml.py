@@ -20,7 +20,7 @@ class JoinProtocol(ExprProtocol):
 
 
 class SelectProtocol(QueryProtocol):
-    def select(self, *args: [str | AliasedProtocol | ExprProtocol | FunctionProtocol, ...]) -> 'SelectProtocol':
+    def select(self, *args: str | AliasedProtocol | ExprProtocol | FunctionProtocol) -> 'SelectProtocol':
         pass
 
     def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'SelectProtocol':

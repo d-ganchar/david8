@@ -16,3 +16,7 @@ class BaseDialect(DialectProtocol):
 
     def get_paramstyle(self) -> ParamStyleProtocol:
         return self._param_style
+
+    def is_quote_mode(self) -> bool:
+        return self._is_quote_mode
+

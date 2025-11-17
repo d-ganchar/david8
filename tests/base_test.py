@@ -3,13 +3,12 @@ import unittest
 from david8 import get_qb
 from david8.core.base_dialect import BaseDialect
 from david8.param_styles import PyFormatParamStyle
-from david8.protocols.dialect import ParamStyleProtocol
 
 
 class _TestDialect(BaseDialect):
-    def __init__(self, is_quote_mode: bool = False, param_style: ParamStyleProtocol = None):
+    def __init__(self, is_quote_mode: bool = False):
         self._is_quote_mode = is_quote_mode
-        self._param_style = param_style or PyFormatParamStyle()
+        self._param_style = PyFormatParamStyle()
 
 
 class BaseTest(unittest.TestCase):

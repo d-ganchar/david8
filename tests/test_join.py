@@ -23,7 +23,7 @@ class TestJoin(BaseTest):
             .select('*')
             .from_table('users', 'u')
             .join(left().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o')),
-            'SELECT "*" FROM "users" AS "u" LEFT JOIN "orders" AS "o" ON ("o.user_id" = "u.id")'
+            'SELECT "*" FROM "users" AS "u" LEFT JOIN "orders" AS "o" ON ("o"."user_id" = "u"."id")'
         ),
         # right
         (
@@ -40,7 +40,7 @@ class TestJoin(BaseTest):
             .select('*')
             .from_table('users', 'u')
             .join(right().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o')),
-            'SELECT "*" FROM "users" AS "u" RIGHT JOIN "orders" AS "o" ON ("o.user_id" = "u.id")'
+            'SELECT "*" FROM "users" AS "u" RIGHT JOIN "orders" AS "o" ON ("o"."user_id" = "u"."id")'
         ),
         # inner
         (
@@ -57,7 +57,7 @@ class TestJoin(BaseTest):
             .select('*')
             .from_table('users', 'u')
             .join(inner().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o')),
-            'SELECT "*" FROM "users" AS "u" INNER JOIN "orders" AS "o" ON ("o.user_id" = "u.id")'
+            'SELECT "*" FROM "users" AS "u" INNER JOIN "orders" AS "o" ON ("o"."user_id" = "u"."id")'
         ),
     ])
     def test_simple_join_on(self, query: QueryProtocol, exp_sql: str):

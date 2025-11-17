@@ -3,7 +3,13 @@ from copy import deepcopy
 
 from ..protocols.dialect import DialectProtocol
 from ..protocols.dml import JoinProtocol, SelectProtocol
-from ..protocols.sql import AliasedProtocol, ExprProtocol, FunctionProtocol, LogicalOperatorProtocol, PredicateProtocol
+from ..protocols.sql import (
+    AliasedProtocol,
+    ExprProtocol,
+    FunctionProtocol,
+    LogicalOperatorProtocol,
+    PredicateProtocol,
+)
 from .base_join import BaseJoin
 
 
@@ -34,7 +40,7 @@ class BaseSelect(SelectProtocol):
         self._query_parameters = deepcopy(dialect.get_paramstyle().get_parameters())
 
 
-    def select(self, *args: [str | AliasedProtocol | ExprProtocol | FunctionProtocol, ...]) -> SelectProtocol:
+    def select(self, *args: str | AliasedProtocol | ExprProtocol | FunctionProtocol) -> SelectProtocol:
         self._select += args
         return self
 

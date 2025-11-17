@@ -1,7 +1,6 @@
 import dataclasses
 
-from david8.core.base_aliased import BaseAliased
-from david8.expressions import Column, Parameter
+from david8.core.base_aliased import BaseAliased, Column, Parameter
 from david8.protocols.dialect import DialectProtocol
 from david8.protocols.sql import FunctionProtocol
 

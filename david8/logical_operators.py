@@ -1,7 +1,7 @@
 import dataclasses
 from typing import Union
 
-from .protocols.dialect import DialectProtocol as _DialectProtocol
+from .protocols.dialect import DialectProtocol
 from .protocols.sql import ExprProtocol, LogicalOperatorProtocol
 
 
@@ -10,7 +10,7 @@ class _LogicalOperator(LogicalOperatorProtocol):
     _name: str
     _conditions: Union[ExprProtocol, 'LogicalOperatorProtocol', ...]
 
-    def get_sql(self, dialect: _DialectProtocol) -> str:
+    def get_sql(self, dialect: DialectProtocol) -> str:
         conditions = f' {self._name} '.join(c.get_sql(dialect) for c in self._conditions)
         return f'({conditions})'
 
