@@ -118,10 +118,10 @@ jobs:
 
       - name: Benchmarks ${{ matrix.python-version }}
         run: |
-          psrecord "python3 benchmarks/simple_select_david8.py" --interval 0.001 --include-children > psrecord_reports/david8.txt 2>&1
-          psrecord "python3 benchmarks/simple_select_pypika.py" --interval 0.001 --include-children > psrecord_reports/pypika.txt 2>&1
-          psrecord "python3 benchmarks/simple_select_sqlalchemy.py" --interval 0.001 --include-children > psrecord_reports/sqlalchemy.txt 2>&1
           pytest --benchmark-only benchmarks/test_select_benchmarks.py --color=yes
+          psrecord "python3 benchmarks/select_david8.py" --interval 0.001 --include-children > psrecord_reports/david8.txt 2>&1
+          psrecord "python3 benchmarks/select_pypika.py" --interval 0.001 --include-children > psrecord_reports/pypika.txt 2>&1
+          psrecord "python3 benchmarks/select_sqlalchemy.py" --interval 0.001 --include-children > psrecord_reports/sqlalchemy.txt 2>&1
           python psrecord_report.py
         env:
           TERM: xterm-256color
