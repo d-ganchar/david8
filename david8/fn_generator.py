@@ -1,16 +1,18 @@
 import dataclasses
 
+from david8.core.base_aliased import BaseAliased
 from david8.expressions import Column, Parameter
 from david8.protocols.dialect import DialectProtocol
 from david8.protocols.sql import FunctionProtocol
 
 
-@dataclasses.dataclass(slots=True)
-class _StrArgsFunction(FunctionProtocol):
-    name: str
-    args: tuple
+class _StrArgsFunction(FunctionProtocol, BaseAliased):
+    def __init__(self, name: str, args: tuple) -> None:
+        super().__init__()
+        self.name = name
+        self.args = args
 
-    def get_sql(self, dialect: DialectProtocol) -> str:
+    def _get_sql(self, dialect: DialectProtocol) -> str:
         items = ()
 
         for item in self.args:

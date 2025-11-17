@@ -1,5 +1,5 @@
 from .core.base_dialect import BaseDialect
-from .param_styles import QMarkParamStyle, FormatParamStyle, NamedParamStyle, PyFormatParamStyle
+from .param_styles import FormatParamStyle, NamedParamStyle, PyFormatParamStyle, QMarkParamStyle
 from .protocols.dialect import ParamStyleProtocol
 
 

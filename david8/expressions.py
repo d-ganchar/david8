@@ -1,43 +1,32 @@
-import dataclasses
-
+from .core.base_aliased import BaseAliased
 from .protocols.dialect import DialectProtocol
-from .protocols.sql import AsExprProtocol, ExprProtocol, FunctionProtocol, PredicateProtocol
 
 
-@dataclasses.dataclass(slots=True)
-class Column(ExprProtocol):
-    name: str
+class Column(BaseAliased):
+    def __init__(self, name: str) -> None:
+        super().__init__()
+        self._name = name
 
-    def get_sql(self, dialect: DialectProtocol) -> str:
-        return f'{dialect.quote_ident(self.name)}'
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        return f'{dialect.quote_ident(self._name)}'
 
 
-@dataclasses.dataclass(slots=True)
-class Parameter(ExprProtocol):
-    value: str | int | float
+class Parameter(BaseAliased):
+    def __init__(self, value: str | int | float) -> None:
+        super().__init__()
+        self._value = value
 
-    def get_sql(self, dialect: DialectProtocol) -> str:
-        value = dialect.get_paramstyle().add_param(self.value)
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        value = dialect.get_paramstyle().add_param(self._value)
         return value
 
 
-@dataclasses.dataclass(slots=True)
-class _AsExpression(AsExprProtocol):
-    _value: str | int | float | ExprProtocol | PredicateProtocol | Column | Parameter
-    _alias: str
+class Value(BaseAliased):
+    def __init__(self, value: str | int | float) -> None:
+        super().__init__()
+        self._value = value
 
-    def get_sql(self, dialect: DialectProtocol) -> str:
-        alias = dialect.quote_ident(self._alias)
+    def _get_sql(self, dialect: DialectProtocol) -> str:
         if isinstance(self._value, str):
-            return f"'{self._value}' AS {alias}"
-        elif isinstance(self._value, int | float):
-            return f'{self._value} AS {alias}'
-
-        return f'{self._value.get_sql(dialect)} AS {alias}'
-
-
-def as_(
-    value: str | int | float | FunctionProtocol | PredicateProtocol | Column | Parameter,
-    alias: str
-) -> AsExprProtocol:
-    return _AsExpression(value, alias)
+            return f"'{self._value}'"
+        return f'{self._value}'

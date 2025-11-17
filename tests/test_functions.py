@@ -1,8 +1,7 @@
 from parameterized import parameterized
 
-from david8 import QueryBuilderProtocol, get_qb
-from david8.dialects import ClickhouseDialect
-from david8.expressions import Column, Parameter, as_
+from david8 import QueryBuilderProtocol
+from david8.expressions import Column, Parameter
 from david8.functions import concat
 from tests.base_test import BaseTest
 
@@ -41,10 +40,7 @@ class TestFunctions(BaseTest):
                         2.5,
                     ),
                 ),
-                as_(
-                    concat(Column('col3'), Parameter('value3'), 'static-value3'),
-                    'alias'
-                ),
+                concat(Column('col3'), Parameter('value3'), 'static-value3').as_('alias')
             )
             .from_table('test')
         )

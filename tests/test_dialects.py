@@ -8,7 +8,7 @@ from david8.dialects import (
     PostgresDialect,
     SqliteDialect,
 )
-from david8.param_styles import NumericParamStyle, QMarkParamStyle, FormatParamStyle
+from david8.param_styles import FormatParamStyle, NumericParamStyle, QMarkParamStyle
 from david8.predicates import eq_val
 from tests.base_test import BaseTest
 

@@ -1,5 +1,5 @@
-from ..protocols.sql import AsExprProtocol, LogicalOperatorProtocol, PredicateProtocol, QueryProtocol
-from .sql import ExprProtocol
+from ..protocols.sql import AliasedProtocol, LogicalOperatorProtocol, PredicateProtocol, QueryProtocol
+from .sql import ExprProtocol, FunctionProtocol
 
 
 class JoinProtocol(ExprProtocol):
@@ -15,9 +15,12 @@ class JoinProtocol(ExprProtocol):
     def as_(self, alias: str) -> 'JoinProtocol':
         return self
 
+    def using(self, *args: str) -> 'JoinProtocol':
+        pass
+
 
 class SelectProtocol(QueryProtocol):
-    def select(self, *args: str | AsExprProtocol) -> 'SelectProtocol':
+    def select(self, *args: [str | AliasedProtocol | ExprProtocol | FunctionProtocol, ...]) -> 'SelectProtocol':
         pass
 
     def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'SelectProtocol':

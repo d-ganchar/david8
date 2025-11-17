@@ -1,39 +1,48 @@
 import dataclasses
 
+from .core.base_aliased import BaseAliased
 from .protocols.dialect import DialectProtocol
 from .protocols.sql import ExprProtocol, PredicateProtocol
 
 
-@dataclasses.dataclass(slots=True)
-class _ValPredicate(PredicateProtocol):
-    column: str | ExprProtocol
-    value: int | float | str
-    operator: str
-    add_param: bool = True
+class _ValPredicate(PredicateProtocol, BaseAliased):
+    def __init__(
+        self,
+        column: str | ExprProtocol,
+        value: int | float | str,
+        operator: str,
+        add_param: bool = True
+    ) -> None:
+        super().__init__()
+        self._column = column
+        self._value = value
+        self._operator = operator
+        self._add_param = add_param
 
-    def get_sql(self, dialect: DialectProtocol) -> str:
-        if self.add_param:
-            placeholder = dialect.get_paramstyle().add_param(self.value)
-        elif isinstance(self.value, str):
-            placeholder = f"'{self.value}'"
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        if self._add_param:
+            placeholder = dialect.get_paramstyle().add_param(self._value)
+        elif isinstance(self._value, str):
+            placeholder = f"'{self._value}'"
         else:
-            placeholder = self.value
+            placeholder = self._value
 
-        if isinstance(self.column, str):
-            col = dialect.quote_ident(self.column)
+        if isinstance(self._column, str):
+            col = dialect.quote_ident(self._column)
         else:
-            col = self.column.get_sql(dialect)
+            col = self._column.get_sql(dialect)
 
-        return f'{col} {self.operator} {placeholder}'
+        return f'{col} {self._operator} {placeholder}'
 
 
-@dataclasses.dataclass(slots=True)
-class _ColPredicate(PredicateProtocol):
-    _left_column: str
-    _right_column: str
-    _operator: str
+class _ColPredicate(PredicateProtocol, BaseAliased):
+    def __init__(self, left_column: str, right_column: str, operator: str) -> None:
+        super().__init__()
+        self._left_column = left_column
+        self._right_column = right_column
+        self._operator = operator
 
-    def get_sql(self, dialect: DialectProtocol) -> str:
+    def _get_sql(self, dialect: DialectProtocol) -> str:
         left_col = dialect.quote_ident(self._left_column)
         right_col = dialect.quote_ident(self._right_column)
         return f'{left_col} {self._operator} {right_col}'

@@ -1,4 +1,4 @@
-from typing import Protocol
+from typing import Protocol, Self
 
 from ..protocols.dialect import DialectProtocol
 
@@ -22,21 +22,17 @@ class ExprProtocol:
         pass
 
 
-class PredicateProtocol(ExprProtocol):
-    pass
-
-
-class FunctionProtocol(ExprProtocol):
-    pass
-
-
-class AsExprProtocol(ExprProtocol):
-    # TODO: ?
-    # class AliasedProtocol(ExpressionProtocol):
-    #     def as_(self, alias: str) -> ExpressionProtocol:
-    #         pass
-    def as_(self, value: str | int | float | ExprProtocol | PredicateProtocol, alias: str):
+class AliasedProtocol(ExprProtocol):
+    def as_(self, alias: str) -> Self:
         pass
+
+
+class PredicateProtocol(AliasedProtocol):
+    pass
+
+
+class FunctionProtocol(AliasedProtocol):
+    pass
 
 
 class LogicalOperatorProtocol(ExprProtocol):

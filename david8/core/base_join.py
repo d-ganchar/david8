@@ -7,14 +7,17 @@ from ..protocols.sql import LogicalOperatorProtocol, PredicateProtocol
 
 @dataclasses.dataclass(slots=True)
 class BaseJoin(JoinProtocol):
-    _join_type: str
-    _on: [LogicalOperatorProtocol | PredicateProtocol, ...] = dataclasses.field(default_factory=tuple)
     _alias: str = ''
-    _from: tuple[str, str] | SelectProtocol = dataclasses.field(default_factory=tuple)  # ('table', 'db') | Query
+
+    def __init__(self, join_type: str):
+        self._join_type = join_type
+        self._on: tuple[LogicalOperatorProtocol | PredicateProtocol, ...] = ()
+        self._using: tuple[str, ...] = ()
+        self._from: tuple | [str, str] | SelectProtocol = ()  # ('table', 'db',) or Query
+        self._alias = ''
 
     def get_sql(self, dialect: DialectProtocol) -> str:
-        on = f"{' AND '.join(on.get_sql(dialect) for on in self._on)}"
-        alias = f' AS {self._alias}' if self._alias else ''
+        alias = f' AS {dialect.quote_ident(self._alias)}' if self._alias else ''
         if isinstance(self._from, SelectProtocol):
             source = self._from.get_sql(dialect)
         else:
@@ -23,10 +26,16 @@ class BaseJoin(JoinProtocol):
             if db:
                 source = '.'.join([source, dialect.quote_ident(db)])
 
-        return f'{self._join_type} JOIN {source}{alias} ON ({on})'
+        if self._using:
+            using = ', '.join([dialect.quote_ident(u) for u in self._using])
+            return f'{self._join_type} {source}{alias} USING ({using})'
+
+        on = f"{' AND '.join(on.get_sql(dialect) for on in self._on)}"
+        return f'{self._join_type} {source}{alias} ON ({on})'
 
     def on(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'JoinProtocol':
         self._on += args
+        self._using = ()
         return self
 
     def table(self, name: str, db: str = '') -> 'JoinProtocol':
@@ -39,4 +48,9 @@ class BaseJoin(JoinProtocol):
 
     def as_(self, alias: str) -> JoinProtocol:
         self._alias = alias
+        return self
+
+    def using(self, *args: str) -> 'JoinProtocol':
+        self._using = args
+        self._on = ()
         return self
