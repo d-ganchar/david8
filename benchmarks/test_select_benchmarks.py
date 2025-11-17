@@ -39,9 +39,6 @@ def run_pypika():
     generate_sql()
 
 
-ROUNDS = 20
-ITERATIONS = 1000
-
 def run_benchmark(benchmark, fn: Callable):
     benchmark.pedantic(
         lambda: fn(),
