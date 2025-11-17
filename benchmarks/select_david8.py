@@ -1,7 +1,7 @@
 from david8 import get_qb
-from david8.agg_functions import max_, min_, sum_
 from david8.core.base_dialect import BaseDialect
 from david8.expressions import col
+from david8.functions import max_, min_, sum_
 from david8.joins import left, inner, right
 from david8.param_styles import PyFormatParamStyle
 from david8.predicates import eq_col, eq
@@ -9,8 +9,7 @@ from david8.predicates import eq_col, eq
 
 class _TestDialect(BaseDialect):
     def __init__(self):
-        self._is_quote_mode = False
-        self._param_style = PyFormatParamStyle()
+        super().__init__(PyFormatParamStyle(), False)
 
 
 def generate_sql():
