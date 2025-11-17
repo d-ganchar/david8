@@ -1,4 +1,4 @@
-from typing import Protocol, Self
+from typing import Any, Protocol, Self
 
 from ..protocols.dialect import DialectProtocol
 
@@ -10,7 +10,13 @@ class QueryProtocol(Protocol):
     def get_sql(self, dialect: DialectProtocol = None) -> str:
         pass
 
-    def get_parameters(self) -> list | dict:
+    def get_parameters(self) -> dict:
+        pass
+
+    def get_list_parameters(self) -> list[Any]:
+        pass
+
+    def get_tuple_parameters(self) -> tuple[Any]:
         pass
 
 

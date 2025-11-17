@@ -10,7 +10,6 @@ from ..protocols.sql import (
     LogicalOperatorProtocol,
     PredicateProtocol,
 )
-from .base_join import BaseJoin
 
 
 @dataclasses.dataclass(slots=True)
@@ -190,7 +189,7 @@ class BaseSelect(SelectProtocol):
 
         return sql
 
-    def get_parameters(self) -> list | dict:
+    def get_parameters(self) -> dict:
         return self._dialect.get_paramstyle().get_parameters()
 
     def get_list_parameters(self) -> list[Any]:
@@ -219,17 +218,6 @@ class BaseSelect(SelectProtocol):
 
     def having(self, *args: PredicateProtocol | LogicalOperatorProtocol) -> SelectProtocol:
         self._having += args
-        return self
-
-    def _join_table(
-        self,
-        join_type: str,
-        table: str,
-        on: list[LogicalOperatorProtocol | PredicateProtocol],
-        alias: str = '',
-        db_name: str = '',
-    ) -> SelectProtocol:
-        self._joins += (BaseJoin(join_type, on, alias, (table, db_name,)), )
         return self
 
     def join(self, join: JoinProtocol) -> SelectProtocol:
