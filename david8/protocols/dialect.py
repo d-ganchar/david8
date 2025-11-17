@@ -1,11 +1,19 @@
-from typing import Protocol
+from typing import Any, Protocol
 
 
 class ParamStyleProtocol(Protocol):
     def add_param(self, value: int | str | float | None) -> tuple[str, str]:
+        """
+        Returns param key and placeholder
+        """
+
+    def get_parameters(self) -> dict[str, Any]:
         pass
 
-    def get_parameters(self) -> dict | list | tuple:
+    def get_list_parameters(self) -> list:
+        pass
+
+    def get_tuple_parameters(self) -> tuple:
         pass
 
     def reset_parameters(self):

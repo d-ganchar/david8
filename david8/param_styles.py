@@ -2,46 +2,31 @@ from david8.core.base_params import BaseParams
 
 
 class NumericParamStyle(BaseParams):
-    def _render_param(self, key: str) -> str:
-        return f'${key}'
-
-    def get_parameters(self) -> list:
-        return list(self._params_bag.values())
+    def _render_param(self, param_index: str) -> str:
+        return f'${param_index}'
 
 
 class QMarkParamStyle(BaseParams):
-    def _render_param(self, key: str) -> str:
+    def _render_param(self, param_index: str) -> str:
         return '?'
-
-    def get_parameters(self) -> list:
-        return list(self._params_bag.values())
 
 
 class FormatParamStyle(BaseParams):
-    def _render_param(self, key: str) -> str:
+    def _render_param(self, param_index: str) -> str:
         return '%s'
-
-    def get_parameters(self) -> tuple:
-        return tuple(self._params_bag.values())
 
 
 class NamedParamStyle(BaseParams):
-    def _render_param(self, key: str) -> str:
-        return f':p{key}'
+    def _render_param(self, param_index: str) -> str:
+        return f':p{param_index}'
 
-    def get_parameters(self) -> dict:
-        return {
-            f'p{key}': value
-            for key, value in self._params_bag.items()
-        }
+    def _create_param_key(self, param_index: str) -> str:
+        return f'p{param_index}'
 
 
 class PyFormatParamStyle(BaseParams):
-    def _render_param(self, key: str) -> str:
-        return f'%(p{key})s'
+    def _render_param(self, param_index: str) -> str:
+        return f'%(p{param_index})s'
 
-    def get_parameters(self) -> dict:
-        return {
-            f'p{key}': value
-            for key, value in self._params_bag.items()
-        }
+    def _create_param_key(self, param_index: str) -> str:
+        return f'p{param_index}'

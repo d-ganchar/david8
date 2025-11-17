@@ -1,3 +1,5 @@
+from typing import Any
+
 from ..protocols.sql import AliasedProtocol, LogicalOperatorProtocol, PredicateProtocol, QueryProtocol
 from .sql import ExprProtocol, FunctionProtocol
 
@@ -51,4 +53,10 @@ class SelectProtocol(QueryProtocol):
         pass
 
     def join(self, join: JoinProtocol) -> 'SelectProtocol':
+        pass
+
+    def get_list_parameters(self) -> list[Any]:
+        pass
+
+    def get_tuple_parameters(self) -> tuple[Any]:
         pass

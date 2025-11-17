@@ -1,6 +1,16 @@
 from parameterized import parameterized
 
+from david8 import get_qb
+from david8.core.base_dialect import BaseDialect
+from david8.core.base_params import BaseParams
 from david8.expressions import col, param, val
+from david8.param_styles import (
+    FormatParamStyle,
+    NamedParamStyle,
+    NumericParamStyle,
+    PyFormatParamStyle,
+    QMarkParamStyle,
+)
 from david8.protocols.sql import QueryProtocol
 from tests.base_test import BaseTest
 
@@ -74,3 +84,43 @@ class TestExpressions(BaseTest):
     ])
     def test_val(self, query: QueryProtocol, exp_sql: str):
         self.assertEqual(query.get_sql(), exp_sql)
+
+    @parameterized.expand([
+        (
+            NumericParamStyle(),
+            'SELECT $1, $2, $3',
+            {'1': 'p_name', '2': 2, '3': 0.5},
+            ['p_name', 2, 0.5],
+        ),
+        (
+            QMarkParamStyle(),
+            'SELECT ?, ?, ?',
+            {'1': 'p_name', '2': 2, '3': 0.5},
+            ['p_name', 2, 0.5],
+        ),
+        (
+            FormatParamStyle(),
+            'SELECT %s, %s, %s',
+            {'1': 'p_name', '2': 2, '3': 0.5},
+            ['p_name', 2, 0.5],
+        ),
+        (
+            NamedParamStyle(),
+            'SELECT :p1, :p2, :p3',
+            {'p1': 'p_name', 'p2': 2, 'p3': 0.5},
+            ['p_name', 2, 0.5],
+        ),
+        (
+            PyFormatParamStyle(),
+            'SELECT %(p1)s, %(p2)s, %(p3)s',
+            {'p1': 'p_name', 'p2': 2, 'p3': 0.5},
+            ['p_name', 2, 0.5],
+        ),
+    ])
+    def test_param_styles(self, style: BaseParams, exp_sql: str, exp_dict_params: dict, exp_list_params: list):
+        query = get_qb(BaseDialect(style)).select(param('p_name'), param(2), param(0.5))
+
+        self.assertEqual(query.get_sql(), exp_sql)
+        self.assertEqual(query.get_parameters(), exp_dict_params)
+        self.assertEqual(query.get_list_parameters(), exp_list_params)
+        self.assertEqual(query.get_tuple_parameters(), tuple(exp_list_params))

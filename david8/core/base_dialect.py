@@ -5,8 +5,9 @@ from ..protocols.dialect import DialectProtocol, ParamStyleProtocol
 
 @dataclasses.dataclass(slots=True)
 class BaseDialect(DialectProtocol):
-    _param_style: ParamStyleProtocol
-    _is_quote_mode: bool = False
+    def __init__(self, param_style: ParamStyleProtocol, is_quote_mode: bool = False):
+        self._param_style = param_style
+        self._is_quote_mode = is_quote_mode
 
     def quote_ident(self, name: str) -> str:
         if self._is_quote_mode:

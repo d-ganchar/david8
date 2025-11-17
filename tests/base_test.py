@@ -5,14 +5,8 @@ from david8.core.base_dialect import BaseDialect
 from david8.param_styles import PyFormatParamStyle
 
 
-class _TestDialect(BaseDialect):
-    def __init__(self, is_quote_mode: bool = False):
-        self._is_quote_mode = is_quote_mode
-        self._param_style = PyFormatParamStyle()
-
-
 class BaseTest(unittest.TestCase):
     maxDiff = 1500
 
-    qb = get_qb(_TestDialect())        # without quotes
-    qb_w = get_qb(_TestDialect(True))  # with quotes
+    qb = get_qb(BaseDialect(PyFormatParamStyle()))          # without quotes
+    qb_w = get_qb(BaseDialect(PyFormatParamStyle(), True))  # with quotes

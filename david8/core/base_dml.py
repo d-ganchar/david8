@@ -1,5 +1,5 @@
 import dataclasses
-from copy import deepcopy
+from typing import Any
 
 from ..protocols.dialect import DialectProtocol
 from ..protocols.dml import JoinProtocol, SelectProtocol
@@ -37,7 +37,6 @@ class BaseSelect(SelectProtocol):
         self._alias = ''
         self._limit: int | None = None
         self._dialect = dialect
-        self._query_parameters = deepcopy(dialect.get_paramstyle().get_parameters())
 
 
     def select(self, *args: str | AliasedProtocol | ExprProtocol | FunctionProtocol) -> SelectProtocol:
@@ -189,11 +188,16 @@ class BaseSelect(SelectProtocol):
         limit = f' LIMIT {self._limit}' if self._limit else ''
         sql = f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{limit}{union}'
 
-        self._query_parameters = deepcopy(self._dialect.get_paramstyle().get_parameters())
         return sql
 
     def get_parameters(self) -> list | dict:
-        return deepcopy(self._query_parameters)
+        return self._dialect.get_paramstyle().get_parameters()
+
+    def get_list_parameters(self) -> list[Any]:
+        return self._dialect.get_paramstyle().get_list_parameters()
+
+    def get_tuple_parameters(self) -> tuple[Any]:
+        return self._dialect.get_paramstyle().get_tuple_parameters()
 
     def _add_to_order_by(self, *args: str | int, desc: bool = False):
         for arg in args:
