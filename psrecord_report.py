@@ -1,4 +1,6 @@
 import codecs
+from os import listdir
+from os.path import isfile, join
 
 from rich.console import Console
 from rich.table import Table
@@ -6,9 +8,11 @@ from rich.table import Table
 
 def get_report_data():
     results = []
+    report_dir = './psrecord_reports/'
+    files = [f for f in listdir(report_dir) if isfile(join(report_dir, f)) and f.endswith('.txt')]
 
-    for filename in ['sqlalchemy.txt', 'david8.txt', 'peewee.txt', 'pypika.txt']:
-        with codecs.open(f'./psrecord_reports/{filename}') as file:
+    for filename in files:
+        with codecs.open(join(report_dir, filename)) as file:
             next(file)
             next(file)
             body = file.read()
