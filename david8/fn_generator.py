@@ -33,20 +33,21 @@ class StrArgsCallableFactory:
         return _StrArgsFunction(self.name, args)
 
 
-@dataclasses.dataclass(slots=True)
-class _AggDistinctFunction(FunctionProtocol):
+class _AggDistinctFunction(FunctionProtocol, BaseAliased):
     """
     SUM(DISTINCT price)
     AVG(DISTINCT quantity)
     STDDEV(DISTINCT score)
     """
-    name: str
-    column: str = ''
-    distinct: bool = False
+    def __init__(self, name: str, column: str = '', distinct: bool = False) -> None:
+        super().__init__()
+        self._name = name
+        self._distinct = distinct
+        self._column = column
 
-    def get_sql(self, dialect: DialectProtocol) -> str:
-        name = f"{self.name}({'DISTINCT ' if self.distinct else ''}"
-        return f"{name}{dialect.quote_ident(self.column)})"
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        name = f"{self._name}({'DISTINCT ' if self._distinct else ''}"
+        return f"{name}{dialect.quote_ident(self._column)})"
 
 
 @dataclasses.dataclass(slots=True)
