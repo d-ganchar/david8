@@ -1,7 +1,7 @@
 from parameterized import parameterized
 
 from david8 import QueryBuilderProtocol
-from david8.predicates import eq_val
+from david8.predicates import eq
 from tests.base_test import BaseTest
 
 
@@ -62,9 +62,9 @@ class TestSelect(BaseTest):
                 BaseTest.qb
                 .select('*')
                 .from_table('music')
-                .where(eq_val('band', 'Port-Royal')),
+                .where(eq('band', 'Port-Royal')),
             )
-            .where(eq_val('EPs', 'Anya: Sehnsucht EP'))
+            .where(eq('EPs', 'Anya: Sehnsucht EP'))
         )
 
         self.assertEqual(

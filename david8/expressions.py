@@ -1,10 +1,10 @@
 from david8.core.base_aliased import Column as _Column
 from david8.core.base_aliased import Parameter as _Parameter
 from david8.core.base_aliased import Value as _Value
-from david8.protocols.sql import AliasedProtocol
+from david8.protocols.sql import ValueProtocol
 
 
-def val(value: str | int | float) -> AliasedProtocol:
+def val(value: str | int | float) -> ValueProtocol:
     return _Value(value)
 
 def col(name: str) -> _Column:

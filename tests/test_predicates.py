@@ -1,0 +1,206 @@
+from parameterized import parameterized
+
+from david8.expressions import param, val
+from david8.predicates import (
+    between_c,
+    eq,
+    eq_c,
+    eq_e,
+    ge,
+    ge_c,
+    ge_e,
+    gt,
+    gt_c,
+    gt_e,
+    le,
+    le_c,
+    le_e,
+    lt,
+    lt_c,
+    lt_e,
+    ne,
+    ne_c,
+    ne_e,
+)
+from david8.protocols.sql import PredicateProtocol
+from tests.base_test import BaseTest
+
+
+class TestPredicates(BaseTest):
+    @parameterized.expand([
+        # between
+        (
+            between_c('age', 14, 18).as_('is_valid'),
+            'SELECT age BETWEEN %(p1)s AND %(p2)s AS is_valid',
+            {'p1': 14, 'p2': 18}
+        ),
+        (
+            between_c('created_day', val('2025-01-01'), val('2026-01-01')),
+            "SELECT created_day BETWEEN '2025-01-01' AND '2026-01-01'",
+            {}
+        ),
+        # eq
+        (
+            eq('color', 'orange'),
+            'SELECT color = %(p1)s',
+            {'p1': 'orange'}
+        ),
+        (
+            eq('beer', 0.5).as_('size'),
+            'SELECT beer = %(p1)s AS size',
+            {'p1': 0.5}
+        ),
+        (
+            eq('age', 27).as_('is_valid'),
+            'SELECT age = %(p1)s AS is_valid',
+            {'p1': 27}
+        ),
+        (
+            eq('status', val('active')),
+            "SELECT status = 'active'",
+            {}
+        ),
+        # ge
+        (
+            ge('beer', 0.5).as_('size'),
+            'SELECT beer >= %(p1)s AS size',
+            {'p1': 0.5}
+        ),
+        (
+            ge('age', 27).as_('is_valid'),
+            'SELECT age >= %(p1)s AS is_valid',
+            {'p1': 27}
+        ),
+        # gt
+        (
+            gt('beer', 0.5).as_('size'),
+            'SELECT beer > %(p1)s AS size',
+            {'p1': 0.5}
+        ),
+        (
+            gt('age', 27).as_('is_valid'),
+            'SELECT age > %(p1)s AS is_valid',
+            {'p1': 27}
+        ),
+        # le
+        (
+            le('beer', 0.5).as_('size'),
+            'SELECT beer <= %(p1)s AS size',
+            {'p1': 0.5}
+        ),
+        (
+            le('age', 27).as_('is_valid'),
+            'SELECT age <= %(p1)s AS is_valid',
+            {'p1': 27}
+        ),
+        # lt
+        (
+            lt('beer', 0.5).as_('size'),
+            'SELECT beer < %(p1)s AS size',
+            {'p1': 0.5}
+        ),
+        (
+            lt('age', 27).as_('is_valid'),
+            'SELECT age < %(p1)s AS is_valid',
+            {'p1': 27}
+        ),
+        # ne
+        (
+            ne('beer', 0.5).as_('size'),
+            'SELECT beer != %(p1)s AS size',
+            {'p1': 0.5}
+        ),
+        (
+            ne('age', 27).as_('is_valid'),
+            'SELECT age != %(p1)s AS is_valid',
+            {'p1': 27}
+        ),
+        # eq_c
+        (
+            eq_c('billing', 'shipping').as_('is_the_same'),
+            'SELECT billing = shipping AS is_the_same',
+            {}
+        ),
+        # ge_c
+        (
+            ge_c('created', 'last_active'),
+            'SELECT created >= last_active',
+            {}
+        ),
+        # gt_c
+        (
+            gt_c('created', 'last_active'),
+            'SELECT created > last_active',
+            {}
+        ),
+        # le_c
+        (
+            le_c('created', 'last_active'),
+            'SELECT created <= last_active',
+            {}
+        ),
+        # lt_c
+        (
+            lt_c('created', 'last_active'),
+            'SELECT created < last_active',
+            {}
+        ),
+        # ne_c
+        (
+            ne_c('created', 'last_active'),
+            'SELECT created != last_active',
+            {}
+        ),
+        # eq_e
+        (
+            eq_e(val(1), param(1)),
+            'SELECT 1 = %(p1)s',
+            {'p1': 1}
+        ),
+        # ge_e
+        (
+            ge_e(val(1), param(1)),
+            'SELECT 1 >= %(p1)s',
+            {'p1': 1}
+        ),
+        # gt_e
+        (
+            gt_e(val(1), param(1)),
+            'SELECT 1 > %(p1)s',
+            {'p1': 1}
+        ),
+        # le_e
+        (
+            le_e(val(1), param(1)),
+            'SELECT 1 <= %(p1)s',
+            {'p1': 1}
+        ),
+        # lt_e
+        (
+            lt_e(val(1), param(1)),
+            'SELECT 1 < %(p1)s',
+            {'p1': 1}
+        ),
+        # le_e
+        (
+            le_e(val(1), param(1)),
+            'SELECT 1 <= %(p1)s',
+            {'p1': 1}
+        ),
+        # lt_e
+        (
+            lt_e(val(1), param(1)),
+            'SELECT 1 < %(p1)s',
+            {'p1': 1}
+        ),
+        # ne_e
+        (
+            ne_e(val(1), param(1)),
+            'SELECT 1 != %(p1)s',
+            {'p1': 1}
+        ),
+    ])
+    def test_predicate(self, predicate: PredicateProtocol, exp_sql: str, exp_params: dict) -> None:
+        query = BaseTest.qb.select(predicate)
+        self.assertEqual(query.get_sql(), exp_sql)
+        self.assertEqual(query.get_parameters(), exp_params)

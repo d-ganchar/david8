@@ -32,6 +32,3 @@ class DialectProtocol(Protocol):
 
     def get_paramstyle(self) -> ParamStyleProtocol:
         pass
-
-    def is_quote_mode(self) -> bool:
-        pass

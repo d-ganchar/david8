@@ -11,13 +11,8 @@ class BaseDialect(DialectProtocol):
 
     def quote_ident(self, name: str) -> str:
         if self._is_quote_mode:
-            return f'"{name}"'
-
-        return name
+            return '.'.join([f'"{c}"' for c in name.split('.')])
+        return '.'.join([c for c in name.split('.')])
 
     def get_paramstyle(self) -> ParamStyleProtocol:
         return self._param_style
-
-    def is_quote_mode(self) -> bool:
-        return self._is_quote_mode
-

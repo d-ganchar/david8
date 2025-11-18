@@ -1,5 +1,5 @@
 from david8.logical_operators import and_, or_, xor
-from david8.predicates import eq_val
+from david8.predicates import eq
 from tests.base_test import BaseTest
 
 
@@ -11,14 +11,14 @@ class TestLogicalOperators(BaseTest):
             .from_table('logical_operators')
             .where(
                 or_(
-                    eq_val('col1', 1),
-                    eq_val('col1', 2),
+                    eq('col1', 1),
+                    eq('col1', 2),
                     xor(
-                        eq_val('col2', 3),
-                        eq_val('col2', 4),
+                        eq('col2', 3),
+                        eq('col2', 4),
                     ),
                 ),
-                eq_val('col3', 5),
+                eq('col3', 5),
             )
          )
 
@@ -37,14 +37,14 @@ class TestLogicalOperators(BaseTest):
             .from_table('logical_operators')
             .where(
                 xor(
-                    eq_val('col1', 1),
-                    eq_val('col1', 2),
+                    eq('col1', 1),
+                    eq('col1', 2),
                     or_(
-                        eq_val('col2', 3),
-                        eq_val('col2', 4),
+                        eq('col2', 3),
+                        eq('col2', 4),
                     ),
                 ),
-                eq_val('col3', 5),
+                eq('col3', 5),
             )
          )
 
@@ -64,13 +64,13 @@ class TestLogicalOperators(BaseTest):
             .where(
                 or_(
                     and_(
-                        eq_val('col1', 1),
-                        eq_val('col2', 2),
-                        eq_val('col3', 3),
+                        eq('col1', 1),
+                        eq('col2', 2),
+                        eq('col3', 3),
                     ),
-                    eq_val('col4', 4),
+                    eq('col4', 4),
                 ),
-                eq_val('col3', 5),
+                eq('col3', 5),
             )
          )
 

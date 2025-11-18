@@ -10,6 +10,7 @@ from ..protocols.sql import (
     LogicalOperatorProtocol,
     PredicateProtocol,
 )
+from .log import log
 
 
 @dataclasses.dataclass(slots=True)
@@ -186,6 +187,8 @@ class BaseSelect(SelectProtocol):
 
         limit = f' LIMIT {self._limit}' if self._limit else ''
         sql = f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{limit}{union}'
+        if dialect is None:
+            log.info('%s %s', sql, self.get_parameters())
 
         return sql
 

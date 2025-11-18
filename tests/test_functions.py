@@ -4,7 +4,7 @@ from david8 import QueryBuilderProtocol
 from david8.expressions import param, val
 from david8.functions import avg, concat, count, max_, min_, sum_
 from david8.logical_operators import and_, or_, xor
-from david8.predicates import eq
+from david8.predicates import eq_e
 from tests.base_test import BaseTest
 
 
@@ -57,20 +57,20 @@ class TestAggFunctions(BaseTest):
             self.qb
             .select('*')
             .from_table('test')
-            .having(eq(count('*'), 1))
+            .having(eq_e(count('*'), val(1)))
         )
 
         for expr in [
-            eq(count('name'), 2),
-            eq(max_('price'), 1000),
-            eq(min_('age'), 27),
-            eq(sum_('money'), 100),
-            eq(avg('success'), 99),
-            eq(count('name', True), 3),
-            eq(max_('price', True), 2000),
-            eq(min_('age', True), 33),
-            eq(sum_('money', True), 200),
-            eq(avg('success', True), 299),
+            eq_e(count('name'), val(2)),
+            eq_e(max_('price'), val(1000)),
+            eq_e(min_('age'), val(27)),
+            eq_e(sum_('money'), val(100)),
+            eq_e(avg('success'), val(99)),
+            eq_e(count('name', True), val(3)),
+            eq_e(max_('price', True), val(2000)),
+            eq_e(min_('age', True), val(33)),
+            eq_e(sum_('money', True), val(200)),
+            eq_e(avg('success', True), val(299)),
         ]:
             query.having(expr)
 
@@ -89,20 +89,22 @@ class TestAggFunctions(BaseTest):
             .from_table('test')
             .having(
                 or_(
-                    eq(count('name'), 2),
-                    eq(max_('price'), 1000),
+                    eq_e(count('name'), val(2)),
+                    eq_e(max_('price'), val(1000)),
                     and_(
-                        eq(min_('age'), 27),
-                        eq(sum_('money'), 100),
+                        eq_e(min_('age'), val(27)),
+                        eq_e(sum_('money'), val(100)),
                     ),
                     xor(
-                        eq(avg('success'), 99),
-                        eq(avg('happiness'), 101),
+                        eq_e(avg('success'), val(99)),
+                        eq_e(avg('happiness'), val(101)),
                     )
                 )
             )
         )
 
-        sql = query.get_sql()
-        self.assertEqual(sql, 'SELECT * FROM test HAVING (count(name) = 2 OR max(price) = 1000 OR (min(age) = 27 '
-                              'AND sum(money) = 100) OR (avg(success) = 99 XOR avg(happiness) = 101))')
+        self.assertEqual(
+            query.get_sql(),
+            'SELECT * FROM test HAVING (count(name) = 2 OR max(price) = 1000 OR (min(age) = 27 '
+            'AND sum(money) = 100) OR (avg(success) = 99 XOR avg(happiness) = 101))'
+        )

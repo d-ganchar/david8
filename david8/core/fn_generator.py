@@ -1,8 +1,8 @@
 import dataclasses
 
-from david8.core.base_aliased import BaseAliased, Parameter, Value
+from david8.core.base_aliased import BaseAliased
 from david8.protocols.dialect import DialectProtocol
-from david8.protocols.sql import FunctionProtocol
+from david8.protocols.sql import ExprProtocol, FunctionProtocol
 
 
 class _StrArgsFunction(FunctionProtocol, BaseAliased):
@@ -34,7 +34,7 @@ class StrArgsCallableFactory:
     """
     name: str
 
-    def __call__(self, *args: FunctionProtocol | int | float | str | Parameter | Value) -> FunctionProtocol:
+    def __call__(self, *args: int | float | str | ExprProtocol) -> FunctionProtocol:
         return _StrArgsFunction(self.name, args)
 
 

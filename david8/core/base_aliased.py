@@ -2,7 +2,7 @@ import dataclasses
 from typing import Self
 
 from .. import DialectProtocol
-from ..protocols.sql import AliasedProtocol, ParameterProtocol
+from ..protocols.sql import AliasedProtocol, ParameterProtocol, ValueProtocol
 
 
 @dataclasses.dataclass(slots=True)
@@ -25,7 +25,7 @@ class BaseAliased(AliasedProtocol):
         return sql
 
 
-class Value(BaseAliased):
+class Value(BaseAliased, ValueProtocol):
     def __init__(self, value: str | int | float) -> None:
         super().__init__()
         self._value = value

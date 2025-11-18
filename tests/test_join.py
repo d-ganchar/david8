@@ -1,7 +1,7 @@
 from parameterized import parameterized
 
 from david8.joins import inner, left, right
-from david8.predicates import eq_col
+from david8.predicates import eq_c
 from david8.protocols.sql import QueryProtocol
 from tests.base_test import BaseTest
 
@@ -14,7 +14,7 @@ class TestJoin(BaseTest):
             .qb
             .select('*')
             .from_table('users', 'u')
-            .join(left().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o')),
+            .join(left().table('orders').on(eq_c('o.user_id', 'u.id')).as_('o')),
             'SELECT * FROM users AS u LEFT JOIN orders AS o ON (o.user_id = u.id)'
         ),
         (
@@ -22,7 +22,7 @@ class TestJoin(BaseTest):
             .qb_w
             .select('*')
             .from_table('users', 'u')
-            .join(left().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o')),
+            .join(left().table('orders').on(eq_c('o.user_id', 'u.id')).as_('o')),
             'SELECT "*" FROM "users" AS "u" LEFT JOIN "orders" AS "o" ON ("o"."user_id" = "u"."id")'
         ),
         # right
@@ -31,7 +31,7 @@ class TestJoin(BaseTest):
             .qb
             .select('*')
             .from_table('users', 'u')
-            .join(right().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o')),
+            .join(right().table('orders').on(eq_c('o.user_id', 'u.id')).as_('o')),
             'SELECT * FROM users AS u RIGHT JOIN orders AS o ON (o.user_id = u.id)'
         ),
         (
@@ -39,7 +39,7 @@ class TestJoin(BaseTest):
             .qb_w
             .select('*')
             .from_table('users', 'u')
-            .join(right().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o')),
+            .join(right().table('orders').on(eq_c('o.user_id', 'u.id')).as_('o')),
             'SELECT "*" FROM "users" AS "u" RIGHT JOIN "orders" AS "o" ON ("o"."user_id" = "u"."id")'
         ),
         # inner
@@ -48,7 +48,7 @@ class TestJoin(BaseTest):
             .qb
             .select('*')
             .from_table('users', 'u')
-            .join(inner().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o')),
+            .join(inner().table('orders').on(eq_c('o.user_id', 'u.id')).as_('o')),
             'SELECT * FROM users AS u INNER JOIN orders AS o ON (o.user_id = u.id)'
         ),
         (
@@ -56,7 +56,7 @@ class TestJoin(BaseTest):
             .qb_w
             .select('*')
             .from_table('users', 'u')
-            .join(inner().table('orders').on(eq_col('o.user_id', 'u.id')).as_('o')),
+            .join(inner().table('orders').on(eq_c('o.user_id', 'u.id')).as_('o')),
             'SELECT "*" FROM "users" AS "u" INNER JOIN "orders" AS "o" ON ("o"."user_id" = "u"."id")'
         ),
     ])

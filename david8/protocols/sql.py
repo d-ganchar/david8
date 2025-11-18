@@ -37,6 +37,10 @@ class ParameterProtocol(AliasedProtocol):
     pass
 
 
+class ValueProtocol(AliasedProtocol):
+    pass
+
+
 class PredicateProtocol(AliasedProtocol):
     pass
 

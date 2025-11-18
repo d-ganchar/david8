@@ -1,7 +1,7 @@
 from parameterized import parameterized
 
 from david8 import QueryBuilderProtocol
-from david8.predicates import eq_val
+from david8.predicates import eq
 from tests.base_test import BaseTest
 
 
@@ -22,8 +22,8 @@ class TestWith(BaseTest):
     def test_with_as_chain(self, qb: QueryBuilderProtocol, exp_sql: str) -> None:
         query = (
             qb.with_(
-                ('alias1', qb.select('*').from_table('legacy_table').where(eq_val('bad_category', 'val1'))),
-                ('alias2', qb.select('*').from_table('new_table').where(eq_val('category', 'val2'))),
+                ('alias1', qb.select('*').from_table('legacy_table').where(eq('bad_category', 'val1'))),
+                ('alias2', qb.select('*').from_table('new_table').where(eq('category', 'val2'))),
             )
             .select('*')
             .from_table('legacy_table')
@@ -49,8 +49,8 @@ class TestWith(BaseTest):
         )
     ])
     def test_with_query_args(self, qb: QueryBuilderProtocol, exp_sql: str, q1_sql: str, q2_sql) -> None:
-        query1 = qb.select('*').from_table('legacy_table').where(eq_val('bad_category', 'val1'))
-        query2 = qb.select('*').from_table('new_table').where(eq_val('category', 'val2'))
+        query1 = qb.select('*').from_table('legacy_table').where(eq('bad_category', 'val1'))
+        query2 = qb.select('*').from_table('new_table').where(eq('category', 'val2'))
         query = (
             qb.with_(
                 ('alias1', query1),
