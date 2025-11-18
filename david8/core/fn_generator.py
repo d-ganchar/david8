@@ -5,11 +5,12 @@ from david8.protocols.dialect import DialectProtocol
 from david8.protocols.sql import ExprProtocol, FunctionProtocol
 
 
-class _StrArgsFunction(FunctionProtocol, BaseAliased):
-    def __init__(self, name: str, args: tuple) -> None:
+class _SeparatedStrArgsFn(FunctionProtocol, BaseAliased):
+    def __init__(self, name: str, args: tuple, separator: str) -> None:
         super().__init__()
         self._name = name
         self._args = args
+        self._separator = separator
 
     def _get_sql(self, dialect: DialectProtocol) -> str:
         items = ()
@@ -24,18 +25,19 @@ class _StrArgsFunction(FunctionProtocol, BaseAliased):
 
             items += (item.get_sql(dialect),)
 
-        return f"{self._name}({', '.join(items)})"
+        return f"{self._name}({self._separator.join(items)})"
 
 
 @dataclasses.dataclass(slots=True)
-class StrArgsCallableFactory:
+class SeparatedStrArgsCallableFactory:
     """
     str works as column name. concat('col_name', 2, 0.5, val('test')) -> concat(col_name, '2', '0.5', 'test')
     """
     name: str
+    separator: str
 
     def __call__(self, *args: int | float | str | ExprProtocol) -> FunctionProtocol:
-        return _StrArgsFunction(self.name, args)
+        return _SeparatedStrArgsFn(self.name, args, self.separator)
 
 
 class _OneArgDistinctFunction(FunctionProtocol, BaseAliased):
