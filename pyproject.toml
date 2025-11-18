@@ -1,24 +1,26 @@
 [project]
 name = "david8"
 version = "0.dev.0"
-description = ""
+description = "Lightweight Python SQL query builder with support for multiple dialects: ClickHouse and PostgreSQL"
 authors = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
 maintainers = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
 license = {text = "MIT license"}
 readme = "README.md"
-requires-python = ">=3.10, < 3.14"
+requires-python = ">=3.11, < 3.14"
 dependencies = [
 
 ]
 
 classifiers = [
-  "License :: OSI Approved :: MIT License",
-  "Development Status :: 1 - Planning",
-  "Intended Audience :: Developers",
-  "Topic :: Database",
-  "Programming Language :: Python :: 3.11",
-  "Programming Language :: Python :: 3.12",
-  "Programming Language :: Python :: 3.13",
+    "Development Status :: 2 - Pre-Alpha",
+    "License :: OSI Approved :: Apache Software License",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Database",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 
 
@@ -27,16 +29,62 @@ Homepage = "https://github.com/d-ganchar/david8"
 Changelog = "https://github.com/d-ganchar/david8/releases"
 Issues = "https://github.com/d-ganchar/david8/issues"
 CI = "https://github.com/d-ganchar/david8/actions"
+Documentation = "https://github.com/d-ganchar/david8/wiki"
+Source = "https://github.com/d-ganchar/david8"
 
 
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools>=61.0.0"]
 build-backend = "setuptools.build_meta"
+
+
+[tool.setuptools.packages]
+find = { include = ["david8", "david8.*"] }
 
 
 [dependency-groups]
 dev = [
-    "ruff>=0.11",
-    "parameterized==0.9.0, < 1",
-    "pytest>=9",
+    "ruff",
+    "parameterized",
+    "pytest",
+    "pytest-benchmark",
+    "sqlalchemy>=2.0.44",
+    "pypika>=0.48.9",
+    "psrecord>=1.4",
+    "rich>=14.2.0",
+    "pytest-cov>=7.0.0",
+]
+
+
+[lint.select]
+
+[lint.isort]
+known-third-party = ["pytest"]
+lines-after-imports = 2
+lines-between-types = 1
+
+
+[tool.ruff]
+line-length = 120
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    "**/.git",
+    "__pycache__",
+    "tests/fixtures/",
+    "benchmarks/"
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "N", "B", "W"]
+
+[tool.pytest.ini_options]
+testpaths = [
+    "tests",
+    "--color=yes",
+]
+
+addopts = [
+    "--ignore=tests/test_benchmarks.py",
 ]
