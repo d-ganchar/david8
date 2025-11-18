@@ -1,17 +1,16 @@
 import dataclasses
 from typing import Self
 
-from .. import DialectProtocol
+from ..protocols.dialect import DialectProtocol
 from ..protocols.sql import AliasedProtocol, ParameterProtocol, ValueProtocol
 
 
-@dataclasses.dataclass(slots=True)
+@dataclasses.dataclass(slots=True, kw_only=True)
 class BaseAliased(AliasedProtocol):
-    def __init__(self, _as: str = '') -> None:
-        self._as = _as
+    alias: str = ''
 
     def as_(self, alias: str) -> Self:
-        self._as = alias
+        self.alias = alias
         return self
 
     def _get_sql(self, dialect: DialectProtocol) -> str:
@@ -19,8 +18,8 @@ class BaseAliased(AliasedProtocol):
 
     def get_sql(self, dialect: DialectProtocol) -> str:
         sql = self._get_sql(dialect)
-        if self._as:
-            return f'{sql} AS {dialect.quote_ident(self._as)}'
+        if self.alias:
+            return f'{sql} AS {dialect.quote_ident(self.alias)}'
 
         return sql
 

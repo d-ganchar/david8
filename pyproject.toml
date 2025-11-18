@@ -4,7 +4,7 @@ version = "0.dev.0"
 description = "Lightweight Python SQL query builder with support for multiple dialects: ClickHouse and PostgreSQL"
 authors = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
 maintainers = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
-license = {text = "MIT license"}
+license-files = ["LICENSE"]
 readme = "README.md"
 requires-python = ">=3.11, < 3.14"
 dependencies = [
@@ -13,7 +13,6 @@ dependencies = [
 
 classifiers = [
     "Development Status :: 2 - Pre-Alpha",
-    "License :: OSI Approved :: Apache Software License",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries",
     "Topic :: Database",
@@ -22,7 +21,6 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-
 
 [project.urls]
 Homepage = "https://github.com/d-ganchar/david8"
@@ -34,7 +32,7 @@ Source = "https://github.com/d-ganchar/david8"
 
 
 [build-system]
-requires = ["setuptools>=61.0.0"]
+requires = ["setuptools>=77.0.0"]
 build-backend = "setuptools.build_meta"
 
 

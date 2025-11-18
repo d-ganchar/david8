@@ -1,12 +1,10 @@
 import unittest
 
-from david8 import get_qb
-from david8.core.base_dialect import BaseDialect
-from david8.param_styles import PyFormatParamStyle
+from david8 import get_default_qb
 
 
 class BaseTest(unittest.TestCase):
     maxDiff = 1500
 
-    qb = get_qb(BaseDialect(PyFormatParamStyle()))          # without quotes
-    qb_w = get_qb(BaseDialect(PyFormatParamStyle(), True))  # with quotes
+    qb = get_default_qb()                      # without quotes
+    qb_w = get_default_qb(is_quote_mode=True)  # with quotes

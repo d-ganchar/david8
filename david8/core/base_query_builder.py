@@ -13,7 +13,7 @@ class BaseQueryBuilder(QueryBuilderProtocol):
         self._dialect = dialect
 
     def select(self, *args: str | AliasedProtocol | ExprProtocol | FunctionProtocol) -> SelectProtocol:
-        return _BaseSelect(select=args, dialect=self._dialect)
+        return _BaseSelect(select_columns=args, dialect=self._dialect)
 
     def with_(self, *args: tuple[str, SelectProtocol]) -> SelectProtocol:
         return _BaseSelect(with_queries=args, dialect=self._dialect)
