@@ -2,21 +2,8 @@ from ..protocols.sql import AliasedProtocol, LogicalOperatorProtocol, PredicateP
 from .sql import ExprProtocol, FunctionProtocol
 
 
-class JoinProtocol(ExprProtocol):
-    def on(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'JoinProtocol':
-        pass
-
-    def table(self, name: str, db: str = '') -> 'JoinProtocol':
-        pass
-
-    def query(self, query: 'SelectProtocol') -> 'JoinProtocol':
-        return self
-
-    def as_(self, alias: str) -> 'JoinProtocol':
-        return self
-
-    def using(self, *args: str) -> 'JoinProtocol':
-        pass
+class JoinProtocol(AliasedProtocol):
+    pass
 
 
 class SelectProtocol(QueryProtocol):
@@ -29,7 +16,7 @@ class SelectProtocol(QueryProtocol):
     def from_table(self, table_name: str, alias: str = '', db_name: str = '') -> 'SelectProtocol':
         pass
 
-    def from_query(self, query: 'SelectProtocol', alias: str = '') -> 'SelectProtocol':
+    def from_query(self, query: 'SelectProtocol') -> 'SelectProtocol':
         pass
 
     def group_by(self, *args: str | int) -> 'SelectProtocol':
@@ -51,4 +38,18 @@ class SelectProtocol(QueryProtocol):
         pass
 
     def join(self, join: JoinProtocol) -> 'SelectProtocol':
+        pass
+
+
+class Sql92JoinProtocol(JoinProtocol):
+    def on(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'Sql92JoinProtocol':
+        pass
+
+    def table(self, name: str, db: str = '') -> 'Sql92JoinProtocol':
+        pass
+
+    def query(self, query: SelectProtocol) -> 'Sql92JoinProtocol':
+        pass
+
+    def using(self, *args: str) -> 'Sql92JoinProtocol':
         pass

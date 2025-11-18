@@ -45,7 +45,6 @@ class TestSelect(BaseTest):
         )
 
         self.assertEqual(query.get_sql(), table_sql)
-
         query = (
             qb
             .select('*')

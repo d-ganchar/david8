@@ -1,20 +1,13 @@
-from david8 import get_qb
-from david8.core.base_dialect import BaseDialect
+from david8 import get_default_qb
 from david8.expressions import col
 from david8.functions import max_, min_, sum_
 from david8.joins import left, inner, right
-from david8.param_styles import PyFormatParamStyle
 from david8.predicates import eq_c, eq
-
-
-class _TestDialect(BaseDialect):
-    def __init__(self):
-        super().__init__(PyFormatParamStyle(), False)
 
 
 def generate_sql():
     return (
-        get_qb(_TestDialect())
+        get_default_qb()
         .select(
             col('p.product_name').as_('pn'),
             col('c.country').as_('cy'),

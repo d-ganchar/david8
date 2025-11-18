@@ -1,8 +1,6 @@
 from parameterized import parameterized
 
-from david8 import get_qb
-from david8.core.base_dialect import BaseDialect
-from david8.core.base_params import BaseParams
+from david8 import get_default_qb
 from david8.expressions import col, param, val
 from david8.param_styles import (
     FormatParamStyle,
@@ -11,6 +9,7 @@ from david8.param_styles import (
     PyFormatParamStyle,
     QMarkParamStyle,
 )
+from david8.protocols.dialect import ParamStyleProtocol
 from david8.protocols.sql import QueryProtocol
 from tests.base_test import BaseTest
 
@@ -117,8 +116,14 @@ class TestExpressions(BaseTest):
             ['p_name', 2, 0.5],
         ),
     ])
-    def test_param_styles(self, style: BaseParams, exp_sql: str, exp_dict_params: dict, exp_list_params: list):
-        query = get_qb(BaseDialect(style)).select(param('p_name'), param(2), param(0.5))
+    def test_param_styles(
+        self,
+        style: ParamStyleProtocol,
+        exp_sql: str,
+        exp_dict_params: dict,
+        exp_list_params: list
+    ):
+        query = get_default_qb(style).select(param('p_name'), param(2), param(0.5))
 
         self.assertEqual(query.get_sql(), exp_sql)
         self.assertEqual(query.get_parameters(), exp_dict_params)

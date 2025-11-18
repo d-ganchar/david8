@@ -1,12 +1,12 @@
-from david8.core.base_join import BaseJoin as _BaseJoin
-from david8.protocols.dml import JoinProtocol
+from david8.core.sql_92_join import Sql92Join as _Sql92Join
+from david8.protocols.dml import Sql92JoinProtocol
 
 
-def left() -> JoinProtocol:
-    return _BaseJoin('LEFT JOIN')
+def left() -> Sql92JoinProtocol:
+    return _Sql92Join(join_type='LEFT JOIN')
 
-def right() -> JoinProtocol:
-    return _BaseJoin('RIGHT JOIN')
+def right() -> Sql92JoinProtocol:
+    return _Sql92Join(join_type='RIGHT JOIN')
 
-def inner() -> JoinProtocol:
-    return _BaseJoin('INNER JOIN')
+def inner() -> Sql92JoinProtocol:
+    return _Sql92Join(join_type='INNER JOIN')
