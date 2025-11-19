@@ -15,6 +15,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    outputs:
+      artifact_url: ${{ steps.artifact.outputs.artifact_url }}
+
     env:
       UV_PYTHON: 3.11
     steps:
@@ -37,12 +40,20 @@ jobs:
           uv build
           mkdir david8_build
           mv ./dist ./david8_build
+
       - name: Upload david8 package
+        id: upload_dist
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: david8_build
-          retention-days: 90
+
+      - name: Set artifact URL
+        id: artifact
+        run: |
+          ARTIFACT_ID=${{ steps.upload_dist.outputs.artifact-id }}
+          ARTIFACT_URL="https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip"
+          echo "artifact_url=$ARTIFACT_URL" >> $GITHUB_OUTPUT
 
   tests:
     runs-on: ubuntu-22.04
@@ -61,6 +72,7 @@ jobs:
             pyproject.toml
             uv.lock
             tests
+            LICENSE
 
       - uses: astral-sh/setup-uv@v5
         with:
@@ -80,11 +92,30 @@ jobs:
       - name: Test with python ${{ matrix.python-version }}
         run: pytest tests
 
+  trigger_postgres_dialect:
+    needs: [ tests, build ]
+    uses: ./.github/workflows/trigger_dialect_test.yml
+    permissions: write-all
+    with:
+      repo: "d-ganchar/david8_postgresql"
+      artifact_url: ${{ needs.build.outputs.artifact_url }}
+    secrets:
+      pat: ${{ secrets.DAVID8_CHANGES_TOKEN }}
+
+  trigger_clickhouse_dialect:
+    needs: [ tests, build ]
+    uses: ./.github/workflows/trigger_dialect_test.yml
+    permissions: write-all
+    with:
+      repo: "d-ganchar/david8_clickhouse"
+      artifact_url: ${{ needs.build.outputs.artifact_url }}
+    secrets:
+      pat: ${{ secrets.DAVID8_CHANGES_TOKEN }}
 
   benchmarks:
     runs-on: ubuntu-22.04
     permissions: write-all
-    needs: [ tests ]
+    needs: [ trigger_postgres_dialect, trigger_clickhouse_dialect ]
     strategy:
       fail-fast: false
       matrix:
@@ -100,6 +131,7 @@ jobs:
             benchmarks
             psrecord_reports
             psrecord_report.py
+            LICENSE
 
       - uses: astral-sh/setup-uv@v5
         with:

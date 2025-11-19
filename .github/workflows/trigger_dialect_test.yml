@@ -1,0 +1,89 @@
+name: Run dialect tests
+
+on:
+  workflow_call:
+    inputs:
+      repo:
+        required: true
+        type: string
+      artifact_url:
+        required: true
+        type: string
+    secrets:
+      pat:
+        required: true
+
+jobs:
+  trigger_dialect_tests:
+    runs-on: ubuntu-22.04
+    env:
+      REPO: ${{ inputs.REPO }}
+      ARTIFACT_URL: ${{ inputs.ARTIFACT_URL }}
+      PAT: ${{ secrets.PAT }}
+    steps:
+      - name: Trigger david8_changes workflow in david8_postgresql
+        id: trigger
+        run: |
+          REF="main"
+
+          if [ -z "$ARTIFACT_URL" ]; then
+            echo "Error: artifact_url is empty"
+            exit 1
+          fi
+
+          RESPONSE=$(curl -s -o /tmp/response.json -w "%{http_code}" -X POST \
+            -H "Authorization: token $PAT" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$REPO/actions/workflows/david8_changes.yml/dispatches \
+            -d "{\"ref\":\"$REF\", \"inputs\": {\"artifact_url\": \"$ARTIFACT_URL\", \"auth_token\": \"$PAT\"}}")
+
+          HTTP_CODE=$(tail -n1 <<< "$RESPONSE")
+          if [ "$HTTP_CODE" != "204" ]; then
+            echo "Failed to trigger workflow: HTTP $HTTP_CODE"
+            cat /tmp/response.json
+            exit 1
+          fi
+
+          echo "Workflow triggered successfully"
+          echo $RESPONSE
+
+      - name: Wait for david8_changes workflow to complete
+        id: wait_for_completion
+        run: |
+          BRANCH="main"
+
+          RUN_ID=$(curl -s -H "Authorization: token $PAT" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$REPO/actions/runs?branch=$BRANCH \
+            | jq '.workflow_runs[0].id')
+
+          if [ "$RUN_ID" = "null" ]; then
+            echo "Error: Could not find a recent workflow run in $REPO on branch $BRANCH."
+            exit 1
+          fi
+
+          echo "Found Run ID: $RUN_ID"
+
+          STATUS="in_progress"
+          while [ "$STATUS" = "queued" ] || [ "$STATUS" = "in_progress" ] || [ "$STATUS" = "waiting" ]; do
+            sleep 30
+
+            RUN_DATA=$(curl -s -H "Authorization: token $PAT" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/$REPO/actions/runs/$RUN_ID)
+
+            STATUS=$(echo "$RUN_DATA" | jq -r '.status')
+            CONCLUSION=$(echo "$RUN_DATA" | jq -r '.conclusion')
+
+            echo "Current status: $STATUS, Workflow status: $CONCLUSION (Run ID: $RUN_ID)"
+          done
+
+          echo "Workflow status: $CONCLUSION"
+
+          if [ "$STATUS" != "completed" ] || [ "$CONCLUSION" != "success" ]; then
+            echo "david8_postgresql failed, failing this workflow."
+            exit 1
+          fi
+
+          HTML_URL=$(echo "$RUN_DATA" | jq -r '.html_url')
+          echo "Target workflow finished successfully: $HTML_URL"
