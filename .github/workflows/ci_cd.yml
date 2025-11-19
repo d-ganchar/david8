@@ -100,12 +100,22 @@ jobs:
       repo: "d-ganchar/david8_postgresql"
       artifact_url: ${{ needs.build.outputs.artifact_url }}
     secrets:
-      pat: ${{ secrets.DAVID8_POSTGRESQL_WORKFLOW_DAVID8_CHANGES_TOKEN }}
+      pat: ${{ secrets.DAVID8_CHANGES_TOKEN }}
+
+  trigger_clickhouse_dialect:
+    needs: [ tests, build ]
+    uses: ./.github/workflows/trigger_dialect_test.yml
+    permissions: write-all
+    with:
+      repo: "d-ganchar/david8_clickhouse"
+      artifact_url: ${{ needs.build.outputs.artifact_url }}
+    secrets:
+      pat: ${{ secrets.DAVID8_CHANGES_TOKEN }}
 
   benchmarks:
     runs-on: ubuntu-22.04
     permissions: write-all
-    needs: [ trigger_postgres_dialect ]
+    needs: [ trigger_postgres_dialect, trigger_clickhouse_dialect ]
     strategy:
       fail-fast: false
       matrix:
