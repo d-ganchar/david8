@@ -47,7 +47,6 @@ jobs:
         with:
           name: dist
           path: david8_build
-          retention-days: 90
 
       - name: Set artifact URL
         id: artifact
@@ -73,6 +72,7 @@ jobs:
             pyproject.toml
             uv.lock
             tests
+            LICENSE
 
       - uses: astral-sh/setup-uv@v5
         with:
@@ -92,92 +92,19 @@ jobs:
       - name: Test with python ${{ matrix.python-version }}
         run: pytest tests
 
-  trigger_dialect_tests:
-    runs-on: ubuntu-22.04
-    permissions: write-all
+  trigger_postgres_dialect:
     needs: [ tests, build ]
-    steps:
-      - name: Trigger david8_changes workflow in david8_postgresql
-        id: trigger
-        env:
-          PAT: ${{ secrets.DAVID8_POSTGRESQL_WORKFLOW_DAVID8_CHANGES_TOKEN }}
-        run: |
-          WORKFLOW_FILE="david8_changes.yml"
-          REPO="d-ganchar/david8_postgresql"
-          REF="main"
-          ARTIFACT_URL="${{ needs.build.outputs.artifact_url }}"
-
-          if [ -z "$ARTIFACT_URL" ]; then
-            echo "Error: artifact_url is empty, cannot trigger workflow"
-            exit 1
-          fi
-
-          RESPONSE=$(curl -s -o /tmp/response.json -w "%{http_code}" -X POST \
-            -H "Authorization: token $PAT" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/$REPO/actions/workflows/$WORKFLOW_FILE/dispatches \
-            -d "{\"ref\":\"$REF\", \"inputs\": {\"artifact_url\": \"$ARTIFACT_URL\", \"auth_token\": \"$PAT\"}}")
-
-          HTTP_CODE=$(tail -n1 <<< "$RESPONSE")
-          if [ "$HTTP_CODE" != "204" ]; then
-            echo "Failed to trigger workflow: HTTP $HTTP_CODE"
-            cat /tmp/response.json
-            exit 1
-          fi
-
-          echo "Workflow triggered successfully"
-          echo $RESPONSE
-
-      - name: Wait for david8_changes workflow to complete
-        id: wait_for_completion
-        env:
-          PAT: ${{ secrets.DAVID8_POSTGRESQL_WORKFLOW_DAVID8_CHANGES_TOKEN }}
-        run: |
-          PAT="${{ secrets.DAVID8_POSTGRESQL_WORKFLOW_DAVID8_CHANGES_TOKEN }}"
-          REPO="d-ganchar/david8_postgresql"
-          BRANCH="main"
-  
-          RUN_ID=$(curl -s -H "Authorization: token $PAT" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/$REPO/actions/runs?branch=$BRANCH \
-            | jq '.workflow_runs[0].id')
-          
-          if [ "$RUN_ID" = "null" ]; then
-            echo "Error: Could not find a recent workflow run in $REPO on branch $BRANCH."
-            exit 1
-          fi
-          
-          echo "Found Run ID: $RUN_ID"
-          
-          STATUS="in_progress"
-          while [ "$STATUS" = "queued" ] || [ "$STATUS" = "in_progress" ] || [ "$STATUS" = "waiting" ]; do
-            sleep 30
-            
-            RUN_DATA=$(curl -s -H "Authorization: token $PAT" \
-              -H "Accept: application/vnd.github+json" \
-              https://api.github.com/repos/$REPO/actions/runs/$RUN_ID)
-              
-            STATUS=$(echo "$RUN_DATA" | jq -r '.status')
-            CONCLUSION=$(echo "$RUN_DATA" | jq -r '.conclusion')
-            
-            echo "Current status: $STATUS, Conclusion: $CONCLUSION (Run ID: $RUN_ID)"
-  
-          done
-  
-          echo "Workflow status: $CONCLUSION"
-  
-          if [ "$CONCLUSION" != "success" ]; then
-            echo "david8_postgresql failed, failing this workflow."
-            exit 1
-          fi
-          
-          HTML_URL=$(echo "$RUN_DATA" | jq -r '.html_url')
-          echo "Target workflow finished successfully: $HTML_URL"
+    uses: d-ganchar/david8/.github/workflows/trigger_dialect_test.yml@main
+    with:
+      repo: "d-ganchar/david8_postgresql"
+      artifact_url: ${{ needs.build.outputs.artifact_url }}
+    secrets:
+      pat: ${{ secrets.DAVID8_POSTGRESQL_WORKFLOW_DAVID8_CHANGES_TOKEN }}
 
   benchmarks:
     runs-on: ubuntu-22.04
     permissions: write-all
-    needs: [ trigger_dialect_tests ]
+    needs: [ trigger_postgres_dialect ]
     strategy:
       fail-fast: false
       matrix:
@@ -193,6 +120,7 @@ jobs:
             benchmarks
             psrecord_reports
             psrecord_report.py
+            LICENSE
 
       - uses: astral-sh/setup-uv@v5
         with:
