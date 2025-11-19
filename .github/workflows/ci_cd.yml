@@ -16,7 +16,8 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     outputs:
-      artifact_url: ${{ steps.upload.outputs.artifact_url }}
+      artifact_url: ${{ steps.artifact.outputs.artifact_url }}
+
     env:
       UV_PYTHON: 3.11
     steps:
@@ -41,6 +42,7 @@ jobs:
           mv ./dist ./david8_build
 
       - name: Upload david8 package
+        id: upload_dist
         uses: actions/upload-artifact@v4
         with:
           name: dist
@@ -50,7 +52,7 @@ jobs:
       - name: Set artifact URL
         id: artifact
         run: |
-          ARTIFACT_ID=${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_ID=${{ steps.upload_dist.outputs.artifact-id }}
           ARTIFACT_URL="https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip"
           echo "artifact_url=$ARTIFACT_URL" >> $GITHUB_OUTPUT
 
@@ -100,14 +102,31 @@ jobs:
         env:
           PAT: ${{ secrets.DAVID8_POSTGRESQL_WORKFLOW_DAVID8_CHANGES_TOKEN }}
         run: |
-          RESPONSE=$(curl -s -X POST \
-          -H "Authorization: token $PAT" \
-          -H "Accept: application/vnd.github+json" \
-          https://api.github.com/repos/d-ganchar/david8_postgresql/actions/workflows/david8_changes.yml/dispatches \
-          -d "{\"ref\":\"main\", \"inputs\": {\"artifact_url\": \"${{ needs.build-artifact.outputs.artifact_url }}\", \"auth_token\": \"$PAT\"}}")
-          
-          echo "Response from workflow dispatch:"
-          echo "$RESPONSE"  
+          WORKFLOW_FILE="david8_changes.yml"
+          REPO="d-ganchar/david8_postgresql"
+          REF="main"
+          ARTIFACT_URL="${{ needs.build.outputs.artifact_url }}"
+
+          if [ -z "$ARTIFACT_URL" ]; then
+            echo "Error: artifact_url is empty, cannot trigger workflow"
+            exit 1
+          fi
+
+          RESPONSE=$(curl -s -o /tmp/response.json -w "%{http_code}" -X POST \
+            -H "Authorization: token $PAT" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$REPO/actions/workflows/$WORKFLOW_FILE/dispatches \
+            -d "{\"ref\":\"$REF\", \"inputs\": {\"artifact_url\": \"$ARTIFACT_URL\", \"auth_token\": \"$PAT\"}}")
+
+          HTTP_CODE=$(tail -n1 <<< "$RESPONSE")
+          if [ "$HTTP_CODE" != "201" ]; then
+            echo "Failed to trigger workflow: HTTP $HTTP_CODE"
+            cat /tmp/response.json
+            exit 1
+          fi
+
+          echo "Workflow triggered successfully"
+          echo $RESPONSE
 
       - name: Wait for david8_changes workflow to complete
         id: wait_for_completion
