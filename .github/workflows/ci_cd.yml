@@ -119,7 +119,7 @@ jobs:
             -d "{\"ref\":\"$REF\", \"inputs\": {\"artifact_url\": \"$ARTIFACT_URL\", \"auth_token\": \"$PAT\"}}")
 
           HTTP_CODE=$(tail -n1 <<< "$RESPONSE")
-          if [ "$HTTP_CODE" != "201" ]; then
+          if [ "$HTTP_CODE" != "204" ]; then
             echo "Failed to trigger workflow: HTTP $HTTP_CODE"
             cat /tmp/response.json
             exit 1
