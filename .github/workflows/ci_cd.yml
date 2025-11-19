@@ -94,7 +94,7 @@ jobs:
 
   trigger_postgres_dialect:
     needs: [ tests, build ]
-    uses: d-ganchar/david8/.github/workflows/trigger_dialect_test.yml@main
+    uses: ./.github/workflows/trigger_dialect_test.yml@main
     with:
       repo: "d-ganchar/david8_postgresql"
       artifact_url: ${{ needs.build.outputs.artifact_url }}
