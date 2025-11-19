@@ -95,6 +95,7 @@ jobs:
   trigger_postgres_dialect:
     needs: [ tests, build ]
     uses: ./.github/workflows/trigger_dialect_test.yml
+    permissions: write-all
     with:
       repo: "d-ganchar/david8_postgresql"
       artifact_url: ${{ needs.build.outputs.artifact_url }}

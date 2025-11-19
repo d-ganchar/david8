@@ -16,7 +16,6 @@ on:
 jobs:
   trigger_dialect_tests:
     runs-on: ubuntu-22.04
-    permissions: write-all
     env:
       REPO: ${{ inputs.REPO }}
       ARTIFACT_URL: ${{ inputs.ARTIFACT_URL }}
