@@ -83,7 +83,7 @@ jobs:
       - name: Trigger david8_changes workflow in david8_postgresql
         id: trigger
         env:
-          PAT: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          PAT: ${{ secrets.DAVID8_POSTGRESQL_WORKFLOW_DAVID8_CHANGES_TOKEN }}
         run: |
           RESPONSE=$(curl -s -X POST \
           -H "Authorization: token $PAT" \
@@ -94,7 +94,7 @@ jobs:
 
           - name: Wait for david8_changes workflow to complete
             env:
-              PAT: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+              PAT: ${{ secrets.DAVID8_POSTGRESQL_WORKFLOW_DAVID8_CHANGES_TOKEN }}
             run: |
               sleep 10
               RUN_ID=$(curl -s -H "Authorization: token $PAT" \
