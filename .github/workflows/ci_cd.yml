@@ -80,6 +80,46 @@ jobs:
       - name: Test with python ${{ matrix.python-version }}
         run: pytest tests
 
+      - name: Trigger david8_changes workflow in david8_postgresql
+        id: trigger
+        env:
+          PAT: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          RESPONSE=$(curl -s -X POST \
+          -H "Authorization: token $PAT" \
+          -H "Accept: application/vnd.github+json" \
+          https://api.github.com/repos/d-ganchar/david8_postgresql/actions/workflows/david8_changes.yml/dispatches \
+          -d "{\"ref\":\"main\", \"inputs\": {\"artifact_url\": \"${{ needs.build-artifact.outputs.artifact_url }}\"}}")
+          echo "Trigger david8_changes workflow in david8_postgresql"
+
+          - name: Wait for david8_changes workflow to complete
+            env:
+              PAT: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+            run: |
+              sleep 10
+              RUN_ID=$(curl -s -H "Authorization: token $PAT" \
+                https://api.github.com/repos/d-ganchar/david8_postgresql/actions/runs?branch=main \
+                | jq '.workflow_runs[0].id')
+              
+              STATUS="in_progress"
+              while [ "$STATUS" = "in_progress" ]; do
+                sleep 10
+                STATUS=$(curl -s -H "Authorization: token $PAT" \
+                  https://api.github.com/repos/d-ganchar/david8_postgresql/actions/runs/$RUN_ID \
+                  | jq -r '.status')
+              done
+              
+              CONCLUSION=$(curl -s -H "Authorization: token $PAT" \
+                https://api.github.com/repos/d-ganchar/david8_postgresql/actions/runs/$RUN_ID \
+                | jq -r '.conclusion')
+              
+              echo "Repo B workflow status: $CONCLUSION"
+              
+              if [ "$CONCLUSION" != "success" ]; then
+                echo "Repo B failed, failing this workflow."
+                exit 1
+              fi
+
 
   benchmarks:
     runs-on: ubuntu-22.04
