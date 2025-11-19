@@ -93,7 +93,7 @@ jobs:
   trigger_dialect_tests:
     runs-on: ubuntu-22.04
     permissions: write-all
-    needs: [ tests ]
+    needs: [ tests, build ]
     steps:
       - name: Trigger david8_changes workflow in david8_postgresql
         id: trigger
@@ -105,35 +105,55 @@ jobs:
           -H "Accept: application/vnd.github+json" \
           https://api.github.com/repos/d-ganchar/david8_postgresql/actions/workflows/david8_changes.yml/dispatches \
           -d "{\"ref\":\"main\", \"inputs\": {\"artifact_url\": \"${{ needs.build-artifact.outputs.artifact_url }}\"}}")
-          echo "Trigger david8_changes workflow in david8_postgresql"
+          
+          echo "Response from workflow dispatch:"
+          echo "$RESPONSE"  
 
-          - name: Wait for david8_changes workflow to complete
-            env:
-              PAT: ${{ secrets.DAVID8_POSTGRESQL_WORKFLOW_DAVID8_CHANGES_TOKEN }}
-            run: |
-              sleep 10
-              RUN_ID=$(curl -s -H "Authorization: token $PAT" \
-                https://api.github.com/repos/d-ganchar/david8_postgresql/actions/runs?branch=main \
-                | jq '.workflow_runs[0].id')
-
-              STATUS="in_progress"
-              while [ "$STATUS" = "in_progress" ]; do
-                sleep 10
-                STATUS=$(curl -s -H "Authorization: token $PAT" \
-                  https://api.github.com/repos/d-ganchar/david8_postgresql/actions/runs/$RUN_ID \
-                  | jq -r '.status')
-              done
-
-              CONCLUSION=$(curl -s -H "Authorization: token $PAT" \
-                https://api.github.com/repos/d-ganchar/david8_postgresql/actions/runs/$RUN_ID \
-                | jq -r '.conclusion')
-
-              echo "Repo B workflow status: $CONCLUSION"
-
-              if [ "$CONCLUSION" != "success" ]; then
-                echo "Repo B failed, failing this workflow."
-                exit 1
-              fi
+      - name: Wait for david8_changes workflow to complete
+        id: wait_for_completion
+        env:
+          PAT: ${{ secrets.DAVID8_POSTGRESQL_WORKFLOW_DAVID8_CHANGES_TOKEN }}
+        run: |
+          PAT="${{ secrets.DAVID8_POSTGRESQL_WORKFLOW_DAVID8_CHANGES_TOKEN }}"
+          REPO="d-ganchar/david8_postgresql"
+          BRANCH="main"
+  
+          RUN_ID=$(curl -s -H "Authorization: token $PAT" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/$REPO/actions/runs?branch=$BRANCH \
+            | jq '.workflow_runs[0].id')
+          
+          if [ "$RUN_ID" = "null" ]; then
+            echo "Error: Could not find a recent workflow run in $REPO on branch $BRANCH."
+            exit 1
+          fi
+          
+          echo "Found Run ID: $RUN_ID"
+          
+          STATUS="in_progress"
+          while [ "$STATUS" = "queued" ] || [ "$STATUS" = "in_progress" ] || [ "$STATUS" = "waiting" ]; do
+            sleep 30
+            
+            RUN_DATA=$(curl -s -H "Authorization: token $PAT" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/$REPO/actions/runs/$RUN_ID)
+              
+            STATUS=$(echo "$RUN_DATA" | jq -r '.status')
+            CONCLUSION=$(echo "$RUN_DATA" | jq -r '.conclusion')
+            
+            echo "Current status: $STATUS, Conclusion: $CONCLUSION (Run ID: $RUN_ID)"
+  
+          done
+  
+          echo "Workflow status: $CONCLUSION"
+  
+          if [ "$CONCLUSION" != "success" ]; then
+            echo "david8_postgresql failed, failing this workflow."
+            exit 1
+          fi
+          
+          HTML_URL=$(echo "$RUN_DATA" | jq -r '.html_url')
+          echo "Target workflow finished successfully: $HTML_URL"
 
   benchmarks:
     runs-on: ubuntu-22.04
