@@ -15,6 +15,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    outputs:
+      artifact_url: ${{ steps.upload.outputs.artifact_url }}
     env:
       UV_PYTHON: 3.11
     steps:
@@ -37,12 +39,20 @@ jobs:
           uv build
           mkdir david8_build
           mv ./dist ./david8_build
+
       - name: Upload david8 package
         uses: actions/upload-artifact@v4
         with:
           name: dist
           path: david8_build
           retention-days: 90
+
+      - name: Set artifact URL
+        id: artifact
+        run: |
+          ARTIFACT_ID=${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_URL="https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip"
+          echo "artifact_url=$ARTIFACT_URL" >> $GITHUB_OUTPUT
 
   tests:
     runs-on: ubuntu-22.04
@@ -80,6 +90,11 @@ jobs:
       - name: Test with python ${{ matrix.python-version }}
         run: pytest tests
 
+  trigger_dialect_tests:
+    runs-on: ubuntu-22.04
+    permissions: write-all
+    needs: [ tests ]
+    steps:
       - name: Trigger david8_changes workflow in david8_postgresql
         id: trigger
         env:
@@ -100,7 +115,7 @@ jobs:
               RUN_ID=$(curl -s -H "Authorization: token $PAT" \
                 https://api.github.com/repos/d-ganchar/david8_postgresql/actions/runs?branch=main \
                 | jq '.workflow_runs[0].id')
-              
+
               STATUS="in_progress"
               while [ "$STATUS" = "in_progress" ]; do
                 sleep 10
@@ -108,23 +123,22 @@ jobs:
                   https://api.github.com/repos/d-ganchar/david8_postgresql/actions/runs/$RUN_ID \
                   | jq -r '.status')
               done
-              
+
               CONCLUSION=$(curl -s -H "Authorization: token $PAT" \
                 https://api.github.com/repos/d-ganchar/david8_postgresql/actions/runs/$RUN_ID \
                 | jq -r '.conclusion')
-              
+
               echo "Repo B workflow status: $CONCLUSION"
-              
+
               if [ "$CONCLUSION" != "success" ]; then
                 echo "Repo B failed, failing this workflow."
                 exit 1
               fi
 
-
   benchmarks:
     runs-on: ubuntu-22.04
     permissions: write-all
-    needs: [ tests ]
+    needs: [ trigger_dialect_tests ]
     strategy:
       fail-fast: false
       matrix:
