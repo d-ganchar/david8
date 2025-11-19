@@ -104,7 +104,7 @@ jobs:
           -H "Authorization: token $PAT" \
           -H "Accept: application/vnd.github+json" \
           https://api.github.com/repos/d-ganchar/david8_postgresql/actions/workflows/david8_changes.yml/dispatches \
-          -d "{\"ref\":\"main\", \"inputs\": {\"artifact_url\": \"${{ needs.build-artifact.outputs.artifact_url }}\"}}")
+          -d "{\"ref\":\"main\", \"inputs\": {\"artifact_url\": \"${{ needs.build-artifact.outputs.artifact_url }}\", \"auth_token\": \"$PAT\"}}")
           
           echo "Response from workflow dispatch:"
           echo "$RESPONSE"  
