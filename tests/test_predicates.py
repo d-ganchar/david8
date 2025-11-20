@@ -2,7 +2,7 @@ from parameterized import parameterized
 
 from david8.expressions import param, val
 from david8.predicates import (
-    between_c,
+    between,
     eq,
     eq_c,
     eq_e,
@@ -30,14 +30,14 @@ class TestPredicates(BaseTest):
     @parameterized.expand([
         # between
         (
-            between_c('age', 14, 18).as_('is_valid'),
+                between('age', 14, 18).as_('is_valid'),
             'SELECT age BETWEEN %(p1)s AND %(p2)s AS is_valid',
-            {'p1': 14, 'p2': 18}
+                {'p1': 14, 'p2': 18}
         ),
         (
-            between_c('created_day', val('2025-01-01'), val('2026-01-01')),
+                between('created_day', val('2025-01-01'), val('2026-01-01')),
             "SELECT created_day BETWEEN '2025-01-01' AND '2026-01-01'",
-            {}
+                {}
         ),
         # eq
         (

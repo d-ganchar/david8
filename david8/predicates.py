@@ -97,7 +97,7 @@ def le(column: str, value: int | float | ExprProtocol) -> PredicateProtocol:
 def ne(column: str, value: int | float | str | ExprProtocol) -> PredicateProtocol:
     return _LeftColRightParamPredicate(column, value, '!=')
 
-def between_c(
+def between(
     column: str,
     start: str | float | int | ExprProtocol,
     end: str | float | int | ExprProtocol
