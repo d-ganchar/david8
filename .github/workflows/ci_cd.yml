@@ -89,8 +89,27 @@ jobs:
       - name: Install david8 from dist
         run: uv pip install dist/$(ls ./dist/ | grep ".tar.gz")
 
-      - name: Test with python ${{ matrix.python-version }}
-        run: pytest tests
+      - name: Run tests with coverage. py${{ matrix.python-version }}
+        run: |
+          coverage run -m pytest
+          coverage xml
+
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          format: cobertura
+          file: coverage.xml
+          parallel: true
+          flag-name: py-${{ matrix.python-version }}
+
+  coveralls_finish:
+    needs: [ tests ]
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Finish Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true
 
   trigger_postgres_dialect:
     needs: [ tests, build ]
