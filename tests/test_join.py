@@ -118,3 +118,60 @@ class TestJoin(BaseTest):
     ])
     def test_simple_join_using(self, query: QueryProtocol, exp_sql: str):
         self.assertEqual(query.get_sql(), exp_sql)
+
+    @parameterized.expand([
+        # using
+        (
+            BaseTest
+            .qb
+            .select('*')
+            .from_table('orders')
+            .join(
+                left()
+                .query(BaseTest.qb.select('*').from_table('users'))
+                .using('order_id', 'user_id')
+            ),
+            'SELECT * FROM orders LEFT JOIN (SELECT * FROM users) USING (order_id, user_id)'
+        ),
+        (
+            BaseTest
+            .qb_w
+            .select('*')
+            .from_table('orders')
+            .join(
+                left()
+                .query(BaseTest.qb.select('*').from_table('users'))
+                .using('order_id', 'user_id')
+            ),
+            'SELECT "*" FROM "orders" LEFT JOIN (SELECT "*" FROM "users") USING ("order_id", "user_id")'
+        ),
+        # on
+        (
+            BaseTest
+            .qb
+            .select('*')
+            .from_table('users', 'u')
+            .join(
+                left()
+                .query(BaseTest.qb.select('*').from_table('users'))
+                .on(eq_c('o.user_id', 'u.id'))
+                .as_('o')
+            ),
+            'SELECT * FROM users AS u LEFT JOIN (SELECT * FROM users) AS o ON (o.user_id = u.id)'
+        ),
+        (
+            BaseTest
+            .qb_w
+            .select('*')
+            .from_table('users', 'u')
+            .join(
+                left()
+                .query(BaseTest.qb.select('*').from_table('users'))
+                .on(eq_c('o.user_id', 'u.id'))
+                .as_('o')
+            ),
+            'SELECT "*" FROM "users" AS "u" LEFT JOIN (SELECT "*" FROM "users") AS "o" ON ("o"."user_id" = "u"."id")'
+        ),
+    ])
+    def test_join_from_query(self, query: QueryProtocol, exp_sql: str):
+        self.assertEqual(query.get_sql(), exp_sql)

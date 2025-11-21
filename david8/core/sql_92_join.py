@@ -21,7 +21,7 @@ class Sql92Join(Sql92JoinProtocol):
 
     def get_sql(self, dialect: DialectProtocol) -> str:
         if self.from_query:
-            source = self.from_query.get_sql(dialect)
+            source = f'({self.from_query.get_sql(dialect)})'
         else:
             table, db = self.from_table
             source = dialect.quote_ident(table)

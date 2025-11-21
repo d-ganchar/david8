@@ -67,18 +67,18 @@ class BaseSelect(SelectProtocol):
         self.limit_value = value
         return self
 
-    def _columns_to_sql(self) -> str:
+    def _columns_to_sql(self, dialect: DialectProtocol) -> str:
         return ', '.join(
-            self.dialect.quote_ident(column)
-            if isinstance(column, str) else column.get_sql(self.dialect)
+            dialect.quote_ident(column)
+            if isinstance(column, str) else column.get_sql(dialect)
             for column in self.select_columns
         )
 
-    def _where_to_sql(self) -> str:
+    def _where_to_sql(self, dialect: DialectProtocol) -> str:
         if not self.where_conditions:
             return ''
 
-        return f" WHERE {' AND '.join(predicate.get_sql(self.dialect) for predicate in self.where_conditions)}"
+        return f" WHERE {' AND '.join(predicate.get_sql(dialect) for predicate in self.where_conditions)}"
 
     def _order_by_to_sql(self) -> str:
         if not self.order_by_expressions:
@@ -91,60 +91,60 @@ class BaseSelect(SelectProtocol):
 
         return f" ORDER BY {', '.join(order_items)}"
 
-    def _with_queries_to_sql(self) -> str:
+    def _with_queries_to_sql(self, dialect: DialectProtocol) -> str:
         if not self.with_queries:
             return ''
 
         with_items = ', '.join(
-            f'{self.dialect.quote_ident(alias)} AS ({query.get_sql(self.dialect)})'
+            f'{dialect.quote_ident(alias)} AS ({query.get_sql(dialect)})'
             for alias, query in self.with_queries
         )
 
         return f'WITH {with_items} '
 
-    def _from_to_sql(self) -> str:
+    def _from_to_sql(self, dialect: DialectProtocol) -> str:
         if self.from_query_expr:
-            source = f'({self.from_query_expr.get_sql(self.dialect)})'
+            source = f'({self.from_query_expr.get_sql(dialect)})'
         elif self.from_table_value:
-            source = self.dialect.quote_ident(self.from_table_value)
+            source = dialect.quote_ident(self.from_table_value)
             if self.from_db_value:
-                source = f'{self.dialect.quote_ident(self.from_db_value)}.{source}'
+                source = f'{dialect.quote_ident(self.from_db_value)}.{source}'
         else:
             return ''
 
-        source = f'{source} AS {self.dialect.quote_ident(self.source_alias)}' if self.source_alias else source
+        source = f'{source} AS {dialect.quote_ident(self.source_alias)}' if self.source_alias else source
         return f' FROM {source}'
 
-    def _union_to_sql(self) -> str:
+    def _union_to_sql(self, dialect: DialectProtocol) -> str:
         if not self.unions:
             return ''
 
         return ' ' + ' '.join(
-            f"UNION{' ALL' if union_type else ''} {query.get_sql(self.dialect)}"
+            f"UNION{' ALL' if union_type else ''} {query.get_sql(dialect)}"
             for union_type, query in self.unions
         )
 
-    def _group_by_to_sql(self) -> str:
+    def _group_by_to_sql(self, dialect: DialectProtocol) -> str:
         if not self.group_by_expressions:
             return ''
 
         return ' GROUP BY ' + ', '.join(
-            f"{self.dialect.quote_ident(f) if isinstance(f, str) else str(f)}"
+            f"{dialect.quote_ident(f) if isinstance(f, str) else str(f)}"
             for f in self.group_by_expressions
         )
 
-    def _having_to_sql(self) -> str:
+    def _having_to_sql(self, dialect: DialectProtocol) -> str:
         if not self.having_expressions:
             return ''
 
-        return f" HAVING {' AND '.join(p.get_sql(self.dialect) for p in self.having_expressions)}"
+        return f" HAVING {' AND '.join(p.get_sql(dialect) for p in self.having_expressions)}"
 
-    def _joins_to_sql(self) -> str:
+    def _joins_to_sql(self, dialect: DialectProtocol) -> str:
         if not self.joins:
             return ''
 
         return ' ' + ' '.join(
-            join.get_sql(self.dialect)
+            join.get_sql(dialect)
             for join in self.joins
         )
 
@@ -169,21 +169,25 @@ class BaseSelect(SelectProtocol):
         """
         if dialect is None:
             self.dialect.get_paramstyle().reset_parameters()
+            dialect = self.dialect
+            log_query = True
+        else:
+            log_query = False
 
-        with_query = self._with_queries_to_sql()
-        select = self._columns_to_sql()
-        from_ref = self._from_to_sql()
-        joins = self._joins_to_sql()
-        where = self._where_to_sql()
-        group_by = self._group_by_to_sql()
-        having = self._having_to_sql()
-        union = self._union_to_sql()
+        with_query = self._with_queries_to_sql(dialect)
+        select = self._columns_to_sql(dialect)
+        from_ref = self._from_to_sql(dialect)
+        joins = self._joins_to_sql(dialect)
+        where = self._where_to_sql(dialect)
+        group_by = self._group_by_to_sql(dialect)
+        having = self._having_to_sql(dialect)
+        union = self._union_to_sql(dialect)
         order_by = self._order_by_to_sql()
 
         limit = f' LIMIT {self.limit_value}' if self.limit_value else ''
         sql = f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{limit}{union}'
-        if dialect is None:
-            log.info('%s %s', sql, self.get_parameters())
+        if log_query:
+            log.info('%s\n%s', sql, self.get_parameters())
 
         return sql
 
