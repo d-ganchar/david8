@@ -65,3 +65,28 @@ class _OneArgDistinctFn(Function):
 class OneArgDistinctCallableFactory(FnCallableFactory):
     def __call__(self, column: str, distinct: bool = False) -> FunctionProtocol:
         return _OneArgDistinctFn(self.name, column, distinct)
+
+
+@dataclasses.dataclass(slots=True)
+class _StrArgFn(Function):
+    """
+    upper(col_name)
+    lower(col_name)
+    etc
+    """
+    value: str | ExprProtocol = ''
+
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        if isinstance(self.value, str):
+            value = dialect.quote_ident(self.value)
+        else:
+            value = self.value.get_sql(dialect)
+        return f"{self.name}({value})"
+
+
+@dataclasses.dataclass(slots=True)
+class StrArgCallableFactory(FnCallableFactory):
+    value: str = ''
+
+    def __call__(self, value: str | ExprProtocol) -> FunctionProtocol:
+        return _StrArgFn(self.name, value)

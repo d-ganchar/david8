@@ -12,6 +12,6 @@ predictable and ergonomic workflow
 
 - Zero dependencies
 - Zero global objects
-- Built-in base support for ClickHouse, PostgreSQL, DuckDB, and MySQL
+- Built-in base support for ClickHouse, PostgreSQL, DuckDB, MySQL and SQLite
 
 See [Wiki](https://github.com/d-ganchar/david8/wiki)

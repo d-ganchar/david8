@@ -2,9 +2,10 @@ from parameterized import parameterized
 
 from david8 import QueryBuilderProtocol
 from david8.expressions import param, val
-from david8.functions import avg, concat, count, max_, min_, sum_
+from david8.functions import avg, concat, count, length, lower, max_, min_, sum_, trim, upper
 from david8.logical_operators import and_, or_, xor
 from david8.predicates import eq_e
+from david8.protocols.dml import FunctionProtocol
 from tests.base_test import BaseTest
 
 
@@ -108,3 +109,96 @@ class TestAggFunctions(BaseTest):
             'SELECT * FROM test HAVING (count(name) = 2 OR max(price) = 1000 OR (min(age) = 27 '
             'AND sum(money) = 100) OR (avg(success) = 99 XOR avg(happiness) = 101))'
         )
+
+    @parameterized.expand([
+        # length
+        (
+            length(concat('col1', 'col2')),
+            'SELECT length(concat(col1, col2))',
+            'SELECT length(concat("col1", "col2"))',
+            {},
+        ),
+        (
+            length('col_name'),
+            'SELECT length(col_name)',
+            'SELECT length("col_name")',
+            {},
+        ),
+        (
+            length(val('MyVAR')),
+            "SELECT length('MyVAR')",
+            "SELECT length('MyVAR')",
+            {},
+        ),
+        (
+            length(param('myParam')),
+            'SELECT length(%(p1)s)',
+            'SELECT length(%(p1)s)',
+            {'p1': 'myParam'},
+        ),
+        # upper
+        (
+            upper('col_name'),
+            'SELECT upper(col_name)',
+            'SELECT upper("col_name")',
+            {},
+        ),
+        (
+            upper(val('MyVAR')),
+            "SELECT upper('MyVAR')",
+            "SELECT upper('MyVAR')",
+            {},
+        ),
+        (
+            upper(param('myParam')),
+            'SELECT upper(%(p1)s)',
+            'SELECT upper(%(p1)s)',
+            {'p1': 'myParam'},
+        ),
+        # lower
+        (
+            lower('col_name'),
+            'SELECT lower(col_name)',
+            'SELECT lower("col_name")',
+            {},
+        ),
+        (
+            lower(val('MyVAR')),
+            "SELECT lower('MyVAR')",
+            "SELECT lower('MyVAR')",
+            {},
+        ),
+        (
+            lower(param('myParam')),
+            'SELECT lower(%(p1)s)',
+            'SELECT lower(%(p1)s)',
+            {'p1': 'myParam'},
+        ),
+        # trim
+        (
+            trim('col_name'),
+            'SELECT trim(col_name)',
+            'SELECT trim("col_name")',
+            {},
+        ),
+        (
+            trim(val('MyVAR')),
+            "SELECT trim('MyVAR')",
+            "SELECT trim('MyVAR')",
+            {},
+        ),
+        (
+            trim(param('myParam')),
+            'SELECT trim(%(p1)s)',
+            'SELECT trim(%(p1)s)',
+            {'p1': 'myParam'},
+        ),
+    ])
+    def test_str_arg_fn(self, fn: FunctionProtocol, sql_exp: str, sql_expr2: str, exp_param: dict):
+        query = self.qb.select(fn)
+        self.assertEqual(query.get_sql(), sql_exp)
+        self.assertEqual(query.get_parameters(), exp_param)
+
+        query = self.qb_w.select(fn)
+        self.assertEqual(query.get_sql(), sql_expr2)
+        self.assertEqual(query.get_parameters(), exp_param)
