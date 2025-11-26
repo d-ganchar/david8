@@ -1,6 +1,19 @@
+from .core.arg_convertors import to_col_or_expr
 from .core.base_aliased import BaseAliased as _BaseAliased
 from .protocols.dialect import DialectProtocol
 from .protocols.sql import ExprProtocol, PredicateProtocol
+
+
+class _IsPredicate(PredicateProtocol, _BaseAliased):
+    def __init__(self, left: str | ExprProtocol, right: str | ExprProtocol):
+        super().__init__()
+        self._left = left
+        self._right = right
+
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        left = to_col_or_expr(self._left, dialect)
+        right = to_col_or_expr(self._right, dialect)
+        return f'{left} IS {right}'
 
 
 class _LeftColRightParamPredicate(PredicateProtocol, _BaseAliased):
@@ -103,6 +116,11 @@ def between(
     end: str | float | int | ExprProtocol
 ) -> PredicateProtocol:
     return _BetweenPredicate(column, start, end)
+
+# .where(is_('is_active', false)) => WHERE is_active IS FALSE
+# .where(is_('is_active', not_(false))) => WHERE is_active IS NOT FALSE
+def is_(left: str | ExprProtocol, right: str | ExprProtocol) -> PredicateProtocol:
+    return _IsPredicate(left, right)
 
 # columns predicates. example: WHERE col_name = col_name2, col_name != col_name2 ...
 def eq_c(left_column: str, right_column: str) -> PredicateProtocol:

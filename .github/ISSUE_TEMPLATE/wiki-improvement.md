@@ -2,7 +2,7 @@
 name: Doc improvement
 about: Documentation bugs / improvements
 title: 'Wiki:'
-labels: doc
+labels: documentation
 assignees: d-ganchar
 
 ---

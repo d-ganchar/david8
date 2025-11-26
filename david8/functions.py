@@ -14,6 +14,7 @@ upper = _StrArgCallableFactory(name='upper')
 length = _StrArgCallableFactory(name='length')
 trim = _StrArgCallableFactory(name='trim')
 
+# count('name', True) => count(DISTINCT name), min_('age', True) => min(DISTINCT age) = 33
 count = _AggDistinctCallableFactory(name='count')
 avg = _AggDistinctCallableFactory(name='avg')
 sum_ = _AggDistinctCallableFactory(name='sum')

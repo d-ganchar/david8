@@ -35,6 +35,15 @@ class Value(BaseAliased, ValueProtocol):
         return f'{self._value}'
 
 
+class SqlType(BaseAliased):
+    def __init__(self, name: str) -> None:
+        super().__init__()
+        self._name = name
+
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        return f'{self._name}'
+
+
 class Parameter(BaseAliased, ParameterProtocol):
     def __init__(self, value: str | int | float, fixed_name: bool = False) -> None:
         super().__init__()

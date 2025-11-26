@@ -1,6 +1,7 @@
 from parameterized import parameterized
 
-from david8.expressions import param, val
+from david8.expressions import false, null, param, true, val
+from david8.logical_operators import not_
 from david8.predicates import (
     between,
     eq,
@@ -12,6 +13,7 @@ from david8.predicates import (
     gt,
     gt_c,
     gt_e,
+    is_,
     le,
     le_c,
     le_e,
@@ -30,14 +32,14 @@ class TestPredicates(BaseTest):
     @parameterized.expand([
         # between
         (
-                between('age', 14, 18).as_('is_valid'),
+            between('age', 14, 18).as_('is_valid'),
             'SELECT age BETWEEN %(p1)s AND %(p2)s AS is_valid',
-                {'p1': 14, 'p2': 18}
+            {'p1': 14, 'p2': 18}
         ),
         (
-                between('created_day', val('2025-01-01'), val('2026-01-01')),
+            between('created_day', val('2025-01-01'), val('2026-01-01')),
             "SELECT created_day BETWEEN '2025-01-01' AND '2026-01-01'",
-                {}
+            {}
         ),
         # eq
         (
@@ -197,6 +199,47 @@ class TestPredicates(BaseTest):
         (
             ne_e(val(1), param(1)),
             'SELECT 1 != %(p1)s',
+            {'p1': 1}
+        ),
+        # is
+        (
+            is_('is_active', true()),
+            'SELECT is_active IS TRUE',
+            {},
+        ),
+        (
+            is_('is_active', not_(true())),
+            'SELECT is_active IS NOT TRUE',
+            {},
+        ),
+        (
+            is_('is_active', false()),
+            'SELECT is_active IS FALSE',
+            {},
+        ),
+        (
+            is_('is_active', not_(false())),
+            'SELECT is_active IS NOT FALSE',
+            {},
+        ),
+        (
+            is_('is_active', null()),
+            'SELECT is_active IS NULL',
+            {},
+        ),
+        (
+            is_('is_active', not_(null())),
+            'SELECT is_active IS NOT NULL',
+            {},
+        ),
+        (
+            is_('last_update_dt', 'last_login_dt'),
+            'SELECT last_update_dt IS last_login_dt',
+            {}
+        ),
+        (
+            is_('last_update_dt', param(1)),
+            'SELECT last_update_dt IS %(p1)s',
             {'p1': 1}
         ),
     ])

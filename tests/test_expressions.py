@@ -1,7 +1,7 @@
 from parameterized import parameterized
 
 from david8 import get_default_qb
-from david8.expressions import col, param, val
+from david8.expressions import col, false, null, param, true, val
 from david8.param_styles import (
     FormatParamStyle,
     NamedParamStyle,
@@ -10,7 +10,7 @@ from david8.param_styles import (
     QMarkParamStyle,
 )
 from david8.protocols.dialect import ParamStyleProtocol
-from david8.protocols.sql import QueryProtocol
+from david8.protocols.sql import AliasedProtocol, QueryProtocol
 from tests.base_test import BaseTest
 
 
@@ -129,3 +129,20 @@ class TestExpressions(BaseTest):
         self.assertEqual(query.get_parameters(), exp_dict_params)
         self.assertEqual(query.get_list_parameters(), exp_list_params)
         self.assertEqual(query.get_tuple_parameters(), tuple(exp_list_params))
+
+    @parameterized.expand([
+        (
+            true(),
+            'SELECT TRUE',
+        ),
+        (
+            false(),
+            'SELECT FALSE',
+        ),
+        (
+            null(),
+            'SELECT NULL',
+        ),
+    ])
+    def test_sql_type(self, expr: AliasedProtocol, exp_sql: str):
+        self.assertEqual(self.qb.select(expr).get_sql(), exp_sql)
