@@ -9,6 +9,17 @@ from david8.protocols.sql import ExprProtocol, FunctionProtocol
 class Function(BaseAliased, FunctionProtocol):
     name: str
 
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        return f"{self.name}()"
+
+
+@dataclasses.dataclass(slots=True, kw_only=True)
+class ZeroArgsCallableFactory:
+    name: str = ''
+
+    def __call__(self) -> FunctionProtocol:
+        return Function(self.name)
+
 
 @dataclasses.dataclass(slots=True, kw_only=True)
 class FnCallableFactory:

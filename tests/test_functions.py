@@ -2,7 +2,7 @@ from parameterized import parameterized
 
 from david8 import QueryBuilderProtocol
 from david8.expressions import param, val
-from david8.functions import avg, concat, count, length, lower, max_, min_, sum_, trim, upper
+from david8.functions import avg, concat, count, length, lower, max_, min_, now_, sum_, trim, upper, uuid_
 from david8.logical_operators import and_, or_, xor
 from david8.predicates import eq_e
 from david8.protocols.dml import FunctionProtocol
@@ -202,3 +202,16 @@ class TestAggFunctions(BaseTest):
         query = self.qb_w.select(fn)
         self.assertEqual(query.get_sql(), sql_expr2)
         self.assertEqual(query.get_parameters(), exp_param)
+
+    @parameterized.expand([
+        (
+            now_(),
+            'SELECT now()',
+        ),
+        (
+            uuid_(),
+            'SELECT uuid()',
+        ),
+    ])
+    def test_zero_arg_fn(self, fn: FunctionProtocol, sql_exp: str):
+        self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)

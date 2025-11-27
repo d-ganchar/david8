@@ -7,6 +7,9 @@ from david8.core.fn_generator import (
 from david8.core.fn_generator import (
     StrArgCallableFactory as _StrArgCallableFactory,
 )
+from david8.core.fn_generator import (
+    ZeroArgsCallableFactory as _ZeroArgsCallableFactory,
+)
 
 # length('col_name') | length(val('MyVAR')) | length(param('myParam')) | length(concat('col1', 'col2'))
 lower = _StrArgCallableFactory(name='lower')
@@ -22,3 +25,6 @@ max_ = _AggDistinctCallableFactory(name='max')
 min_ = _AggDistinctCallableFactory(name='min')
 
 concat = _SeparatedStrArgsCallableFactory(name='concat', separator=', ')
+
+now_ = _ZeroArgsCallableFactory(name='now')
+uuid_ = _ZeroArgsCallableFactory(name='uuid')
