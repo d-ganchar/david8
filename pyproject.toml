@@ -1,7 +1,7 @@
 [project]
 name = "david8"
 version = "0.dev.0"
-description = "Lightweight Python SQL query builder with support for multiple dialects: ClickHouse and PostgreSQL"
+description = "Lightweight Python SQL query builder with support for multiple dialects: ClickHouse, PostgreSQL, DuckDB, MySQL and SQLite"
 authors = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
 maintainers = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
 license-files = ["LICENSE"]

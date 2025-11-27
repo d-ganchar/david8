@@ -1,4 +1,7 @@
 from david8.core.fn_generator import (
+    CastCallableFactory as _CastCallableFactory,
+)
+from david8.core.fn_generator import (
     OneArgDistinctCallableFactory as _AggDistinctCallableFactory,
 )
 from david8.core.fn_generator import (
@@ -28,3 +31,5 @@ concat = _SeparatedStrArgsCallableFactory(name='concat', separator=', ')
 
 now_ = _ZeroArgsCallableFactory(name='now')
 uuid_ = _ZeroArgsCallableFactory(name='uuid')
+
+cast = _CastCallableFactory()

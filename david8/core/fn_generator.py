@@ -1,5 +1,6 @@
 import dataclasses
 
+from david8.core.arg_convertors import to_col_or_expr
 from david8.core.base_aliased import BaseAliased
 from david8.protocols.dialect import DialectProtocol
 from david8.protocols.sql import ExprProtocol, FunctionProtocol
@@ -101,3 +102,20 @@ class StrArgCallableFactory(FnCallableFactory):
 
     def __call__(self, value: str | ExprProtocol) -> FunctionProtocol:
         return _StrArgFn(self.name, value)
+
+
+@dataclasses.dataclass(slots=True)
+class _CastFn(Function):
+    value: str | ExprProtocol
+    cast_type: str
+
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        value = to_col_or_expr(self.value, dialect)
+        return f"{self.name}({value} AS {self.cast_type})"
+
+
+@dataclasses.dataclass(slots=True)
+class CastCallableFactory(FnCallableFactory):
+    name = 'CAST'
+    def __call__(self, value: str | ExprProtocol, cast_type: str) -> FunctionProtocol:
+        return _CastFn('CAST', value, cast_type)

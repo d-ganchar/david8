@@ -1,8 +1,9 @@
 from parameterized import parameterized
 
 from david8 import QueryBuilderProtocol
+from david8.cast_types import bigint, char, date_, integer, smallint, text, time_, timestamp_, varchar
 from david8.expressions import param, val
-from david8.functions import avg, concat, count, length, lower, max_, min_, now_, sum_, trim, upper, uuid_
+from david8.functions import avg, cast, concat, count, length, lower, max_, min_, now_, sum_, trim, upper, uuid_
 from david8.logical_operators import and_, or_, xor
 from david8.predicates import eq_e
 from david8.protocols.dml import FunctionProtocol
@@ -214,4 +215,45 @@ class TestAggFunctions(BaseTest):
         ),
     ])
     def test_zero_arg_fn(self, fn: FunctionProtocol, sql_exp: str):
+        self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)
+
+    @parameterized.expand([
+        (
+            cast('col_name', integer),
+            'SELECT CAST(col_name AS INTEGER)',
+        ),
+        (
+            cast('col_name', bigint),
+            'SELECT CAST(col_name AS BIGINT)',
+        ),
+        (
+            cast('col_name', text),
+            'SELECT CAST(col_name AS TEXT)',
+        ),
+        (
+            cast('col_name', char(9)),
+            'SELECT CAST(col_name AS CHAR(9))',
+        ),
+        (
+            cast('col_name', varchar(9)),
+            'SELECT CAST(col_name AS VARCHAR(9))',
+        ),
+        (
+            cast(val('1'), smallint).as_('small_int_val'),
+            "SELECT CAST('1' AS SMALLINT) AS small_int_val",
+        ),
+        (
+            cast(val('2025-11-27 15:54:34.173122+00'), timestamp_),
+            "SELECT CAST('2025-11-27 15:54:34.173122+00' AS TIMESTAMP)",
+        ),
+        (
+            cast(val('2025-11-27 15:54:34.173122+00'), date_),
+            "SELECT CAST('2025-11-27 15:54:34.173122+00' AS DATE)",
+        ),
+        (
+            cast(val('2025-11-27 15:54:34.173122+00'), time_),
+            "SELECT CAST('2025-11-27 15:54:34.173122+00' AS TIME)",
+        ),
+    ])
+    def test_cast(self, fn: FunctionProtocol, sql_exp: str):
         self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)
