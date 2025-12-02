@@ -53,3 +53,14 @@ class Sql92JoinProtocol(JoinProtocol):
 
     def using(self, *args: str) -> 'Sql92JoinProtocol':
         pass
+
+
+class UpdateProtocol(QueryProtocol):
+    def table(self, table_name: str, alias: str = '', db_name: str = '') -> 'UpdateProtocol':
+        pass
+
+    def set_(self, column: str, value: str | int | float | ExprProtocol | SelectProtocol) -> 'UpdateProtocol':
+        pass
+
+    def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'UpdateProtocol':
+        pass

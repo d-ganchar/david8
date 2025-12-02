@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from ..protocols.dml import SelectProtocol
+from ..protocols.dml import SelectProtocol, UpdateProtocol
 from .sql import AliasedProtocol, ExprProtocol, FunctionProtocol
 
 
@@ -9,4 +9,7 @@ class QueryBuilderProtocol(Protocol):
         pass
 
     def with_(self, *args: tuple[str, SelectProtocol]) -> SelectProtocol:
+        pass
+
+    def update(self) -> UpdateProtocol:
         pass

@@ -1,16 +1,70 @@
 import dataclasses
+import functools
+from collections.abc import Callable
 from typing import Any
 
-from ..core.base_aliased import AliasedProtocol
-from ..protocols.dialect import DialectProtocol
-from ..protocols.dml import JoinProtocol, SelectProtocol
+from david8.core.log import log
+from david8.protocols.dialect import DialectProtocol
+
+from ..core.base_aliased import AliasedProtocol, Column
+from ..protocols.dml import JoinProtocol, SelectProtocol, UpdateProtocol
 from ..protocols.sql import (
     ExprProtocol,
     FunctionProtocol,
     LogicalOperatorProtocol,
     PredicateProtocol,
 )
-from .log import log
+
+
+def log_and_reset(func: Callable) -> Callable:
+    """
+    Recalculate parameters when subqueries and log final sql query with parameters
+    """
+    @functools.wraps(func)
+    def wrapper(self: 'BaseSelect' or 'BaseUpdate', dialect: DialectProtocol = None):
+        if dialect is None:
+            self.dialect.get_paramstyle().reset_parameters()
+            log_query = True
+        else:
+            log_query = False
+
+        sql = func(self, dialect)
+        if log_query:
+            log.info('%s\n%s', sql, self.get_parameters())
+
+        return sql
+    return wrapper
+
+
+@dataclasses.dataclass(slots=True)
+class BaseWhereConstruction(ExprProtocol):
+    conditions: tuple[ExprProtocol, ...] = dataclasses.field(default_factory=tuple)
+
+    def get_sql(self, dialect: DialectProtocol) -> str:
+        if not self.conditions:
+            return ''
+
+        return f" WHERE {' AND '.join(predicate.get_sql(dialect) for predicate in self.conditions)}"
+
+    def add_conditions(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> None:
+        self.conditions += args
+
+
+@dataclasses.dataclass(slots=True)
+class TargetTableConstruction(ExprProtocol):
+    from_table: str = ''
+    from_db: str = ''
+
+    def set_source(self, from_table: str, from_db: str = '') -> None:
+        self.from_db = from_db
+        self.from_table = from_table
+
+    def get_sql(self, dialect: DialectProtocol) -> str:
+        source = dialect.quote_ident(self.from_table)
+        if self.from_db:
+            source = f'{dialect.quote_ident(self.from_db)}.{source}'
+
+        return source
 
 
 @dataclasses.dataclass(slots=True)
@@ -22,7 +76,7 @@ class BaseSelect(SelectProtocol):
         ...
     ] = dataclasses.field(default_factory=tuple)
 
-    where_conditions: tuple[ExprProtocol, ...] = dataclasses.field(default_factory=tuple)
+    where_construction: BaseWhereConstruction = dataclasses.field(default_factory=BaseWhereConstruction)
     order_by_expressions: tuple[tuple[str | int, str], ...] = dataclasses.field(default_factory=tuple)
     group_by_expressions: tuple = dataclasses.field(default_factory=tuple)
     with_queries: tuple = dataclasses.field(default_factory=tuple)
@@ -32,8 +86,7 @@ class BaseSelect(SelectProtocol):
     # ((True, query1), (False, query2))
     unions: tuple[tuple[str, SelectProtocol], ...] = dataclasses.field(default_factory=tuple)
     joins: tuple[JoinProtocol, ...] = dataclasses.field(default_factory=tuple)
-    from_table_value: str = ''
-    from_db_value: str = ''
+    from_table_cnstr: TargetTableConstruction = dataclasses.field(default_factory=TargetTableConstruction)
     from_query_expr: SelectProtocol | None = None
     limit_value: int | None = None
 
@@ -42,12 +95,11 @@ class BaseSelect(SelectProtocol):
         return self
 
     def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> SelectProtocol:
-        self.where_conditions += args
+        self.where_construction.add_conditions(*args)
         return self
 
     def from_table(self, table_name: str, alias: str = '', db_name: str = '') -> SelectProtocol:
-        self.from_db_value = db_name
-        self.from_table_value = table_name
+        self.from_table_cnstr.set_source(table_name, db_name)
         self.source_alias = alias
         self.from_query_expr = None
         return self
@@ -55,8 +107,7 @@ class BaseSelect(SelectProtocol):
     def from_query(self, query: 'SelectProtocol', alias: str = '') -> 'SelectProtocol':
         self.from_query_expr = query
         self.source_alias = alias
-        self.from_db_value = ''
-        self.from_table_value = ''
+        self.from_table_cnstr.set_source('')
         return self
 
     def group_by(self, *args: str | int) -> SelectProtocol:
@@ -73,12 +124,6 @@ class BaseSelect(SelectProtocol):
             if isinstance(column, str) else column.get_sql(dialect)
             for column in self.select_columns
         )
-
-    def _where_to_sql(self, dialect: DialectProtocol) -> str:
-        if not self.where_conditions:
-            return ''
-
-        return f" WHERE {' AND '.join(predicate.get_sql(dialect) for predicate in self.where_conditions)}"
 
     def _order_by_to_sql(self) -> str:
         if not self.order_by_expressions:
@@ -105,10 +150,8 @@ class BaseSelect(SelectProtocol):
     def _from_to_sql(self, dialect: DialectProtocol) -> str:
         if self.from_query_expr:
             source = f'({self.from_query_expr.get_sql(dialect)})'
-        elif self.from_table_value:
-            source = dialect.quote_ident(self.from_table_value)
-            if self.from_db_value:
-                source = f'{dialect.quote_ident(self.from_db_value)}.{source}'
+        elif self.from_table_cnstr.from_table:
+            source = self.from_table_cnstr.get_sql(dialect)
         else:
             return ''
 
@@ -148,6 +191,7 @@ class BaseSelect(SelectProtocol):
             for join in self.joins
         )
 
+    @log_and_reset
     def get_sql(self, dialect: DialectProtocol = None) -> str:
         """
         Don't forget about a query rendering sequence. You can break the sequence of query parameters, see:
@@ -167,29 +211,19 @@ class BaseSelect(SelectProtocol):
         [ ORDER BY <sort_specification_list> ]
         [ LIMIT <limit_value> ]
         """
-        if dialect is None:
-            self.dialect.get_paramstyle().reset_parameters()
-            dialect = self.dialect
-            log_query = True
-        else:
-            log_query = False
-
+        dialect = dialect or self.dialect
         with_query = self._with_queries_to_sql(dialect)
         select = self._columns_to_sql(dialect)
         from_ref = self._from_to_sql(dialect)
         joins = self._joins_to_sql(dialect)
-        where = self._where_to_sql(dialect)
+        where = self.where_construction.get_sql(dialect)
         group_by = self._group_by_to_sql(dialect)
         having = self._having_to_sql(dialect)
         union = self._union_to_sql(dialect)
         order_by = self._order_by_to_sql()
 
         limit = f' LIMIT {self.limit_value}' if self.limit_value else ''
-        sql = f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{limit}{union}'
-        if log_query:
-            log.info('%s\n%s', sql, self.get_parameters())
-
-        return sql
+        return f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{limit}{union}'
 
     def get_parameters(self) -> dict:
         return self.dialect.get_paramstyle().get_parameters()
@@ -225,3 +259,70 @@ class BaseSelect(SelectProtocol):
     def join(self, join: JoinProtocol) -> SelectProtocol:
         self.joins += (join,)
         return self
+
+
+@dataclasses.dataclass(slots=True)
+class BaseUpdate(UpdateProtocol):
+    dialect: DialectProtocol = None
+    alias: str = ''
+    target_table: TargetTableConstruction = dataclasses.field(default_factory=TargetTableConstruction)
+    where_construction: BaseWhereConstruction = dataclasses.field(default_factory=BaseWhereConstruction)
+    set_construction: tuple[
+        str,
+        [str | int | float | ExprProtocol | SelectProtocol],
+        ...
+    ] = dataclasses.field(default_factory=tuple)
+
+    def table(self, table_name: str, alias: str = '', db_name: str = '') -> 'UpdateProtocol':
+        self.target_table.set_source(table_name, db_name)
+        self.alias = alias
+        return self
+
+    def set_(self, column: str, value: str | int | float | ExprProtocol | SelectProtocol) -> 'UpdateProtocol':
+        self.set_construction += ((column, value, ), )
+        return self
+
+    def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'UpdateProtocol':
+        self.where_construction.add_conditions(*args)
+        return self
+
+    def get_parameters(self) -> dict:
+        return self.dialect.get_paramstyle().get_parameters()
+
+    def get_list_parameters(self) -> list[Any]:
+        return self.dialect.get_paramstyle().get_list_parameters()
+
+    def get_tuple_parameters(self) -> tuple[Any]:
+        return self.dialect.get_paramstyle().get_tuple_parameters()
+
+    def _table_to_sql(self, dialect: DialectProtocol) -> str:
+        table = self.target_table.get_sql(dialect)
+        if self.alias:
+            table = f'{table} AS {dialect.quote_ident(self.alias)}'
+
+        return table
+
+    def _set_construction_to_sql(self, dialect: DialectProtocol) -> str:
+        set_columns = ()
+
+        for col, value in self.set_construction:
+            if isinstance(value, Column):
+                sql_val = value.get_sql(dialect)
+            elif isinstance(value, (ExprProtocol, SelectProtocol)):
+                sql_val = f'({value.get_sql(dialect)})'
+            else:
+                _, sql_val = dialect.get_paramstyle().add_param(value)
+
+            set_columns += (f'{dialect.quote_ident(col)} = {sql_val}',)
+
+        return f' SET {", ".join(set_columns)}'
+
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        set_columns = self._set_construction_to_sql(dialect)
+        table = self._table_to_sql(dialect)
+        where = self.where_construction.get_sql(dialect)
+        return f'UPDATE {table}{set_columns}{where}'
+
+    @log_and_reset
+    def get_sql(self, dialect: DialectProtocol = None) -> str:
+        return self._get_sql(dialect or self.dialect)
