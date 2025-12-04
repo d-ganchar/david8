@@ -1,5 +1,4 @@
 import dataclasses
-from typing import Self
 
 from ..protocols.dialect import DialectProtocol
 from ..protocols.sql import AliasedProtocol, ParameterProtocol, ValueProtocol
@@ -9,7 +8,7 @@ from ..protocols.sql import AliasedProtocol, ParameterProtocol, ValueProtocol
 class BaseAliased(AliasedProtocol):
     alias: str = ''
 
-    def as_(self, alias: str) -> Self:
+    def as_(self, alias: str) -> AliasedProtocol:
         self.alias = alias
         return self
 

@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 
 from ..protocols.dialect import DialectProtocol
-from ..protocols.dml import SelectProtocol, UpdateProtocol
+from ..protocols.dml import InsertProtocol, SelectProtocol, UpdateProtocol
 from ..protocols.query_builder import QueryBuilderProtocol
 from ..protocols.sql import AliasedProtocol, ExprProtocol, FunctionProtocol
+from .base_dml import BaseInsert
 from .base_dml import BaseSelect as _BaseSelect
 from .base_dml import BaseUpdate as _BaseUpdate
 
@@ -21,3 +22,6 @@ class BaseQueryBuilder(QueryBuilderProtocol):
 
     def update(self) -> UpdateProtocol:
         return _BaseUpdate(dialect=self._dialect)
+
+    def insert(self) -> InsertProtocol:
+        return BaseInsert(dialect=self._dialect)

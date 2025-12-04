@@ -64,3 +64,17 @@ class UpdateProtocol(QueryProtocol):
 
     def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'UpdateProtocol':
         pass
+
+
+class InsertProtocol(QueryProtocol):
+    def into(self, table_name: str, db_name: str = '') -> 'InsertProtocol':
+        pass
+
+    def value(self, col_name: str, value: str | float | int) -> 'InsertProtocol':
+        pass
+
+    def columns(self, *args: str) -> 'InsertProtocol':
+        pass
+
+    def from_select(self, query: SelectProtocol) -> 'InsertProtocol':
+        pass

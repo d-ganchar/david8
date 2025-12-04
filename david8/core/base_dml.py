@@ -7,7 +7,7 @@ from david8.core.log import log
 from david8.protocols.dialect import DialectProtocol
 
 from ..core.base_aliased import AliasedProtocol, Column
-from ..protocols.dml import JoinProtocol, SelectProtocol, UpdateProtocol
+from ..protocols.dml import InsertProtocol, JoinProtocol, SelectProtocol, UpdateProtocol
 from ..protocols.sql import (
     ExprProtocol,
     FunctionProtocol,
@@ -191,6 +191,20 @@ class BaseSelect(SelectProtocol):
             for join in self.joins
         )
 
+    def _to_sql(self, dialect: DialectProtocol):
+        with_query = self._with_queries_to_sql(dialect)
+        select = self._columns_to_sql(dialect)
+        from_ref = self._from_to_sql(dialect)
+        joins = self._joins_to_sql(dialect)
+        where = self.where_construction.get_sql(dialect)
+        group_by = self._group_by_to_sql(dialect)
+        having = self._having_to_sql(dialect)
+        union = self._union_to_sql(dialect)
+        order_by = self._order_by_to_sql()
+
+        limit = f' LIMIT {self.limit_value}' if self.limit_value else ''
+        return f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{limit}{union}'
+
     @log_and_reset
     def get_sql(self, dialect: DialectProtocol = None) -> str:
         """
@@ -211,19 +225,7 @@ class BaseSelect(SelectProtocol):
         [ ORDER BY <sort_specification_list> ]
         [ LIMIT <limit_value> ]
         """
-        dialect = dialect or self.dialect
-        with_query = self._with_queries_to_sql(dialect)
-        select = self._columns_to_sql(dialect)
-        from_ref = self._from_to_sql(dialect)
-        joins = self._joins_to_sql(dialect)
-        where = self.where_construction.get_sql(dialect)
-        group_by = self._group_by_to_sql(dialect)
-        having = self._having_to_sql(dialect)
-        union = self._union_to_sql(dialect)
-        order_by = self._order_by_to_sql()
-
-        limit = f' LIMIT {self.limit_value}' if self.limit_value else ''
-        return f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{limit}{union}'
+        return self._to_sql(dialect or self.dialect)
 
     def get_parameters(self) -> dict:
         return self.dialect.get_paramstyle().get_parameters()
@@ -326,3 +328,61 @@ class BaseUpdate(UpdateProtocol):
     @log_and_reset
     def get_sql(self, dialect: DialectProtocol = None) -> str:
         return self._get_sql(dialect or self.dialect)
+
+
+@dataclasses.dataclass(slots=True)
+class BaseInsert(InsertProtocol):
+    from_query_expr: SelectProtocol | None = None
+    dialect: DialectProtocol = None
+    alias: str = ''
+    target_table: TargetTableConstruction = dataclasses.field(default_factory=TargetTableConstruction)
+    values: tuple[str | float | int] = dataclasses.field(default_factory=tuple)
+    column_set: tuple[str, ...] = dataclasses.field(default_factory=tuple)
+
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        columns = f' ({", ".join(dialect.quote_ident(c) for c in self.column_set)})' if self.column_set else ' '
+        sql = f'INSERT INTO {self.target_table.get_sql(dialect)}{columns}'
+
+        if self.from_query_expr:
+            sql = f'{sql} {self.from_query_expr.get_sql(dialect)}'
+        else:
+            placeholders = ()
+            for value in self.values:
+                _, placeholder = dialect.get_paramstyle().add_param(value)
+                placeholders += (placeholder,)
+
+            sql = f'{sql} VALUES ({", ".join(placeholders)})'
+
+        return sql
+
+    @log_and_reset
+    def get_sql(self, dialect: DialectProtocol = None) -> str:
+        return self._get_sql(dialect or self.dialect)
+
+    def into(self, table_name: str, db_name: str = '') -> 'InsertProtocol':
+        self.target_table.set_source(table_name, db_name)
+        return self
+
+    def value(self, col_name: str, value: str | float | int) -> 'InsertProtocol':
+        self.values += (value, )
+        self.column_set += (col_name, )
+        self.from_query_expr = None
+        return self
+
+    def columns(self, *args: str) -> 'InsertProtocol':
+        self.column_set = args
+        return self
+
+    def from_select(self, query: SelectProtocol) -> 'InsertProtocol':
+        self.from_query_expr = query
+        self.values = tuple()
+        return self
+
+    def get_parameters(self) -> dict:
+        return self.dialect.get_paramstyle().get_parameters()
+
+    def get_list_parameters(self) -> list[Any]:
+        return self.dialect.get_paramstyle().get_list_parameters()
+
+    def get_tuple_parameters(self) -> tuple[Any]:
+        return self.dialect.get_paramstyle().get_tuple_parameters()

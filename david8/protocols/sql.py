@@ -1,4 +1,4 @@
-from typing import Any, Protocol, Self
+from typing import Any, Protocol
 
 from ..protocols.dialect import DialectProtocol
 
@@ -29,7 +29,7 @@ class ExprProtocol:
 
 
 class AliasedProtocol(ExprProtocol):
-    def as_(self, alias: str) -> Self:
+    def as_(self, alias: str) -> 'AliasedProtocol':
         pass
 
 
