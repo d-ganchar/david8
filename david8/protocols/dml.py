@@ -78,3 +78,11 @@ class InsertProtocol(QueryProtocol):
 
     def from_select(self, query: SelectProtocol) -> 'InsertProtocol':
         pass
+
+
+class DeleteProtocol(QueryProtocol):
+    def from_table(self, table_name: str, db_name: str = '') -> 'DeleteProtocol':
+        pass
+
+    def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'DeleteProtocol':
+        pass

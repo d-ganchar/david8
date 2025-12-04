@@ -7,7 +7,7 @@ from david8.core.log import log
 from david8.protocols.dialect import DialectProtocol
 
 from ..core.base_aliased import AliasedProtocol, Column
-from ..protocols.dml import InsertProtocol, JoinProtocol, SelectProtocol, UpdateProtocol
+from ..protocols.dml import DeleteProtocol, InsertProtocol, JoinProtocol, SelectProtocol, UpdateProtocol
 from ..protocols.sql import (
     ExprProtocol,
     FunctionProtocol,
@@ -377,6 +377,38 @@ class BaseInsert(InsertProtocol):
         self.from_query_expr = query
         self.values = tuple()
         return self
+
+    def get_parameters(self) -> dict:
+        return self.dialect.get_paramstyle().get_parameters()
+
+    def get_list_parameters(self) -> list[Any]:
+        return self.dialect.get_paramstyle().get_list_parameters()
+
+    def get_tuple_parameters(self) -> tuple[Any]:
+        return self.dialect.get_paramstyle().get_tuple_parameters()
+
+
+@dataclasses.dataclass(slots=True)
+class BaseDelete(DeleteProtocol):
+    dialect: DialectProtocol = None
+    target_table: TargetTableConstruction = dataclasses.field(default_factory=TargetTableConstruction)
+    where_construction: BaseWhereConstruction = dataclasses.field(default_factory=BaseWhereConstruction)
+
+    def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> DeleteProtocol:
+        self.where_construction.add_conditions(*args)
+        return self
+
+    def from_table(self, table_name: str, db_name: str = '') -> 'DeleteProtocol':
+        self.target_table.set_source(table_name, db_name)
+        return self
+
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        where = self.where_construction.get_sql(dialect)
+        return f'DELETE FROM {self.target_table.get_sql(dialect)}{where}'
+
+    @log_and_reset
+    def get_sql(self, dialect: DialectProtocol = None) -> str:
+        return self._get_sql(dialect or self.dialect)
 
     def get_parameters(self) -> dict:
         return self.dialect.get_paramstyle().get_parameters()

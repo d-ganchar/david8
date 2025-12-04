@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from ..protocols.dml import InsertProtocol, SelectProtocol, UpdateProtocol
+from ..protocols.dml import DeleteProtocol, InsertProtocol, SelectProtocol, UpdateProtocol
 from .sql import AliasedProtocol, ExprProtocol, FunctionProtocol
 
 
@@ -15,4 +15,7 @@ class QueryBuilderProtocol(Protocol):
         pass
 
     def insert(self) -> InsertProtocol:
+        pass
+
+    def delete(self) -> DeleteProtocol:
         pass
