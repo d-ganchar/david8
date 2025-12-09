@@ -2,6 +2,7 @@ import dataclasses
 
 from david8.core.arg_convertors import to_col_or_expr
 from david8.core.base_aliased import BaseAliased
+from david8.expressions import val
 from david8.protocols.dialect import DialectProtocol
 from david8.protocols.sql import ExprProtocol, FunctionProtocol
 
@@ -14,12 +15,25 @@ class Function(BaseAliased, FunctionProtocol):
         return f"{self.name}()"
 
 
-@dataclasses.dataclass(slots=True, kw_only=True)
-class ZeroArgsCallableFactory:
-    name: str = ''
+@dataclasses.dataclass(slots=True)
+class SeparatedArgsFn(Function):
+    fn_items: tuple[str | ExprProtocol, ...]
+    separator: str = ', '
+    numbers_as_str: bool = True
 
-    def __call__(self) -> FunctionProtocol:
-        return Function(self.name)
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        items = ()
+        for item in self.fn_items:
+            if isinstance(item, str):
+                items += (dialect.quote_ident(item),)
+                continue
+            elif isinstance(item, (int, float)):
+                items += (f"'{item}'",) if self.numbers_as_str else (f'{item}',)
+                continue
+
+            items += (item.get_sql(dialect),)
+
+        return f'{self.name}({self.separator.join(items)})'
 
 
 @dataclasses.dataclass(slots=True, kw_only=True)
@@ -28,34 +42,11 @@ class FnCallableFactory:
 
 
 @dataclasses.dataclass(slots=True)
-class _SeparatedStrArgsFn(Function):
-    """
-    str works as column name. concat('col_name', 2, 0.5, val('test')) -> concat(col_name, '2', '0.5', 'test')
-    """
-    args: tuple
-    separator: str
-
-    def _get_sql(self, dialect: DialectProtocol) -> str:
-        items = ()
-        for item in self.args:
-            if isinstance(item, str):
-                items += (dialect.quote_ident(item),)
-                continue
-            if isinstance(item, float | int):
-                items += (f"'{item}'",)
-                continue
-
-            items += (item.get_sql(dialect),)
-
-        return f"{self.name}({self.separator.join(items)})"
-
-
-@dataclasses.dataclass(slots=True)
-class SeparatedStrArgsCallableFactory(FnCallableFactory):
-    separator: str
+class SeparatedArgsFnFactory(FnCallableFactory):
+    separator: str = ', '
 
     def __call__(self, *args: int | float | str | ExprProtocol) -> FunctionProtocol:
-        return _SeparatedStrArgsFn(self.name, args, self.separator)
+        return SeparatedArgsFn(self.name, fn_items=args, separator=self.separator)
 
 
 @dataclasses.dataclass(slots=True)
@@ -74,34 +65,77 @@ class _OneArgDistinctFn(Function):
 
 
 @dataclasses.dataclass(slots=True)
-class OneArgDistinctCallableFactory(FnCallableFactory):
+class OneArgDistinctFactory(FnCallableFactory):
     def __call__(self, column: str, distinct: bool = False) -> FunctionProtocol:
         return _OneArgDistinctFn(self.name, column, distinct)
 
 
 @dataclasses.dataclass(slots=True)
-class _StrArgFn(Function):
-    """
-    upper(col_name)
-    lower(col_name)
-    etc
-    """
-    value: str | ExprProtocol = ''
-
-    def _get_sql(self, dialect: DialectProtocol) -> str:
-        if isinstance(self.value, str):
-            value = dialect.quote_ident(self.value)
-        else:
-            value = self.value.get_sql(dialect)
-        return f"{self.name}({value})"
+class StrArgFactory(FnCallableFactory):
+    def __call__(self, value: str | ExprProtocol) -> FunctionProtocol:
+        return SeparatedArgsFn(self.name, fn_items=(value,))
 
 
 @dataclasses.dataclass(slots=True)
-class StrArgCallableFactory(FnCallableFactory):
-    value: str = ''
+class ColStrIntArgFactory(FnCallableFactory):
+    def __call__(
+        self,
+        arg1: str | int | ExprProtocol,
+    ) -> FunctionProtocol:
+        return SeparatedArgsFn(
+            self.name,
+            (
+                val(arg1) if isinstance(arg1, int) else arg1,
+            ),
+        )
 
-    def __call__(self, value: str | ExprProtocol) -> FunctionProtocol:
-        return _StrArgFn(self.name, value)
+
+@dataclasses.dataclass(slots=True)
+class FirstCol1StrArgFactory(FnCallableFactory):
+    separator: str = ', '
+    def __call__(
+        self,
+        col_name: str | ExprProtocol,
+        arg1: str | ExprProtocol,
+    ) -> FunctionProtocol:
+        return SeparatedArgsFn(
+            self.name,
+            (
+                col_name,
+                arg1 if isinstance(arg1, ExprProtocol) else val(arg1),
+            ),
+            self.separator,
+        )
+
+
+@dataclasses.dataclass(slots=True)
+class FirstCol2StrArgFactory(FnCallableFactory):
+    def __call__(
+        self,
+        col_name: str | ExprProtocol,
+        arg1: str | ExprProtocol,
+        arg2: str | ExprProtocol,
+    ) -> FunctionProtocol:
+        return SeparatedArgsFn(self.name, fn_items=(
+            col_name,
+            arg1 if isinstance(arg1, ExprProtocol) else val(arg1),
+            arg2 if isinstance(arg2, ExprProtocol) else val(arg2),
+        ))
+
+
+@dataclasses.dataclass(slots=True)
+class FirstCol2IntArgFactory(FnCallableFactory):
+    def __call__(
+        self,
+        col_name: str | ExprProtocol,
+        arg1: int | ExprProtocol,
+        arg2: int | ExprProtocol,
+    ) -> FunctionProtocol:
+        return SeparatedArgsFn(self.name, fn_items=(
+            col_name,
+            arg1 if isinstance(arg1, ExprProtocol) else val(arg1),
+            arg2 if isinstance(arg2, ExprProtocol) else val(arg2),
+        ))
 
 
 @dataclasses.dataclass(slots=True)
@@ -115,7 +149,7 @@ class _CastFn(Function):
 
 
 @dataclasses.dataclass(slots=True)
-class CastCallableFactory(FnCallableFactory):
+class CastFactory(FnCallableFactory):
     name = 'CAST'
     def __call__(self, value: str | ExprProtocol, cast_type: str) -> FunctionProtocol:
         return _CastFn('CAST', value, cast_type)

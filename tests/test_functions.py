@@ -3,7 +3,24 @@ from parameterized import parameterized
 from david8 import QueryBuilderProtocol
 from david8.cast_types import bigint, char, date_, integer, smallint, text, time_, timestamp_, varchar
 from david8.expressions import param, val
-from david8.functions import avg, cast, concat, count, length, lower, max_, min_, now_, sum_, trim, upper, uuid_
+from david8.functions import (
+    avg,
+    cast,
+    concat,
+    count,
+    length,
+    lower,
+    max_,
+    min_,
+    now_,
+    position,
+    replace_,
+    substring,
+    sum_,
+    trim,
+    upper,
+    uuid_,
+)
 from david8.logical_operators import and_, or_, xor
 from david8.predicates import eq_e
 from david8.protocols.dml import FunctionProtocol
@@ -257,3 +274,54 @@ class TestAggFunctions(BaseTest):
     ])
     def test_cast(self, fn: FunctionProtocol, sql_exp: str):
         self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)
+
+    @parameterized.expand([
+        (
+            replace_('col_name', 'Saruman', 'Gandalf'),
+            "SELECT replace(col_name, 'Saruman', 'Gandalf')",
+            {},
+        ),
+        (
+            replace_('col_name', 'Saruman', param('Gandalf')),
+            "SELECT replace(col_name, 'Saruman', %(p1)s)",
+            {'p1': 'Gandalf'},
+        ),
+    ])
+    def test_replace(self, fn: FunctionProtocol, sql_exp: str, exp_param: dict):
+        query = self.qb.select(fn)
+        self.assertEqual(query.get_sql(), sql_exp)
+        self.assertEqual(query.get_parameters(), exp_param)
+
+    @parameterized.expand([
+        (
+            substring('col_name', 2, 3),
+            'SELECT substring(col_name, 2, 3)',
+            {},
+        ),
+        (
+            substring('col_name', 1, param(3)),
+            'SELECT substring(col_name, 1, %(p1)s)',
+            {'p1': 3},
+        ),
+    ])
+    def test_substring(self, fn: FunctionProtocol, sql_exp: str, exp_param: dict):
+        query = self.qb.select(fn)
+        self.assertEqual(query.get_sql(), sql_exp)
+        self.assertEqual(query.get_parameters(), exp_param)
+
+    @parameterized.expand([
+        (
+            position('col_name', 'Matrix'),
+            "SELECT position(col_name IN 'Matrix')",
+            {},
+        ),
+        (
+            position('col_name', param('Matrix')),
+            'SELECT position(col_name IN %(p1)s)',
+            {'p1': 'Matrix'},
+        ),
+    ])
+    def test_position(self, fn: FunctionProtocol, sql_exp: str, exp_param: dict):
+        query = self.qb.select(fn)
+        self.assertEqual(query.get_sql(), sql_exp)
+        self.assertEqual(query.get_parameters(), exp_param)
