@@ -1,6 +1,6 @@
 [project]
 name = "david8"
-version = "0.dev.0"
+version = "999.9.9.dev1"
 description = "Lightweight Python SQL query builder with support for multiple dialects: ClickHouse, PostgreSQL, DuckDB, MySQL and SQLite"
 authors = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]
 maintainers = [{name = "Danila Ganchar", email = "danila.ganchar@gmail.com"}]

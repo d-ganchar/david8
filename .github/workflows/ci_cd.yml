@@ -35,7 +35,9 @@ jobs:
       - name: Build
         run: |
           if [[ '${{ github.event_name }}' = 'release' ]]; then
-             sed -i -e "s/0.dev.0/$GITHUB_REF_NAME/g" pyproject.toml
+             sed -i -e "s/999.9.9.dev1/$GITHUB_REF_NAME/g" pyproject.toml
+          else
+            sed -i -e "s/999.9.9.dev1/999.9.9.dev$GITHUB_RUN_NUMBER/g" pyproject.toml
           fi
           uv build
           mkdir david8_build
