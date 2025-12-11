@@ -1,7 +1,7 @@
 from parameterized import parameterized
 
 from david8.predicates import eq
-from david8.protocols.ddl import CreateTableProtocol
+from david8.protocols.sql import CreateTableProtocol
 from tests.base_test import BaseTest
 
 

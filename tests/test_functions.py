@@ -23,7 +23,7 @@ from david8.functions import (
 )
 from david8.logical_operators import and_, or_, xor
 from david8.predicates import eq_e
-from david8.protocols.dml import FunctionProtocol
+from david8.protocols.sql import FunctionProtocol
 from tests.base_test import BaseTest
 
 

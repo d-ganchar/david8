@@ -1,15 +1,14 @@
 import dataclasses
-from typing import Any
 
 from ..protocols.ddl import CreateTableProtocol
 from ..protocols.dialect import DialectProtocol
 from ..protocols.dml import SelectProtocol
-from .base_expressions import BaseExpression, FullTableName
+from .base_expressions import FullTableName
+from .base_query import BaseQuery
 
 
 @dataclasses.dataclass(slots=True)
-class BaseCreateTable(BaseExpression, CreateTableProtocol):
-    dialect: DialectProtocol
+class BaseCreateTable(BaseQuery, CreateTableProtocol):
     query: SelectProtocol | None = None
     table: FullTableName = dataclasses.field(default_factory=FullTableName)
 
@@ -23,15 +22,3 @@ class BaseCreateTable(BaseExpression, CreateTableProtocol):
 
     def set_table(self, table: str, db: str = '') -> None:
         self.table.set_names(table, db)
-
-    def get_sql(self, dialect: DialectProtocol = None) -> str:
-        return self._get_sql(dialect or self.dialect)
-
-    def get_parameters(self) -> dict:
-        return self.dialect.get_paramstyle().get_parameters()
-
-    def get_list_parameters(self) -> list[Any]:
-        return self.dialect.get_paramstyle().get_list_parameters()
-
-    def get_tuple_parameters(self) -> tuple[Any]:
-        return self.dialect.get_paramstyle().get_tuple_parameters()
