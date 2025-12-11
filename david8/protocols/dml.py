@@ -5,6 +5,9 @@ from ..protocols.sql import (
     DeleteProtocol as _DeleteProtocol,
 )
 from ..protocols.sql import (
+    ExprProtocol as _ExprProtocol,
+)
+from ..protocols.sql import (
     InsertProtocol as _InsertProtocol,
 )
 from ..protocols.sql import (
@@ -18,9 +21,6 @@ from ..protocols.sql import (
 )
 from ..protocols.sql import (
     UpdateProtocol as _UpdateProtocol,
-)
-from ..protocols.sql import (
-    ExprProtocol as _ExprProtocol,
 )
 
 # TODO: breaking changes. remove when major release
