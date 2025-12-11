@@ -406,18 +406,4 @@ class BaseDelete(DeleteProtocol):
 
 # TODO: breaking changes. remove when major release
 class TargetTableConstruction(FullTableName):
-    @property
-    def from_db(self):
-        return self.db
-
-    @from_db.setter
-    def from_db(self, value: str = ''):
-        self.db = value
-
-    @property
-    def from_table(self):
-        return self.table
-
-    @from_table.setter
-    def from_table(self, value: str = ''):
-        self.table = value
+    pass
