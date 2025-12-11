@@ -19,6 +19,9 @@ from ..protocols.sql import (
 from ..protocols.sql import (
     UpdateProtocol as _UpdateProtocol,
 )
+from ..protocols.sql import (
+    ExprProtocol as _ExprProtocol,
+)
 
 # TODO: breaking changes. remove when major release
 JoinProtocol = _JoinProtocol
@@ -28,3 +31,4 @@ UpdateProtocol = _UpdateProtocol
 InsertProtocol = _InsertProtocol
 DeleteProtocol = _DeleteProtocol
 AliasedProtocol = _AliasedProtocol
+ExprProtocol = _ExprProtocol

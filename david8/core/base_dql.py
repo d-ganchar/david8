@@ -152,7 +152,18 @@ class BaseSelect(BaseQuery, SelectProtocol):
 
     def _to_sql(self, dialect: DialectProtocol):
         # TODO: breaking changes. remove when major release
-        return self._get_sql(dialect)
+        with_query = self._with_queries_to_sql(dialect)
+        select = self._columns_to_sql(dialect)
+        from_ref = self._from_to_sql(dialect)
+        joins = self._joins_to_sql(dialect)
+        where = self.where_construction.get_sql(dialect)
+        group_by = self._group_by_to_sql(dialect)
+        having = self._having_to_sql(dialect)
+        union = self._union_to_sql(dialect)
+        order_by = self._order_by_to_sql()
+
+        limit = f' LIMIT {self.limit_value}' if self.limit_value else ''
+        return f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{limit}{union}'
 
     def _get_sql(self, dialect: DialectProtocol):
         """
