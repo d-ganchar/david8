@@ -1,13 +1,16 @@
 from dataclasses import dataclass
 
+from ..protocols.ddl import CreateTableProtocol
 from ..protocols.dialect import DialectProtocol
 from ..protocols.dml import DeleteProtocol, InsertProtocol, SelectProtocol, UpdateProtocol
 from ..protocols.query_builder import QueryBuilderProtocol
 from ..protocols.sql import AliasedProtocol, ExprProtocol, FunctionProtocol
-from .base_dml import BaseDelete as _BaseDelete
-from .base_dml import BaseInsert as _BaseInsert
-from .base_dml import BaseSelect as _BaseSelect
-from .base_dml import BaseUpdate as _BaseUpdate
+from .base_ddl import BaseCreateTable as _CreateTable
+from .base_dml import BaseDelete as _Delete
+from .base_dml import BaseInsert as _Insert
+from .base_dml import BaseSelect as _Select
+from .base_dml import BaseUpdate as _Update
+from .base_expressions import FullTableName
 
 
 @dataclass(slots=True)
@@ -16,16 +19,19 @@ class BaseQueryBuilder(QueryBuilderProtocol):
         self._dialect = dialect
 
     def select(self, *args: str | AliasedProtocol | ExprProtocol | FunctionProtocol) -> SelectProtocol:
-        return _BaseSelect(select_columns=args, dialect=self._dialect)
+        return _Select(select_columns=args, dialect=self._dialect)
 
     def with_(self, *args: tuple[str, SelectProtocol]) -> SelectProtocol:
-        return _BaseSelect(with_queries=args, dialect=self._dialect)
+        return _Select(with_queries=args, dialect=self._dialect)
 
     def update(self) -> UpdateProtocol:
-        return _BaseUpdate(dialect=self._dialect)
+        return _Update(dialect=self._dialect)
 
     def insert(self) -> InsertProtocol:
-        return _BaseInsert(dialect=self._dialect)
+        return _Insert(dialect=self._dialect)
 
     def delete(self) -> DeleteProtocol:
-        return _BaseDelete(dialect=self._dialect)
+        return _Delete(dialect=self._dialect)
+
+    def create_table_as(self, query: SelectProtocol, table: str, db: str = '') -> CreateTableProtocol:
+        return _CreateTable(dialect=self._dialect, query=query, table=FullTableName(table, db))

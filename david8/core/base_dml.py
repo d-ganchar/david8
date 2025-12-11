@@ -14,6 +14,7 @@ from ..protocols.sql import (
     LogicalOperatorProtocol,
     PredicateProtocol,
 )
+from .base_expressions import FullTableName
 
 
 def log_and_reset(func: Callable) -> Callable:
@@ -51,23 +52,6 @@ class BaseWhereConstruction(ExprProtocol):
 
 
 @dataclasses.dataclass(slots=True)
-class TargetTableConstruction(ExprProtocol):
-    from_table: str = ''
-    from_db: str = ''
-
-    def set_source(self, from_table: str, from_db: str = '') -> None:
-        self.from_db = from_db
-        self.from_table = from_table
-
-    def get_sql(self, dialect: DialectProtocol) -> str:
-        source = dialect.quote_ident(self.from_table)
-        if self.from_db:
-            source = f'{dialect.quote_ident(self.from_db)}.{source}'
-
-        return source
-
-
-@dataclasses.dataclass(slots=True)
 class BaseSelect(SelectProtocol):
     source_alias: str = ''
     dialect: DialectProtocol = None
@@ -86,7 +70,7 @@ class BaseSelect(SelectProtocol):
     # ((True, query1), (False, query2))
     unions: tuple[tuple[str, SelectProtocol], ...] = dataclasses.field(default_factory=tuple)
     joins: tuple[JoinProtocol, ...] = dataclasses.field(default_factory=tuple)
-    from_table_cnstr: TargetTableConstruction = dataclasses.field(default_factory=TargetTableConstruction)
+    from_table_cnstr: FullTableName = dataclasses.field(default_factory=FullTableName)
     from_query_expr: SelectProtocol | None = None
     limit_value: int | None = None
 
@@ -99,15 +83,15 @@ class BaseSelect(SelectProtocol):
         return self
 
     def from_table(self, table_name: str, alias: str = '', db_name: str = '') -> SelectProtocol:
-        self.from_table_cnstr.set_source(table_name, db_name)
+        self.from_table_cnstr.set_names(table_name, db_name)
         self.source_alias = alias
         self.from_query_expr = None
         return self
 
-    def from_query(self, query: 'SelectProtocol', alias: str = '') -> 'SelectProtocol':
+    def from_query(self, query: 'SelectProtocol', alias: str = '') -> SelectProtocol:
         self.from_query_expr = query
         self.source_alias = alias
-        self.from_table_cnstr.set_source('')
+        self.from_table_cnstr.set_names('')
         return self
 
     def group_by(self, *args: str | int) -> SelectProtocol:
@@ -150,7 +134,7 @@ class BaseSelect(SelectProtocol):
     def _from_to_sql(self, dialect: DialectProtocol) -> str:
         if self.from_query_expr:
             source = f'({self.from_query_expr.get_sql(dialect)})'
-        elif self.from_table_cnstr.from_table:
+        elif self.from_table_cnstr.table:
             source = self.from_table_cnstr.get_sql(dialect)
         else:
             return ''
@@ -267,7 +251,7 @@ class BaseSelect(SelectProtocol):
 class BaseUpdate(UpdateProtocol):
     dialect: DialectProtocol = None
     alias: str = ''
-    target_table: TargetTableConstruction = dataclasses.field(default_factory=TargetTableConstruction)
+    target_table: FullTableName = dataclasses.field(default_factory=FullTableName)
     where_construction: BaseWhereConstruction = dataclasses.field(default_factory=BaseWhereConstruction)
     set_construction: tuple[
         str,
@@ -276,7 +260,7 @@ class BaseUpdate(UpdateProtocol):
     ] = dataclasses.field(default_factory=tuple)
 
     def table(self, table_name: str, alias: str = '', db_name: str = '') -> 'UpdateProtocol':
-        self.target_table.set_source(table_name, db_name)
+        self.target_table.set_names(table_name, db_name)
         self.alias = alias
         return self
 
@@ -335,7 +319,7 @@ class BaseInsert(InsertProtocol):
     from_query_expr: SelectProtocol | None = None
     dialect: DialectProtocol = None
     alias: str = ''
-    target_table: TargetTableConstruction = dataclasses.field(default_factory=TargetTableConstruction)
+    target_table: FullTableName = dataclasses.field(default_factory=FullTableName)
     values: tuple[str | float | int] = dataclasses.field(default_factory=tuple)
     column_set: tuple[str, ...] = dataclasses.field(default_factory=tuple)
 
@@ -360,7 +344,7 @@ class BaseInsert(InsertProtocol):
         return self._get_sql(dialect or self.dialect)
 
     def into(self, table_name: str, db_name: str = '') -> 'InsertProtocol':
-        self.target_table.set_source(table_name, db_name)
+        self.target_table.set_names(table_name, db_name)
         return self
 
     def value(self, col_name: str, value: str | float | int) -> 'InsertProtocol':
@@ -391,7 +375,7 @@ class BaseInsert(InsertProtocol):
 @dataclasses.dataclass(slots=True)
 class BaseDelete(DeleteProtocol):
     dialect: DialectProtocol = None
-    target_table: TargetTableConstruction = dataclasses.field(default_factory=TargetTableConstruction)
+    target_table: FullTableName = dataclasses.field(default_factory=FullTableName)
     where_construction: BaseWhereConstruction = dataclasses.field(default_factory=BaseWhereConstruction)
 
     def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> DeleteProtocol:
@@ -399,7 +383,7 @@ class BaseDelete(DeleteProtocol):
         return self
 
     def from_table(self, table_name: str, db_name: str = '') -> 'DeleteProtocol':
-        self.target_table.set_source(table_name, db_name)
+        self.target_table.set_names(table_name, db_name)
         return self
 
     def _get_sql(self, dialect: DialectProtocol) -> str:

@@ -1,6 +1,7 @@
 from typing import Protocol
 
 from ..protocols.dml import DeleteProtocol, InsertProtocol, SelectProtocol, UpdateProtocol
+from .ddl import CreateTableProtocol
 from .sql import AliasedProtocol, ExprProtocol, FunctionProtocol
 
 
@@ -18,4 +19,7 @@ class QueryBuilderProtocol(Protocol):
         pass
 
     def delete(self) -> DeleteProtocol:
+        pass
+
+    def create_table_as(self, query: SelectProtocol, table: str, db: str = '') -> CreateTableProtocol:
         pass

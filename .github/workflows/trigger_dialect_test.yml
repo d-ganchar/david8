@@ -21,7 +21,7 @@ jobs:
       ARTIFACT_URL: ${{ inputs.ARTIFACT_URL }}
       PAT: ${{ secrets.PAT }}
     steps:
-      - name: Trigger david8_changes workflow in david8_postgresql
+      - name: Trigger david8_changes workflow
         id: trigger
         run: |
           REF="main"
