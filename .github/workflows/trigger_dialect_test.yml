@@ -83,9 +83,9 @@ jobs:
           STATUS="in_progress"
           CONCLUSION=""
           
-          for i in {1..10}; do
-            echo "Attempt $i/10..."
-            sleep 3
+          for i in {1..20}; do
+            echo "Attempt $i/20..."
+            sleep 5
           
             RUN_DATA=$(curl -s \
               -H "Authorization: token $PAT" \
