@@ -10,17 +10,17 @@ from .log import log_and_reset
 class BaseQuery(QueryProtocol):
     dialect: DialectProtocol
 
-    def _render_prefix(self, dialect: DialectProtocol) -> str:
+    def _render_sql_prefix(self, dialect: DialectProtocol) -> str:
         return ''
 
-    def _render_postfix(self, dialect: DialectProtocol) -> str:
+    def _render_sql_postfix(self, dialect: DialectProtocol) -> str:
         return ''
 
-    def _render_main_expr(self, dialect: DialectProtocol) -> str:
+    def _render_sql(self, dialect: DialectProtocol) -> str:
         return ''
 
     def _get_sql(self, dialect: DialectProtocol) -> str:
-        return f'{self._render_prefix(dialect)}{self._render_main_expr(dialect)}{self._render_postfix(dialect)}'
+        return f'{self._render_sql_prefix(dialect)}{self._render_sql(dialect)}{self._render_sql_postfix(dialect)}'
 
     @log_and_reset
     def get_sql(self, dialect: DialectProtocol = None) -> str:

@@ -67,11 +67,14 @@ class BaseUpdate(BaseQuery, UpdateProtocol):
 
         return f' SET {", ".join(set_columns)}'
 
-    def _get_sql(self, dialect: DialectProtocol) -> str:
+    def _render_sql_prefix(self, dialect: DialectProtocol) -> str:
+        return 'UPDATE '
+
+    def _render_sql(self, dialect: DialectProtocol) -> str:
         set_columns = self._set_construction_to_sql(dialect)
         table = self._table_to_sql(dialect)
         where = self.where_construction.get_sql(dialect)
-        return f'UPDATE {table}{set_columns}{where}'
+        return f'{table}{set_columns}{where}'
 
 
 @dataclasses.dataclass(slots=True)
@@ -132,9 +135,12 @@ class BaseDelete(BaseQuery, DeleteProtocol):
         self.target_table.set_names(table_name, db_name)
         return self
 
-    def _get_sql(self, dialect: DialectProtocol) -> str:
+    def _render_sql_prefix(self, dialect: DialectProtocol) -> str:
+        return 'DELETE FROM '
+
+    def _render_sql(self, dialect: DialectProtocol) -> str:
         where = self.where_construction.get_sql(dialect)
-        return f'DELETE FROM {self.target_table.get_sql(dialect)}{where}'
+        return f'{self.target_table.get_sql(dialect)}{where}'
 
 
 # TODO: breaking changes. remove when major release

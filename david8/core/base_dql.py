@@ -150,6 +150,10 @@ class BaseSelect(BaseQuery, SelectProtocol):
             for join in self.joins
         )
 
+    def _to_sql(self, dialect: DialectProtocol):
+        # TODO: breaking changes. remove when major release
+        return self._get_sql(dialect)
+
     def _get_sql(self, dialect: DialectProtocol):
         """
         Don't forget about a query rendering sequence. You can break the sequence of query parameters, see:
