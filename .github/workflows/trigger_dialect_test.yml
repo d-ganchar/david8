@@ -25,6 +25,8 @@ jobs:
         id: trigger
         run: |
           REF="main"
+          TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          echo "Dispatch timestamp: $TS"
 
           if [ -z "$ARTIFACT_URL" ]; then
             echo "Error: artifact_url is empty"
@@ -44,53 +46,62 @@ jobs:
             exit 1
           fi
 
-          echo "Workflow triggered successfully"
-          echo $RESPONSE
+          RUN_ID=""
+          for i in {1..30}; do
+            echo "Waiting for new RUN_ID, attempt $i/30..."
+            sleep 3
+      
+            RUN_ID=$(curl -s \
+              -H "Authorization: token $PAT" \
+              "https://api.github.com/repos/$REPO/actions/workflows/david8_changes.yml/runs?event=workflow_dispatch&per_page=5" |
+              jq -r --arg ts "$TS" '
+                .workflow_runs
+                | map(select(.created_at > $ts))
+                | .[0].id // empty
+              ')
+      
+            if [ -n "$RUN_ID" ]; then
+              echo "FOUND new run: $RUN_ID"
+              break
+            fi
+          done
+      
+          if [ -z "$RUN_ID" ]; then
+            echo "ERROR: No new workflow run appeared after dispatch."
+            exit 1
+          fi
+      
+          echo "run_id=$RUN_ID" >> $GITHUB_OUTPUT
+          echo "Workflow https://github.com/$REPO/actions/runs/$RUN_ID started"
 
       - name: Wait for david8_changes workflow to complete
         id: wait_for_completion
         run: |
-          WORKFLOW_FILE="david8_changes.yml"
-          echo "Waiting for workflow: $WORKFLOW_FILE"
-
-          RUN_ID=""
-          ATTEMPTS=0
-
-          while [ -z "$RUN_ID" ] && [ $ATTEMPTS -lt 20 ]; do
-            sleep 3
-            RUN_ID=$(curl -s \
-              -H "Authorization: token $PAT" \
-              -H "Accept: application/vnd.github+json" \
-              "https://api.github.com/repos/$REPO/actions/workflows/$WORKFLOW_FILE/runs?branch=main&event=workflow_dispatch" \
-              | jq '.workflow_runs[0].id')
-
-            ATTEMPTS=$((ATTEMPTS+1))
-          done
-
-          if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
-            echo "Error: Could not find dispatched workflow run for $REPO."
-            exit 1
-          fi
-
-          echo "Found Workflow Run ID: $RUN_ID"
+          RUN_ID="${{ steps.trigger.outputs.run_id }}"
+          echo "Waiting for workflow: https://github.com/$REPO/actions/runs/$RUN_ID"
 
           STATUS="in_progress"
-          while [ "$STATUS" = "queued" ] || [ "$STATUS" = "in_progress" ] || [ "$STATUS" = "waiting" ]; do
-            sleep 20
-
+          CONCLUSION=""
+          
+          for i in {1..10}; do
+            echo "Attempt $i/10..."
+            sleep 3
+          
             RUN_DATA=$(curl -s \
               -H "Authorization: token $PAT" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/$REPO/actions/runs/$RUN_ID")
-
+          
             STATUS=$(echo "$RUN_DATA" | jq -r '.status')
             CONCLUSION=$(echo "$RUN_DATA" | jq -r '.conclusion')
-
+          
             echo "Current status: $STATUS, Workflow conclusion: $CONCLUSION"
+          
+            if [ "$STATUS" != "queued" ] && [ "$STATUS" != "in_progress" ] && [ "$STATUS" != "waiting" ]; then
+              break
+            fi
           done
-
-          echo "Workflow finished: $CONCLUSION"
-
+          
           if [ "$CONCLUSION" != "success" ]; then
             echo "$REPO failed: $CONCLUSION"
             exit 1
