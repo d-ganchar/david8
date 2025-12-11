@@ -7,6 +7,7 @@ from ..protocols.sql import (
 from ..protocols.sql import (
     ExprProtocol as _ExprProtocol,
 )
+from ..protocols.sql import FunctionProtocol as _FunctionProtocol
 from ..protocols.sql import (
     InsertProtocol as _InsertProtocol,
 )
@@ -32,3 +33,4 @@ InsertProtocol = _InsertProtocol
 DeleteProtocol = _DeleteProtocol
 AliasedProtocol = _AliasedProtocol
 ExprProtocol = _ExprProtocol
+FunctionProtocol = _FunctionProtocol

@@ -184,18 +184,7 @@ class BaseSelect(BaseQuery, SelectProtocol):
         [ ORDER BY <sort_specification_list> ]
         [ LIMIT <limit_value> ]
         """
-        with_query = self._with_queries_to_sql(dialect)
-        select = self._columns_to_sql(dialect)
-        from_ref = self._from_to_sql(dialect)
-        joins = self._joins_to_sql(dialect)
-        where = self.where_construction.get_sql(dialect)
-        group_by = self._group_by_to_sql(dialect)
-        having = self._having_to_sql(dialect)
-        union = self._union_to_sql(dialect)
-        order_by = self._order_by_to_sql()
-
-        limit = f' LIMIT {self.limit_value}' if self.limit_value else ''
-        return f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{limit}{union}'
+        return self._to_sql(dialect)
 
     def _add_to_order_by(self, *args: str | int, desc: bool = False):
         for arg in args:
