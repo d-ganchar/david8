@@ -50,40 +50,51 @@ jobs:
       - name: Wait for david8_changes workflow to complete
         id: wait_for_completion
         run: |
-          BRANCH="main"
+          WORKFLOW_FILE="david8_changes.yml"
+          echo "Waiting for workflow: $WORKFLOW_FILE"
 
-          RUN_ID=$(curl -s -H "Authorization: token $PAT" \
-            -H "Accept: application/vnd.github+json" \
-            https://api.github.com/repos/$REPO/actions/runs?branch=$BRANCH \
-            | jq '.workflow_runs[0].id')
+          RUN_ID=""
+          ATTEMPTS=0
 
-          if [ "$RUN_ID" = "null" ]; then
-            echo "Error: Could not find a recent workflow run in $REPO on branch $BRANCH."
+          while [ -z "$RUN_ID" ] && [ $ATTEMPTS -lt 20 ]; do
+            sleep 3
+            RUN_ID=$(curl -s \
+              -H "Authorization: token $PAT" \
+              -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$REPO/actions/workflows/$WORKFLOW_FILE/runs?branch=main&event=workflow_dispatch" \
+              | jq '.workflow_runs[0].id')
+
+            ATTEMPTS=$((ATTEMPTS+1))
+          done
+
+          if [ -z "$RUN_ID" ] || [ "$RUN_ID" = "null" ]; then
+            echo "Error: Could not find dispatched workflow run for $REPO."
             exit 1
           fi
 
-          echo "Found Run ID: $RUN_ID"
+          echo "Found Workflow Run ID: $RUN_ID"
 
           STATUS="in_progress"
           while [ "$STATUS" = "queued" ] || [ "$STATUS" = "in_progress" ] || [ "$STATUS" = "waiting" ]; do
-            sleep 30
+            sleep 20
 
-            RUN_DATA=$(curl -s -H "Authorization: token $PAT" \
+            RUN_DATA=$(curl -s \
+              -H "Authorization: token $PAT" \
               -H "Accept: application/vnd.github+json" \
-              https://api.github.com/repos/$REPO/actions/runs/$RUN_ID)
+              "https://api.github.com/repos/$REPO/actions/runs/$RUN_ID")
 
             STATUS=$(echo "$RUN_DATA" | jq -r '.status')
             CONCLUSION=$(echo "$RUN_DATA" | jq -r '.conclusion')
 
-            echo "Current status: $STATUS, Workflow status: $CONCLUSION (Run ID: $RUN_ID)"
+            echo "Current status: $STATUS, Workflow conclusion: $CONCLUSION"
           done
 
-          echo "Workflow status: $CONCLUSION"
+          echo "Workflow finished: $CONCLUSION"
 
-          if [ "$STATUS" != "completed" ] || [ "$CONCLUSION" != "success" ]; then
-            echo "david8_postgresql failed, failing this workflow."
+          if [ "$CONCLUSION" != "success" ]; then
+            echo "$REPO failed: $CONCLUSION"
             exit 1
           fi
 
           HTML_URL=$(echo "$RUN_DATA" | jq -r '.html_url')
-          echo "Target workflow finished successfully: $HTML_URL"
+          echo "Workflow completed successfully: $HTML_URL"
