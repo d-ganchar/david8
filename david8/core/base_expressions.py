@@ -33,6 +33,10 @@ class FullTableName(ExprProtocol):
         self.table = table
         self.db = db
 
+    def set_source(self, table: str, db: str = '') -> None:
+        # TODO: breaking changes. remove when major release
+        self.set_names(table, db)
+
     def get_sql(self, dialect: DialectProtocol) -> str:
         if self.db:
             return f'{dialect.quote_ident(self.db)}.{dialect.quote_ident(self.table)}'
