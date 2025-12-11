@@ -155,7 +155,7 @@ class CastFactory(FnCallableFactory):
         return _CastFn('CAST', value, cast_type)
 
 
-# TODO: remove after dialects fixes
+# TODO: breaking changes. remove when major release
 @dataclasses.dataclass(slots=True)
 class _SeparatedStrArgsFn(Function):
     """
@@ -179,7 +179,7 @@ class _SeparatedStrArgsFn(Function):
         return f"{self.name}({self.separator.join(items)})"
 
 
-# TODO: remove after dialects fixes
+# TODO: breaking changes. remove when major release
 @dataclasses.dataclass(slots=True)
 class SeparatedStrArgsCallableFactory(FnCallableFactory):
     separator: str

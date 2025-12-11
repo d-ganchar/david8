@@ -402,3 +402,14 @@ class BaseDelete(DeleteProtocol):
 
     def get_tuple_parameters(self) -> tuple[Any]:
         return self.dialect.get_paramstyle().get_tuple_parameters()
+
+
+# TODO: breaking changes. remove when major release
+class TargetTableConstruction(FullTableName):
+    @property
+    def from_db(self):
+        return self.db
+
+    @from_db.setter
+    def from_db(self, value: str = ''):
+        self.db = value
