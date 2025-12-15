@@ -137,6 +137,7 @@ jobs:
     runs-on: ubuntu-22.04
     permissions: write-all
     needs: [ trigger_postgres_dialect, trigger_clickhouse_dialect ]
+    if: github.event_name == 'release' && github.event.action == 'created'
     strategy:
       fail-fast: false
       matrix:

@@ -1,6 +1,7 @@
 from parameterized import parameterized
 
 from david8.expressions import false, null, param, true, val
+from david8.functions import lower
 from david8.logical_operators import not_
 from david8.predicates import (
     between,
@@ -13,6 +14,7 @@ from david8.predicates import (
     gt,
     gt_c,
     gt_e,
+    in_,
     is_,
     le,
     le_c,
@@ -241,6 +243,41 @@ class TestPredicates(BaseTest):
             is_('last_update_dt', param(1)),
             'SELECT last_update_dt IS %(p1)s',
             {'p1': 1}
+        ),
+        (
+            in_('status', [1, 2, 3]),
+            'SELECT status IN (1, 2, 3)',
+            {}
+        ),
+        (
+            in_('status', [1, 2, 3], True),
+            'SELECT status IN (%(p1)s, %(p2)s, %(p3)s)',
+            {'p1': 1, 'p2': 2, 'p3': 3},
+        ),
+        (
+            in_('status', ['closed', 'cancelled']),
+            "SELECT status IN ('closed', 'cancelled')",
+            {}
+        ),
+        (
+            in_('status', ['closed', 'cancelled'], True),
+            'SELECT status IN (%(p1)s, %(p2)s)',
+            {'p1': 'closed', 'p2': 'cancelled'},
+        ),
+        (
+            in_('status', [lower('old_status'), lower('new_status'), lower(val('NewValue'))]),
+            "SELECT status IN (lower(old_status), lower(new_status), lower('NewValue'))",
+            {},
+        ),
+        (
+            in_('status', [lower('old_status'), lower('new_status'), lower(param('NewValue'))]),
+            'SELECT status IN (lower(old_status), lower(new_status), lower(%(p1)s))',
+            {'p1': 'NewValue'},
+        ),
+        (
+            in_('status', BaseTest.qb.select('name').from_table('statuses')),
+            'SELECT status IN (SELECT name FROM statuses)',
+            {},
         ),
     ])
     def test_predicate(self, predicate: PredicateProtocol, exp_sql: str, exp_params: dict) -> None:

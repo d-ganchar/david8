@@ -2,7 +2,7 @@ from parameterized import parameterized
 
 from david8.expressions import col, val
 from david8.predicates import eq
-from david8.protocols.dml import UpdateProtocol
+from david8.protocols.sql import UpdateProtocol
 from tests.base_test import BaseTest
 
 
