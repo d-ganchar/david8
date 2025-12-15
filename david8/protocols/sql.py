@@ -1,4 +1,4 @@
-from typing import Any, Protocol
+from typing import Any, Protocol, Union
 
 from ..protocols.dialect import DialectProtocol
 
@@ -70,7 +70,11 @@ class SelectProtocol(QueryProtocol):
     def from_table(self, table_name: str, alias: str = '', db_name: str = '') -> 'SelectProtocol':
         pass
 
+    # TODO: breaking changes. remove when major release. see from_expr()
     def from_query(self, query: 'SelectProtocol') -> 'SelectProtocol':
+        pass
+
+    def from_expr(self, expr: Union['SelectProtocol', FunctionProtocol], alias: str = '') -> 'SelectProtocol':
         pass
 
     def group_by(self, *args: str | int) -> 'SelectProtocol':

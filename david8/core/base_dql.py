@@ -1,4 +1,5 @@
 import dataclasses
+from typing import Union
 
 from ..core.base_aliased import AliasedProtocol
 from ..protocols.dialect import DialectProtocol
@@ -63,8 +64,15 @@ class BaseSelect(BaseQuery, SelectProtocol):
         self.from_query_expr = None
         return self
 
+    # TODO: breaking changes. remove when major release. see: from_expr()
     def from_query(self, query: 'SelectProtocol', alias: str = '') -> SelectProtocol:
         self.from_query_expr = query
+        self.source_alias = alias
+        self.from_table_cnstr.set_names('')
+        return self
+
+    def from_expr(self, expr: Union['SelectProtocol', FunctionProtocol], alias: str = '') -> 'SelectProtocol':
+        self.from_query_expr = expr
         self.source_alias = alias
         self.from_table_cnstr.set_names('')
         return self
@@ -108,7 +116,9 @@ class BaseSelect(BaseQuery, SelectProtocol):
 
     def _from_to_sql(self, dialect: DialectProtocol) -> str:
         if self.from_query_expr:
-            source = f'({self.from_query_expr.get_sql(dialect)})'
+            source = self.from_query_expr.get_sql(dialect)
+            if isinstance(self.from_query_expr, SelectProtocol):
+                source = f'({source})'
         elif self.from_table_cnstr.table:
             source = self.from_table_cnstr.get_sql(dialect)
         else:

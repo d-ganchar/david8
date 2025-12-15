@@ -17,7 +17,7 @@ class Function(BaseAliased, FunctionProtocol):
 
 @dataclasses.dataclass(slots=True)
 class SeparatedArgsFn(Function):
-    fn_items: tuple[str | ExprProtocol, ...]
+    fn_items: tuple[str | int | float | ExprProtocol, ...]
     separator: str = ', '
     numbers_as_str: bool = True
 
@@ -186,3 +186,20 @@ class SeparatedStrArgsCallableFactory(FnCallableFactory):
 
     def __call__(self, *args: int | float | str | ExprProtocol) -> FunctionProtocol:
         return _SeparatedStrArgsFn(self.name, args, self.separator)
+
+
+@dataclasses.dataclass(slots=True)
+class GenerateSeriesFactory(FnCallableFactory):
+    def __call__(
+        self,
+        start: int | float,
+        stop: int | float = None,
+        step: int | float = None,
+    ) -> FunctionProtocol:
+        args = (val(i) for i in (start, stop, step, ) if i is not None)
+        return SeparatedArgsFn(
+            separator=', ',
+            fn_items=tuple(args),
+            name='generate_series',
+            numbers_as_str=False,
+        )

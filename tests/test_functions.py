@@ -8,6 +8,7 @@ from david8.functions import (
     cast,
     concat,
     count,
+    generate_series,
     length,
     lower,
     max_,
@@ -325,3 +326,21 @@ class TestAggFunctions(BaseTest):
         query = self.qb.select(fn)
         self.assertEqual(query.get_sql(), sql_exp)
         self.assertEqual(query.get_parameters(), exp_param)
+
+    @parameterized.expand([
+        (
+            generate_series(3),
+            'SELECT * FROM generate_series(3)',
+        ),
+        (
+            generate_series(3, 12),
+            'SELECT * FROM generate_series(3, 12)',
+        ),
+        (
+            generate_series(3, 12, 3),
+            'SELECT * FROM generate_series(3, 12, 3)',
+        ),
+    ])
+    def test_generate_series(self, fn: FunctionProtocol, sql_exp: str):
+        query = self.qb.select('*').from_expr(fn)
+        self.assertEqual(query.get_sql(), sql_exp)

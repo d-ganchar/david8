@@ -11,6 +11,9 @@ from david8.core.fn_generator import (
     FirstCol2StrArgFactory as _FirstCol2StrArgFactory,
 )
 from david8.core.fn_generator import (
+    GenerateSeriesFactory as _GenerateSeriesFactory,
+)
+from david8.core.fn_generator import (
     OneArgDistinctFactory as _OneArgDistinctCallableFactory,
 )
 from david8.core.fn_generator import (
@@ -43,3 +46,4 @@ cast = _CastCallableFactory()
 replace_ = _FirstCol2StrArgFactory(name='replace')
 substring = _FirstCol2IntArgFactory(name='substring')
 position = _FirstCol1StrArgFactory(name='position', separator=' IN ')
+generate_series = _GenerateSeriesFactory()
