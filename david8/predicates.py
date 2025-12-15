@@ -1,7 +1,9 @@
+
 from .core.arg_convertors import to_col_or_expr
 from .core.base_aliased import BaseAliased as _BaseAliased
+from .expressions import param, val
 from .protocols.dialect import DialectProtocol
-from .protocols.sql import ExprProtocol, PredicateProtocol
+from .protocols.sql import ExprProtocol, PredicateProtocol, SelectProtocol
 
 
 class _IsPredicate(PredicateProtocol, _BaseAliased):
@@ -88,6 +90,38 @@ class _BetweenPredicate(PredicateProtocol, _BaseAliased):
 
         return f'{dialect.quote_ident(self._column)} BETWEEN {start} AND {end}'
 
+class _InPredicate(PredicateProtocol, _BaseAliased):
+    def __init__(
+        self,
+        left_expr: str | ExprProtocol,
+        right_expr: SelectProtocol | ExprProtocol | list[int | float | str | ExprProtocol],
+        list_item_as_param: bool = False
+    ) -> None:
+        super().__init__()
+        self._left_expr = left_expr
+        self._right_expr = right_expr
+        self._list_item_as_param = list_item_as_param
+
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        left = to_col_or_expr(self._left_expr, dialect)
+        if isinstance(self._right_expr, (ExprProtocol, SelectProtocol)):
+            return f'{left} IN ({self._right_expr.get_sql(dialect)})'
+
+        items = ()
+
+        for item in self._right_expr:
+            if isinstance(item, ExprProtocol):
+                items += (item.get_sql(dialect),)
+                continue
+
+            if self._list_item_as_param:
+                items += (param(item).get_sql(dialect), )
+            else:
+                items += (val(item).get_sql(dialect), )
+
+        right = ', '.join(items)
+        return f'{left} IN ({right})'
+
 # column <> parameter | value | sql expression. examples:
 # WHERE category = %(p1)s
 # WHERE category = 'test'
@@ -159,3 +193,10 @@ def le_e(left_expr: ExprProtocol, right_expr: ExprProtocol) -> PredicateProtocol
 
 def ne_e(left_expr: ExprProtocol, right_expr: ExprProtocol) -> PredicateProtocol:
     return _LeftExprRightExprPredicate(left_expr, right_expr, '!=')
+
+def in_(
+    left_expr: str | ExprProtocol,
+    right_expr: SelectProtocol | ExprProtocol | list[int | float | str | ExprProtocol],
+    list_item_as_param: bool = False,
+) -> PredicateProtocol:
+    return _InPredicate(left_expr, right_expr, list_item_as_param)
