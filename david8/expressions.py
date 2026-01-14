@@ -14,11 +14,5 @@ def col(name: str) -> _Column:
 def param(value: str | int | float, fixed_name: bool = False) -> _Parameter:
     return _Parameter(value, fixed_name)
 
-def true() -> AliasedProtocol:
-    return _SqlType('TRUE')
-
-def false() -> AliasedProtocol:
-    return _SqlType('FALSE')
-
 def null() -> AliasedProtocol:
     return _SqlType('NULL')

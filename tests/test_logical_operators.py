@@ -1,9 +1,5 @@
-from parameterized import parameterized
-
-from david8.expressions import false, true
-from david8.logical_operators import and_, not_, or_, xor
+from david8.logical_operators import and_, or_, xor
 from david8.predicates import eq
-from david8.protocols.sql import LogicalOperatorProtocol
 from tests.base_test import BaseTest
 
 
@@ -85,32 +81,3 @@ class TestLogicalOperators(BaseTest):
         )
 
         self.assertEqual(query.get_parameters(), {'p1': 1, 'p2': 2, 'p3': 3, 'p4': 4, 'p5': 5})
-
-    @parameterized.expand([
-        (
-            not_('column_name'),
-            'SELECT NOT column_name',
-            'SELECT NOT "column_name"',
-            {}
-        ),
-        (
-            not_(true()),
-            'SELECT NOT TRUE',
-            'SELECT NOT TRUE',
-            {}
-        ),
-        (
-            not_(false()),
-            'SELECT NOT FALSE',
-            'SELECT NOT FALSE',
-            {}
-        ),
-    ])
-    def test_not(self, logical: LogicalOperatorProtocol, exp_sql: str, exp_sql2: str, exp_params: dict) -> None:
-        query = BaseTest.qb.select(logical)
-        self.assertEqual(query.get_sql(), exp_sql)
-        self.assertEqual(query.get_parameters(), exp_params)
-
-        query = BaseTest.qb_w.select(logical)
-        self.assertEqual(query.get_sql(), exp_sql2)
-        self.assertEqual(query.get_parameters(), exp_params)

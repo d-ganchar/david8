@@ -1,6 +1,6 @@
 from parameterized import parameterized
 
-from david8.expressions import false, null, param, true, val
+from david8.expressions import null, param, val
 from david8.functions import lower
 from david8.logical_operators import not_
 from david8.predicates import (
@@ -16,6 +16,10 @@ from david8.predicates import (
     gt_e,
     in_,
     is_,
+    is_false,
+    is_not_false,
+    is_not_true,
+    is_true,
     le,
     le_c,
     le_e,
@@ -205,22 +209,22 @@ class TestPredicates(BaseTest):
         ),
         # is
         (
-            is_('is_active', true()),
+            is_true('is_active'),
             'SELECT is_active IS TRUE',
             {},
         ),
         (
-            is_('is_active', not_(true())),
+            is_not_true('is_active'),
             'SELECT is_active IS NOT TRUE',
             {},
         ),
         (
-            is_('is_active', false()),
+            is_false('is_active'),
             'SELECT is_active IS FALSE',
             {},
         ),
         (
-            is_('is_active', not_(false())),
+            is_not_false('is_active'),
             'SELECT is_active IS NOT FALSE',
             {},
         ),

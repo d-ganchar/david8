@@ -1,7 +1,7 @@
 from parameterized import parameterized
 
 from david8 import get_default_qb
-from david8.expressions import col, false, null, param, true, val
+from david8.expressions import col, null, param, val
 from david8.param_styles import (
     FormatParamStyle,
     NamedParamStyle,
@@ -131,14 +131,6 @@ class TestExpressions(BaseTest):
         self.assertEqual(query.get_tuple_parameters(), tuple(exp_list_params))
 
     @parameterized.expand([
-        (
-            true(),
-            'SELECT TRUE',
-        ),
-        (
-            false(),
-            'SELECT FALSE',
-        ),
         (
             null(),
             'SELECT NULL',
