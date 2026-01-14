@@ -9,33 +9,9 @@ class FullTableName(ExprProtocol):
     table: str = ''
     db: str = ''
 
-    @property
-    def from_db(self):
-        # TODO: breaking changes. remove when major release
-        return self.db
-
-    @from_db.setter
-    def from_db(self, value: str = ''):
-        # TODO: breaking changes. remove when major release
-        self.db = value
-
-    @property
-    def from_table(self):
-        # TODO: breaking changes. remove when major release
-        return self.table
-
-    @from_table.setter
-    def from_table(self, value: str = ''):
-        # TODO: breaking changes. remove when major release
-        self.table = value
-
     def set_names(self, table: str, db: str = '') -> None:
         self.table = table
         self.db = db
-
-    def set_source(self, table: str, db: str = '') -> None:
-        # TODO: breaking changes. remove when major release
-        self.set_names(table, db)
 
     def get_sql(self, dialect: DialectProtocol) -> str:
         if self.db:

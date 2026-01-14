@@ -155,39 +155,6 @@ class CastFactory(FnCallableFactory):
         return _CastFn('CAST', value, cast_type)
 
 
-# TODO: breaking changes. remove when major release
-@dataclasses.dataclass(slots=True)
-class _SeparatedStrArgsFn(Function):
-    """
-    str works as column name. concat('col_name', 2, 0.5, val('test')) -> concat(col_name, '2', '0.5', 'test')
-    """
-    args: tuple
-    separator: str
-
-    def _get_sql(self, dialect: DialectProtocol) -> str:
-        items = ()
-        for item in self.args:
-            if isinstance(item, str):
-                items += (dialect.quote_ident(item),)
-                continue
-            if isinstance(item, float | int):
-                items += (f"'{item}'",)
-                continue
-
-            items += (item.get_sql(dialect),)
-
-        return f"{self.name}({self.separator.join(items)})"
-
-
-# TODO: breaking changes. remove when major release
-@dataclasses.dataclass(slots=True)
-class SeparatedStrArgsCallableFactory(FnCallableFactory):
-    separator: str
-
-    def __call__(self, *args: int | float | str | ExprProtocol) -> FunctionProtocol:
-        return _SeparatedStrArgsFn(self.name, args, self.separator)
-
-
 @dataclasses.dataclass(slots=True)
 class GenerateSeriesFactory(FnCallableFactory):
     def __call__(
