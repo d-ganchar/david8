@@ -6,7 +6,7 @@ from .protocols.sql import ExprProtocol, PredicateProtocol, SelectProtocol
 
 
 class _IsPredicate(PredicateProtocol, _BaseAliased):
-    def __init__(self, left: str | ExprProtocol, right: str | bool |  ExprProtocol, not_: bool = False):
+    def __init__(self, left: str | ExprProtocol, right: None | str | bool |  ExprProtocol, not_: bool = False):
         super().__init__()
         self._left = left
         self._right = right
@@ -16,6 +16,8 @@ class _IsPredicate(PredicateProtocol, _BaseAliased):
         left = to_col_or_expr(self._left, dialect)
         if isinstance(self._right, bool):
             right = str(self._right).upper()
+        elif self._right is None:
+            right = 'NULL'
         else:
             right = to_col_or_expr(self._right, dialect)
 
@@ -155,8 +157,6 @@ def between(
 ) -> PredicateProtocol:
     return _BetweenPredicate(column, start, end)
 
-# .where(is_('is_active', false)) => WHERE is_active IS FALSE
-# .where(is_('is_active', not_(false))) => WHERE is_active IS NOT FALSE
 def is_(left: str | ExprProtocol, right: str | ExprProtocol) -> PredicateProtocol:
     return _IsPredicate(left, right)
 
@@ -171,6 +171,12 @@ def is_not_false(value: str | ExprProtocol) -> PredicateProtocol:
 
 def is_not_true(value: str | ExprProtocol) -> PredicateProtocol:
     return _IsPredicate(value, True, True)
+
+def is_null(value: str | ExprProtocol) -> PredicateProtocol:
+    return _IsPredicate(value, None)
+
+def is_not_null(value: str | ExprProtocol) -> PredicateProtocol:
+    return _IsPredicate(value, None, True)
 
 # columns predicates. example: WHERE col_name = col_name2, col_name != col_name2 ...
 def eq_c(left_column: str, right_column: str) -> PredicateProtocol:
