@@ -6,13 +6,10 @@ from david8.predicates import (
     between,
     eq,
     eq_c,
-    eq_e,
     ge,
     ge_c,
-    ge_e,
     gt,
     gt_c,
-    gt_e,
     in_,
     is_,
     is_false,
@@ -23,13 +20,10 @@ from david8.predicates import (
     is_true,
     le,
     le_c,
-    le_e,
     lt,
     lt_c,
-    lt_e,
     ne,
     ne_c,
-    ne_e,
 )
 from david8.protocols.sql import PredicateProtocol
 from tests.base_test import BaseTest
@@ -162,49 +156,49 @@ class TestPredicates(BaseTest):
         ),
         # eq_e
         (
-            eq_e(val(1), param(1)),
+            eq(val(1), param(1)),
             'SELECT 1 = %(p1)s',
             {'p1': 1}
         ),
         # ge_e
         (
-            ge_e(val(1), param(1)),
+            ge(val(1), param(1)),
             'SELECT 1 >= %(p1)s',
             {'p1': 1}
         ),
         # gt_e
         (
-            gt_e(val(1), param(1)),
+            gt(val(1), param(1)),
             'SELECT 1 > %(p1)s',
             {'p1': 1}
         ),
         # le_e
         (
-            le_e(val(1), param(1)),
+            le(val(1), param(1)),
             'SELECT 1 <= %(p1)s',
             {'p1': 1}
         ),
         # lt_e
         (
-            lt_e(val(1), param(1)),
+            lt(val(1), param(1)),
             'SELECT 1 < %(p1)s',
             {'p1': 1}
         ),
         # le_e
         (
-            le_e(val(1), param(1)),
+            le(val(1), param(1)),
             'SELECT 1 <= %(p1)s',
             {'p1': 1}
         ),
         # lt_e
         (
-            lt_e(val(1), param(1)),
+            lt(val(1), param(1)),
             'SELECT 1 < %(p1)s',
             {'p1': 1}
         ),
         # ne_e
         (
-            ne_e(val(1), param(1)),
+            ne(val(1), param(1)),
             'SELECT 1 != %(p1)s',
             {'p1': 1}
         ),

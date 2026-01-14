@@ -23,7 +23,7 @@ from david8.functions import (
     uuid_,
 )
 from david8.logical_operators import and_, or_, xor
-from david8.predicates import eq_e
+from david8.predicates import eq
 from david8.protocols.sql import FunctionProtocol
 from tests.base_test import BaseTest
 
@@ -77,20 +77,20 @@ class TestAggFunctions(BaseTest):
             self.qb
             .select('*')
             .from_table('test')
-            .having(eq_e(count('*'), val(1)))
+            .having(eq(count('*'), val(1)))
         )
 
         for expr in [
-            eq_e(count('name'), val(2)),
-            eq_e(max_('price'), val(1000)),
-            eq_e(min_('age'), val(27)),
-            eq_e(sum_('money'), val(100)),
-            eq_e(avg('success'), val(99)),
-            eq_e(count('name', True), val(3)),
-            eq_e(max_('price', True), val(2000)),
-            eq_e(min_('age', True), val(33)),
-            eq_e(sum_('money', True), val(200)),
-            eq_e(avg('success', True), val(299)),
+            eq(count('name'), val(2)),
+            eq(max_('price'), val(1000)),
+            eq(min_('age'), val(27)),
+            eq(sum_('money'), val(100)),
+            eq(avg('success'), val(99)),
+            eq(count('name', True), val(3)),
+            eq(max_('price', True), val(2000)),
+            eq(min_('age', True), val(33)),
+            eq(sum_('money', True), val(200)),
+            eq(avg('success', True), val(299)),
         ]:
             query.having(expr)
 
@@ -109,15 +109,15 @@ class TestAggFunctions(BaseTest):
             .from_table('test')
             .having(
                 or_(
-                    eq_e(count('name'), val(2)),
-                    eq_e(max_('price'), val(1000)),
+                    eq(count('name'), val(2)),
+                    eq(max_('price'), val(1000)),
                     and_(
-                        eq_e(min_('age'), val(27)),
-                        eq_e(sum_('money'), val(100)),
+                        eq(min_('age'), val(27)),
+                        eq(sum_('money'), val(100)),
                     ),
                     xor(
-                        eq_e(avg('success'), val(99)),
-                        eq_e(avg('happiness'), val(101)),
+                        eq(avg('success'), val(99)),
+                        eq(avg('happiness'), val(101)),
                     )
                 )
             )
