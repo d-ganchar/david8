@@ -57,7 +57,7 @@ class TestSelect(BaseTest):
         query = (
             BaseTest.qb
             .select('*')
-            .from_query(
+            .from_expr(
                 BaseTest.qb
                 .select('*')
                 .from_table('music')

@@ -3,12 +3,13 @@ from typing import Union
 
 from ..core.base_aliased import AliasedProtocol
 from ..protocols.dialect import DialectProtocol
-from ..protocols.dml import JoinProtocol, SelectProtocol
 from ..protocols.sql import (
     ExprProtocol,
     FunctionProtocol,
+    JoinProtocol,
     LogicalOperatorProtocol,
     PredicateProtocol,
+    SelectProtocol,
 )
 from .base_expressions import FullTableName
 from .base_query import BaseQuery
@@ -62,13 +63,6 @@ class BaseSelect(BaseQuery, SelectProtocol):
         self.from_table_cnstr.set_names(table_name, db_name)
         self.source_alias = alias
         self.from_query_expr = None
-        return self
-
-    # TODO: breaking changes. remove when major release. see: from_expr()
-    def from_query(self, query: 'SelectProtocol', alias: str = '') -> SelectProtocol:
-        self.from_query_expr = query
-        self.source_alias = alias
-        self.from_table_cnstr.set_names('')
         return self
 
     def from_expr(self, expr: Union['SelectProtocol', FunctionProtocol], alias: str = '') -> 'SelectProtocol':
@@ -160,21 +154,6 @@ class BaseSelect(BaseQuery, SelectProtocol):
             for join in self.joins
         )
 
-    def _to_sql(self, dialect: DialectProtocol):
-        # TODO: breaking changes. remove when major release
-        with_query = self._with_queries_to_sql(dialect)
-        select = self._columns_to_sql(dialect)
-        from_ref = self._from_to_sql(dialect)
-        joins = self._joins_to_sql(dialect)
-        where = self.where_construction.get_sql(dialect)
-        group_by = self._group_by_to_sql(dialect)
-        having = self._having_to_sql(dialect)
-        union = self._union_to_sql(dialect)
-        order_by = self._order_by_to_sql()
-
-        limit = f' LIMIT {self.limit_value}' if self.limit_value else ''
-        return f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{limit}{union}'
-
     def _get_sql(self, dialect: DialectProtocol):
         """
         Don't forget about a query rendering sequence. You can break the sequence of query parameters, see:
@@ -194,7 +173,18 @@ class BaseSelect(BaseQuery, SelectProtocol):
         [ ORDER BY <sort_specification_list> ]
         [ LIMIT <limit_value> ]
         """
-        return self._to_sql(dialect)
+        with_query = self._with_queries_to_sql(dialect)
+        select = self._columns_to_sql(dialect)
+        from_ref = self._from_to_sql(dialect)
+        joins = self._joins_to_sql(dialect)
+        where = self.where_construction.get_sql(dialect)
+        group_by = self._group_by_to_sql(dialect)
+        having = self._having_to_sql(dialect)
+        union = self._union_to_sql(dialect)
+        order_by = self._order_by_to_sql()
+
+        limit = f' LIMIT {self.limit_value}' if self.limit_value else ''
+        return f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{limit}{union}'
 
     def _add_to_order_by(self, *args: str | int, desc: bool = False):
         for arg in args:

@@ -1,10 +1,17 @@
 from dataclasses import dataclass
 
-from ..protocols.ddl import CreateTableProtocol
 from ..protocols.dialect import DialectProtocol
-from ..protocols.dml import DeleteProtocol, InsertProtocol, SelectProtocol, UpdateProtocol
 from ..protocols.query_builder import QueryBuilderProtocol
-from ..protocols.sql import AliasedProtocol, ExprProtocol, FunctionProtocol
+from ..protocols.sql import (
+    AliasedProtocol,
+    CreateTableProtocol,
+    DeleteProtocol,
+    ExprProtocol,
+    FunctionProtocol,
+    InsertProtocol,
+    SelectProtocol,
+    UpdateProtocol,
+)
 from .base_ddl import BaseCreateTable as _CreateTable
 from .base_dml import BaseDelete as _Delete
 from .base_dml import BaseInsert as _Insert

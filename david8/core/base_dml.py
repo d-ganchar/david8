@@ -2,11 +2,14 @@ import dataclasses
 
 from ..core.base_aliased import Column
 from ..protocols.dialect import DialectProtocol
-from ..protocols.dml import DeleteProtocol, InsertProtocol, SelectProtocol, UpdateProtocol
 from ..protocols.sql import (
+    DeleteProtocol,
     ExprProtocol,
+    InsertProtocol,
     LogicalOperatorProtocol,
     PredicateProtocol,
+    SelectProtocol,
+    UpdateProtocol,
 )
 from .base_dql import BaseWhereConstruction
 from .base_expressions import FullTableName
