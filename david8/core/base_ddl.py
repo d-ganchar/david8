@@ -1,8 +1,7 @@
 import dataclasses
 
-from ..protocols.ddl import CreateTableProtocol
 from ..protocols.dialect import DialectProtocol
-from ..protocols.dml import SelectProtocol
+from ..protocols.sql import CreateTableProtocol, SelectProtocol
 from .base_expressions import FullTableName
 from .base_query import BaseQuery
 

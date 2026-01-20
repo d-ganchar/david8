@@ -1,30 +1,29 @@
 from parameterized import parameterized
 
-from david8.expressions import false, null, param, true, val
+from david8.expressions import param, val
 from david8.functions import lower
-from david8.logical_operators import not_
 from david8.predicates import (
     between,
     eq,
     eq_c,
-    eq_e,
     ge,
     ge_c,
-    ge_e,
     gt,
     gt_c,
-    gt_e,
     in_,
     is_,
+    is_false,
+    is_not_false,
+    is_not_null,
+    is_not_true,
+    is_null,
+    is_true,
     le,
     le_c,
-    le_e,
     lt,
     lt_c,
-    lt_e,
     ne,
     ne_c,
-    ne_e,
 )
 from david8.protocols.sql import PredicateProtocol
 from tests.base_test import BaseTest
@@ -157,80 +156,80 @@ class TestPredicates(BaseTest):
         ),
         # eq_e
         (
-            eq_e(val(1), param(1)),
+            eq(val(1), param(1)),
             'SELECT 1 = %(p1)s',
             {'p1': 1}
         ),
         # ge_e
         (
-            ge_e(val(1), param(1)),
+            ge(val(1), param(1)),
             'SELECT 1 >= %(p1)s',
             {'p1': 1}
         ),
         # gt_e
         (
-            gt_e(val(1), param(1)),
+            gt(val(1), param(1)),
             'SELECT 1 > %(p1)s',
             {'p1': 1}
         ),
         # le_e
         (
-            le_e(val(1), param(1)),
+            le(val(1), param(1)),
             'SELECT 1 <= %(p1)s',
             {'p1': 1}
         ),
         # lt_e
         (
-            lt_e(val(1), param(1)),
+            lt(val(1), param(1)),
             'SELECT 1 < %(p1)s',
             {'p1': 1}
         ),
         # le_e
         (
-            le_e(val(1), param(1)),
+            le(val(1), param(1)),
             'SELECT 1 <= %(p1)s',
             {'p1': 1}
         ),
         # lt_e
         (
-            lt_e(val(1), param(1)),
+            lt(val(1), param(1)),
             'SELECT 1 < %(p1)s',
             {'p1': 1}
         ),
         # ne_e
         (
-            ne_e(val(1), param(1)),
+            ne(val(1), param(1)),
             'SELECT 1 != %(p1)s',
             {'p1': 1}
         ),
         # is
         (
-            is_('is_active', true()),
+            is_true('is_active'),
             'SELECT is_active IS TRUE',
             {},
         ),
         (
-            is_('is_active', not_(true())),
+            is_not_true('is_active'),
             'SELECT is_active IS NOT TRUE',
             {},
         ),
         (
-            is_('is_active', false()),
+            is_false('is_active'),
             'SELECT is_active IS FALSE',
             {},
         ),
         (
-            is_('is_active', not_(false())),
+            is_not_false('is_active'),
             'SELECT is_active IS NOT FALSE',
             {},
         ),
         (
-            is_('is_active', null()),
+            is_null('is_active'),
             'SELECT is_active IS NULL',
             {},
         ),
         (
-            is_('is_active', not_(null())),
+            is_not_null('is_active'),
             'SELECT is_active IS NOT NULL',
             {},
         ),

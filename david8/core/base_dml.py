@@ -2,22 +2,18 @@ import dataclasses
 
 from ..core.base_aliased import Column
 from ..protocols.dialect import DialectProtocol
-from ..protocols.dml import DeleteProtocol, InsertProtocol, SelectProtocol, UpdateProtocol
 from ..protocols.sql import (
+    DeleteProtocol,
     ExprProtocol,
+    InsertProtocol,
     LogicalOperatorProtocol,
     PredicateProtocol,
+    SelectProtocol,
+    UpdateProtocol,
 )
-from .base_dql import BaseSelect as _BaseSelect
-from .base_dql import BaseWhereConstruction as _BaseWhereConstruction
+from .base_dql import BaseWhereConstruction
 from .base_expressions import FullTableName
 from .base_query import BaseQuery
-from .log import log_and_reset as _log_and_reset
-
-# TODO: breaking changes. remove when major release
-log_and_reset = _log_and_reset
-BaseWhereConstruction = _BaseWhereConstruction
-BaseSelect = _BaseSelect
 
 
 @dataclasses.dataclass(slots=True)
@@ -141,8 +137,3 @@ class BaseDelete(BaseQuery, DeleteProtocol):
     def _render_sql(self, dialect: DialectProtocol) -> str:
         where = self.where_construction.get_sql(dialect)
         return f'{self.target_table.get_sql(dialect)}{where}'
-
-
-# TODO: breaking changes. remove when major release
-class TargetTableConstruction(FullTableName):
-    pass

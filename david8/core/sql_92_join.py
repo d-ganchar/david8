@@ -2,8 +2,7 @@ import dataclasses
 from typing import Self
 
 from ..protocols.dialect import DialectProtocol
-from ..protocols.dml import JoinProtocol, SelectProtocol, Sql92JoinProtocol
-from ..protocols.sql import LogicalOperatorProtocol, PredicateProtocol
+from ..protocols.sql import JoinProtocol, LogicalOperatorProtocol, PredicateProtocol, SelectProtocol, Sql92JoinProtocol
 
 
 @dataclasses.dataclass(slots=True)

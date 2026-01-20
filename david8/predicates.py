@@ -1,4 +1,3 @@
-
 from .core.arg_convertors import to_col_or_expr
 from .core.base_aliased import BaseAliased as _BaseAliased
 from .expressions import param, val
@@ -7,15 +6,22 @@ from .protocols.sql import ExprProtocol, PredicateProtocol, SelectProtocol
 
 
 class _IsPredicate(PredicateProtocol, _BaseAliased):
-    def __init__(self, left: str | ExprProtocol, right: str | ExprProtocol):
+    def __init__(self, left: str | ExprProtocol, right: None | str | bool |  ExprProtocol, not_: bool = False):
         super().__init__()
         self._left = left
         self._right = right
+        self._predicate = 'IS NOT' if not_ else 'IS'
 
     def _get_sql(self, dialect: DialectProtocol) -> str:
         left = to_col_or_expr(self._left, dialect)
-        right = to_col_or_expr(self._right, dialect)
-        return f'{left} IS {right}'
+        if isinstance(self._right, bool):
+            right = str(self._right).upper()
+        elif self._right is None:
+            right = 'NULL'
+        else:
+            right = to_col_or_expr(self._right, dialect)
+
+        return f'{left} {self._predicate} {right}'
 
 
 class _LeftColRightParamPredicate(PredicateProtocol, _BaseAliased):
@@ -31,7 +37,11 @@ class _LeftColRightParamPredicate(PredicateProtocol, _BaseAliased):
         self._operator = operator
 
     def _get_sql(self, dialect: DialectProtocol) -> str:
-        col = dialect.quote_ident(self._left)
+        if isinstance(self._left, ExprProtocol):
+            col = self._left.get_sql(dialect)
+        else:
+            col = dialect.quote_ident(self._left)
+
         if isinstance(self._right, ExprProtocol):
             placeholder = self._right.get_sql(dialect)
             return f'{col} {self._operator} {placeholder}'
@@ -52,17 +62,6 @@ class _LeftColRightColPredicate(PredicateProtocol, _BaseAliased):
         right_col = dialect.quote_ident(self._right_column)
 
         return f'{left_col} {self._operator} {right_col}'
-
-
-class _LeftExprRightExprPredicate(PredicateProtocol, _BaseAliased):
-    def __init__(self, left_expr: ExprProtocol, right_expr: ExprProtocol, operator: str) -> None:
-        super().__init__()
-        self._left_expr = left_expr
-        self._right_expr = right_expr
-        self._operator = operator
-
-    def _get_sql(self, dialect: DialectProtocol) -> str:
-        return f'{self._left_expr.get_sql(dialect)} {self._operator} {self._right_expr.get_sql(dialect)}'
 
 
 class _BetweenPredicate(PredicateProtocol, _BaseAliased):
@@ -122,26 +121,22 @@ class _InPredicate(PredicateProtocol, _BaseAliased):
         right = ', '.join(items)
         return f'{left} IN ({right})'
 
-# column <> parameter | value | sql expression. examples:
-# WHERE category = %(p1)s
-# WHERE category = 'test'
-# WHERE category = concat(...)
-def eq(column: str, value: int | float | str | ExprProtocol) -> PredicateProtocol:
+def eq(column: str | ExprProtocol, value: int | float | str | ExprProtocol) -> PredicateProtocol:
     return _LeftColRightParamPredicate(column, value, '=')
 
-def gt(column: str, value: int | float | ExprProtocol) -> PredicateProtocol:
+def gt(column: str | ExprProtocol, value: int | float | ExprProtocol) -> PredicateProtocol:
     return _LeftColRightParamPredicate(column, value, '>')
 
-def ge(column: str, value: int | float | ExprProtocol) -> PredicateProtocol:
+def ge(column: str | ExprProtocol, value: int | float | ExprProtocol) -> PredicateProtocol:
     return _LeftColRightParamPredicate(column, value, '>=')
 
-def lt(column: str, value: int | float | ExprProtocol) -> PredicateProtocol:
+def lt(column: str | ExprProtocol, value: int | float | ExprProtocol) -> PredicateProtocol:
     return _LeftColRightParamPredicate(column, value, '<')
 
-def le(column: str, value: int | float | ExprProtocol) -> PredicateProtocol:
+def le(column: str | ExprProtocol, value: int | float | ExprProtocol) -> PredicateProtocol:
     return _LeftColRightParamPredicate(column, value, '<=')
 
-def ne(column: str, value: int | float | str | ExprProtocol) -> PredicateProtocol:
+def ne(column: str | ExprProtocol, value: int | float | str | ExprProtocol) -> PredicateProtocol:
     return _LeftColRightParamPredicate(column, value, '!=')
 
 def between(
@@ -151,10 +146,26 @@ def between(
 ) -> PredicateProtocol:
     return _BetweenPredicate(column, start, end)
 
-# .where(is_('is_active', false)) => WHERE is_active IS FALSE
-# .where(is_('is_active', not_(false))) => WHERE is_active IS NOT FALSE
 def is_(left: str | ExprProtocol, right: str | ExprProtocol) -> PredicateProtocol:
     return _IsPredicate(left, right)
+
+def is_false(value: str | ExprProtocol) -> PredicateProtocol:
+    return _IsPredicate(value, False)
+
+def is_true(value: str | ExprProtocol) -> PredicateProtocol:
+    return _IsPredicate(value, True)
+
+def is_not_false(value: str | ExprProtocol) -> PredicateProtocol:
+    return _IsPredicate(value, False, True)
+
+def is_not_true(value: str | ExprProtocol) -> PredicateProtocol:
+    return _IsPredicate(value, True, True)
+
+def is_null(value: str | ExprProtocol) -> PredicateProtocol:
+    return _IsPredicate(value, None)
+
+def is_not_null(value: str | ExprProtocol) -> PredicateProtocol:
+    return _IsPredicate(value, None, True)
 
 # columns predicates. example: WHERE col_name = col_name2, col_name != col_name2 ...
 def eq_c(left_column: str, right_column: str) -> PredicateProtocol:
@@ -174,25 +185,6 @@ def le_c(left_column: str, right_column: str) -> PredicateProtocol:
 
 def ne_c(left_column: str, right_column: str) -> PredicateProtocol:
     return _LeftColRightColPredicate(left_column, right_column, '!=')
-
-# expression predicates. example: WHERE concat(...) = (SELECT ...), max(...) != min(...) ...
-def eq_e(left_expr: ExprProtocol, right_expr: ExprProtocol) -> PredicateProtocol:
-    return _LeftExprRightExprPredicate(left_expr, right_expr, '=')
-
-def gt_e(left_expr: ExprProtocol, right_expr: ExprProtocol) -> PredicateProtocol:
-    return _LeftExprRightExprPredicate(left_expr, right_expr, '>')
-
-def ge_e(left_expr: ExprProtocol, right_expr: ExprProtocol) -> PredicateProtocol:
-    return _LeftExprRightExprPredicate(left_expr, right_expr, '>=')
-
-def lt_e(left_expr: ExprProtocol, right_expr: ExprProtocol) -> PredicateProtocol:
-    return _LeftExprRightExprPredicate(left_expr, right_expr, '<')
-
-def le_e(left_expr: ExprProtocol, right_expr: ExprProtocol) -> PredicateProtocol:
-    return _LeftExprRightExprPredicate(left_expr, right_expr, '<=')
-
-def ne_e(left_expr: ExprProtocol, right_expr: ExprProtocol) -> PredicateProtocol:
-    return _LeftExprRightExprPredicate(left_expr, right_expr, '!=')
 
 def in_(
     left_expr: str | ExprProtocol,
