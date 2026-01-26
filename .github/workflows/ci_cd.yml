@@ -133,6 +133,16 @@ jobs:
     secrets:
       pat: ${{ secrets.DAVID8_CHANGES_TOKEN }}
 
+  trigger_duckdb_dialect:
+    needs: [ tests, build ]
+    uses: ./.github/workflows/trigger_dialect_test.yml
+    permissions: write-all
+    with:
+      repo: "d-ganchar/david8_duckdb"
+      artifact_url: ${{ needs.build.outputs.artifact_url }}
+    secrets:
+      pat: ${{ secrets.DAVID8_CHANGES_TOKEN }}
+
   benchmarks:
     runs-on: ubuntu-22.04
     permissions: write-all
