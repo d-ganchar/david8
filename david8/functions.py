@@ -5,6 +5,9 @@ from david8.core.fn_generator import (
     FirstCol1StrArgFactory as _FirstCol1StrArgFactory,
 )
 from david8.core.fn_generator import (
+    FirstCol1ValFactory as _FirstCol1ValFactory,
+)
+from david8.core.fn_generator import (
     FirstCol2IntArgFactory as _FirstCol2IntArgFactory,
 )
 from david8.core.fn_generator import (
@@ -47,3 +50,4 @@ replace_ = _FirstCol2StrArgFactory(name='replace')
 substring = _FirstCol2IntArgFactory(name='substring')
 position = _FirstCol1StrArgFactory(name='position', separator=' IN ')
 generate_series = _GenerateSeriesFactory()
+null_if = _FirstCol1ValFactory(name='nullif')

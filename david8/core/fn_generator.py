@@ -109,6 +109,24 @@ class FirstCol1StrArgFactory(FnCallableFactory):
 
 
 @dataclasses.dataclass(slots=True)
+class FirstCol1ValFactory(FnCallableFactory):
+    separator: str = ', '
+    def __call__(
+        self,
+        col_name: str | ExprProtocol,
+        value: str | float | int | ExprProtocol,
+    ) -> FunctionProtocol:
+        return SeparatedArgsFn(
+            self.name,
+            (
+                col_name,
+                value if isinstance(value, ExprProtocol) else val(value),
+            ),
+            self.separator,
+        )
+
+
+@dataclasses.dataclass(slots=True)
 class FirstCol2StrArgFactory(FnCallableFactory):
     def __call__(
         self,

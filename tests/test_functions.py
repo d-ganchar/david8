@@ -14,6 +14,7 @@ from david8.functions import (
     max_,
     min_,
     now_,
+    null_if,
     position,
     replace_,
     substring,
@@ -344,3 +345,20 @@ class TestAggFunctions(BaseTest):
     def test_generate_series(self, fn: FunctionProtocol, sql_exp: str):
         query = self.qb.select('*').from_expr(fn)
         self.assertEqual(query.get_sql(), sql_exp)
+
+    @parameterized.expand([
+        (
+            null_if('col_name', 'unknown'),
+            "SELECT nullif(col_name, 'unknown')",
+        ),
+        (
+            null_if('int_col', 65).as_('number'),
+            'SELECT nullif(int_col, 65) AS number',
+        ),
+        (
+            null_if('col_name', 0.9),
+            'SELECT nullif(col_name, 0.9)',
+        ),
+    ])
+    def test_null_if(self, fn: FunctionProtocol, sql_exp: str):
+        self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)
