@@ -1,7 +1,7 @@
 import dataclasses
 
 from ..protocols.dialect import DialectProtocol
-from ..protocols.sql import CreateTableProtocol, SelectProtocol
+from ..protocols.sql import CreateTableProtocol, DropProtocol, QueryProtocol, SelectProtocol
 from .base_expressions import FullTableName
 from .base_query import BaseQuery
 
@@ -21,3 +21,31 @@ class BaseCreateTable(BaseQuery, CreateTableProtocol):
 
     def set_table(self, table: str, db: str = '') -> None:
         self.table.set_names(table, db)
+
+
+@dataclasses.dataclass(slots=True)
+class BaseDropTable(BaseQuery):
+    table: FullTableName = dataclasses.field(default_factory=FullTableName)
+
+    def _render_sql_prefix(self, dialect: DialectProtocol) -> str:
+        return 'TABLE '
+
+    def _render_sql(self, dialect: DialectProtocol) -> str:
+        return self.table.get_sql(dialect)
+
+
+@dataclasses.dataclass(slots=True)
+class BaseDrop(BaseQuery, DropProtocol):
+    query: QueryProtocol | None = None
+
+    def _render_sql_prefix(self, dialect: DialectProtocol) -> str:
+        return 'DROP '
+
+    def _render_sql(self, dialect: DialectProtocol) -> str:
+        if self.query:
+            return f'{self.query.get_sql(dialect)}'
+        return ''
+
+    def table(self, table_name: str, db_name: str = '') -> DropProtocol:
+        self.query = BaseDropTable(dialect=self.dialect, table=FullTableName(table_name, db_name))
+        return self

@@ -1,7 +1,7 @@
 from typing import Protocol
 
 from ..protocols.sql import DeleteProtocol, InsertProtocol, SelectProtocol, UpdateProtocol
-from .sql import AliasedProtocol, CreateTableProtocol, ExprProtocol, FunctionProtocol
+from .sql import AliasedProtocol, CreateTableProtocol, DropProtocol, ExprProtocol, FunctionProtocol
 
 
 class QueryBuilderProtocol(Protocol):
@@ -21,4 +21,7 @@ class QueryBuilderProtocol(Protocol):
         pass
 
     def create_table_as(self, query: SelectProtocol, table: str, db: str = '') -> CreateTableProtocol:
+        pass
+
+    def drop(self) -> DropProtocol:
         pass

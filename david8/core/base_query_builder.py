@@ -6,6 +6,7 @@ from ..protocols.sql import (
     AliasedProtocol,
     CreateTableProtocol,
     DeleteProtocol,
+    DropProtocol,
     ExprProtocol,
     FunctionProtocol,
     InsertProtocol,
@@ -13,6 +14,7 @@ from ..protocols.sql import (
     UpdateProtocol,
 )
 from .base_ddl import BaseCreateTable as _CreateTable
+from .base_ddl import BaseDrop
 from .base_dml import BaseDelete as _Delete
 from .base_dml import BaseInsert as _Insert
 from .base_dml import BaseUpdate as _Update
@@ -42,3 +44,6 @@ class BaseQueryBuilder(QueryBuilderProtocol):
 
     def create_table_as(self, query: SelectProtocol, table: str, db: str = '') -> CreateTableProtocol:
         return _CreateTable(dialect=self._dialect, query=query, table=FullTableName(table, db))
+
+    def drop(self) -> DropProtocol:
+        return BaseDrop(dialect=self._dialect)
