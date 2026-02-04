@@ -4,19 +4,23 @@ from david8 import QueryBuilderProtocol
 from david8.cast_types import bigint, char, date_, integer, smallint, text, time_, timestamp_, varchar
 from david8.expressions import param, val
 from david8.functions import (
+    add,
     avg,
     cast,
     concat,
     count,
+    div,
     generate_series,
     length,
     lower,
     max_,
     min_,
+    mul,
     now_,
     null_if,
     position,
     replace_,
+    sub,
     substring,
     sum_,
     trim,
@@ -361,4 +365,27 @@ class TestAggFunctions(BaseTest):
         ),
     ])
     def test_null_if(self, fn: FunctionProtocol, sql_exp: str):
+        self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)
+
+
+class TestArithmeticFunctions(BaseTest):
+    @parameterized.expand([
+        (
+            add('col1', 'col2', 'col3'),
+            'SELECT (col1 + col2 + col3)',
+        ),
+        (
+            div('col1', 'col2', 'col3'),
+            'SELECT (col1 / col2 / col3)',
+        ),
+        (
+            sub('col1', 'col2', 'col3'),
+            'SELECT (col1 - col2 - col3)',
+        ),
+        (
+            mul('col1', 'col2', 'col3'),
+            'SELECT (col1 * col2 * col3)',
+        ),
+    ])
+    def test_base_arithmetic_fn(self, fn: FunctionProtocol, sql_exp: str):
         self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)

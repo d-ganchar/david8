@@ -40,6 +40,10 @@ max_ = _OneArgDistinctCallableFactory(name='max')
 min_ = _OneArgDistinctCallableFactory(name='min')
 
 concat = _SeparatedArgsFnFactory(name='concat')
+add = _SeparatedArgsFnFactory(name='', separator=' + ')
+sub = _SeparatedArgsFnFactory(name='', separator=' - ')
+mul = _SeparatedArgsFnFactory(name='', separator=' * ')
+div = _SeparatedArgsFnFactory(name='', separator=' / ')
 
 now_ = _SeparatedArgsFnFactory(name='now')
 uuid_ = _SeparatedArgsFnFactory(name='uuid')
