@@ -1,57 +1,100 @@
-from sqlalchemy import Table, Column, Integer, String, Date, MetaData, select, func
-from sqlalchemy.dialects import postgresql
-from sqlalchemy.sql.elements import literal_column
-from sqlalchemy.sql.expression import desc
+from sqlalchemy import (
+    Table,
+    Column,
+    MetaData,
+    Integer,
+    String,
+    Date,
+    Numeric,
+    select,
+    func,
+    bindparam,
+    literal_column,
+)
 
 
 def generate_sql():
     metadata = MetaData()
-    products_t = Table(
-        'products',
-        metadata,
-        Column('product_id', Integer),
-        Column('product_name', String),
-        Column('category', String)
+    events = Table(
+        "events", metadata,
+        Column("user_id", Integer),
+        Column("event_type", String),
+        Column("event_day", Date),
+        Column("amount", Numeric),
     )
 
-    orders_t = Table(
-        'orders',
-        metadata,
-        Column('order_id', Integer),
-        Column('product_id', Integer),
-        Column('customer_id', Integer),
-        Column('shipper_id', Integer),
-        Column('order_quantity', Integer),
-        Column('order_date', Date)
+    events_v2 = Table(
+        "events_v2", metadata,
+        Column("user_id", Integer),
+        Column("event_type", String),
+        Column("event_day", Date),
+        Column("amount", Numeric),
     )
 
-    customers_t = Table('customers', metadata, Column('customer_id', Integer), Column('country', String))
-    shippers_t = Table('shippers', metadata, Column('shipper_id', Integer), Column('shipper_name', String))
+    event_metadata = Table(
+        "event_metadata", metadata,
+        Column("user_id", Integer),
+        Column("event_type", String),
+        Column("category", String),
+    )
 
-    p = products_t.alias('p')
-    o = orders_t.alias('o')
-    c = customers_t.alias('c')
-    s = shippers_t.alias('s')
+    base_data = (
+        select(
+            events.c.user_id,
+            events.c.event_type,
+            events.c.event_day,
+            events.c.amount,
+        )
+        .where(
+            events.c.event_day.between(
+                literal_column("DATE '2023-01-01'"),
+                literal_column("DATE '2025-01-01'")
+            )
+        ).union_all(
+            select(
+                events_v2.c.user_id,
+                events_v2.c.event_type,
+                events_v2.c.event_day,
+                events_v2.c.amount,
+            )
+            .where(
+                events_v2.c.event_day.between(
+                    bindparam("p1"),
+                    bindparam("p2")
+                )
+            )
+        )
+    ).cte("base_data")
 
-    base_join = s.outerjoin(o, s.c.shipper_id == o.c.shipper_id)
-    base_join = base_join.join(p, o.c.product_id == p.c.product_id)
-    base_join = base_join.outerjoin(c, o.c.customer_id == c.c.customer_id)
+    bd = base_data.alias("bd")
     stmt = (
         select(
-            p.c.product_name.label('pn'),
-            c.c.country.label('cy'),
-            s.c.shipper_name.label('sn'),
-            func.sum(o.c.order_quantity).label('tqs'),
-            func.min(o.c.order_date).label('eod'),
-            func.max(o.c.order_date).label('lod')
+            bd.c.user_id,
+            bd.c.event_type,
+            func.count().label("cnt_events"),
+            func.sum(bd.c.amount).label("sum_amount"),
+            func.min(bd.c.amount).label("min_amount"),
+            func.max(bd.c.amount).label("max_amount"),
+            func.min(bd.c.event_day).label("first_event_day"),
+            func.max(bd.c.event_day).label("last_event_day"),
+            event_metadata.c.category,
         )
-        .select_from(base_join)
-        .where(p.c.category == 'Beverages')
-        .group_by(p.c.product_name, c.c.country, s.c.shipper_name)
+        .select_from(
+            bd.outerjoin(
+                event_metadata,
+                (bd.c.user_id == event_metadata.c.user_id)
+                & (bd.c.event_type == event_metadata.c.event_type)
+            )
+        )
+        .group_by(
+            bd.c.user_id,
+            bd.c.event_type,
+            event_metadata.c.category,
+        )
         .order_by(
-            desc(literal_column('tqs')),
-            literal_column('pn')
+            bd.c.event_type.desc(),
+            bd.c.user_id,
         )
     )
 
-    return str(stmt.compile(dialect=postgresql.dialect()))
+    return str(stmt.compile())

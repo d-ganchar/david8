@@ -1,27 +1,37 @@
 """
 Benchmarks SQL query:
 
-SELECT
-    p.product_name AS pn,
-    c.country AS cy,
-    s.shipper_name AS sn,
-    SUM(o.order_quantity) AS tqs,
-    MIN(o.order_date) AS eod,
-    MAX(o.order_date) AS lod
-FROM
-    products AS p
-INNER JOIN
-    orders AS o ON p.product_id = o.product_id
-LEFT JOIN
-    customers AS c ON o.customer_id = c.customer_id
-RIGHT JOIN
-    shippers AS s ON o.shipper_id = s.shipper_id
-WHERE
-    p.category = 'Beverages'
-GROUP BY
-    p.product_name, c.country, s.shipper_name
-ORDER BY
-    tqs DESC, pn;
+WITH base_data AS (
+    SELECT user_id,
+           event_type,
+           event_day,
+           amount
+      FROM events
+     WHERE event_day BETWEEN '2023-01-01' AND '2025-01-01'
+     UNION ALL
+    SELECT user_id,
+           event_type,
+           event_day,
+           amount
+      FROM events_v2
+     WHERE event_day BETWEEN %(p1)s AND %(p2)s
+)
+SELECT bd.user_id,
+       bd.event_type,
+       m.category,
+       COUNT(*)          AS cnt_events,
+       SUM(bd.amount)    AS sum_amount,
+       MIN(bd.amount)    AS min_amount,
+       MAX(bd.amount)    AS max_amount,
+       MIN(bd.event_day) AS first_event_day,
+       MAX(bd.event_day) AS last_event_day
+  FROM base_data bd
+  LEFT JOIN event_metadata m USING (user_id, event_type)
+ GROUP BY bd.user_id,
+          bd.event_type,
+          m.category
+ ORDER BY bd.event_type DESC,
+          bd.user_id
 """
 from typing import Callable
 
@@ -48,7 +58,6 @@ def run_benchmark(benchmark, fn: Callable):
 
 def test_david8(benchmark):
     run_benchmark(benchmark, run_david8)
-
 
 def test_sqlalchemy(benchmark):
     run_benchmark(benchmark, run_sqlalchemy)
