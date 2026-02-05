@@ -1,7 +1,8 @@
 from parameterized import parameterized
 
 from david8 import get_default_qb
-from david8.expressions import col, param, val
+from david8.expressions import case, col, param, val
+from david8.logical_operators import or_
 from david8.param_styles import (
     FormatParamStyle,
     NamedParamStyle,
@@ -9,6 +10,7 @@ from david8.param_styles import (
     PyFormatParamStyle,
     QMarkParamStyle,
 )
+from david8.predicates import eq
 from david8.protocols.dialect import ParamStyleProtocol
 from david8.protocols.sql import QueryProtocol
 from tests.base_test import BaseTest
@@ -129,3 +131,41 @@ class TestExpressions(BaseTest):
         self.assertEqual(query.get_parameters(), exp_dict_params)
         self.assertEqual(query.get_list_parameters(), exp_list_params)
         self.assertEqual(query.get_tuple_parameters(), tuple(exp_list_params))
+
+    @parameterized.expand([
+        (
+            case(
+                ('col_name', -1),
+                ('col_name2', -2),
+                else_=1,
+            ),
+            'SELECT CASE WHEN col_name THEN %(p1)s WHEN col_name2 THEN %(p2)s ELSE %(p3)s END',
+            {'p1': -1, 'p2': -2, 'p3': 1},
+        ),
+        (
+            case(
+                (eq('status', 'active'), 1),
+                (eq('status', 'online'), 2),
+                else_=0,
+            ),
+            'SELECT CASE WHEN status = %(p1)s THEN %(p2)s WHEN status = %(p3)s THEN %(p4)s ELSE %(p5)s END',
+            {'p1': 'active', 'p2': 1, 'p3': 'online', 'p4': 2, 'p5': 0},
+        ),
+        (
+            case(
+                (
+                    or_(eq('status', 'active'), eq('status', 'online')),
+                    1
+                ),
+                (eq('status', 'blocked'), -1),
+                else_=col('status_num'),
+            ),
+            'SELECT CASE WHEN (status = %(p1)s OR status = %(p2)s) THEN %(p3)s WHEN '
+            'status = %(p4)s THEN %(p5)s ELSE status_num END',
+            {'p1': 'active', 'p2': 'online', 'p3': 1, 'p4': 'blocked', 'p5': -1},
+        ),
+    ])
+    def test_case(self, expr: case, exp_sql: str, params: dict):
+        query = self.qb.select(expr)
+        self.assertEqual(query.get_sql(), exp_sql)
+        self.assertEqual(query.get_parameters(), params)
