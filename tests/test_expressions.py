@@ -1,7 +1,7 @@
 from parameterized import parameterized
 
 from david8 import get_default_qb
-from david8.expressions import case, col, param, val
+from david8.expressions import case, col, param, val, interval
 from david8.logical_operators import or_
 from david8.param_styles import (
     FormatParamStyle,
@@ -12,7 +12,7 @@ from david8.param_styles import (
 )
 from david8.predicates import eq
 from david8.protocols.dialect import ParamStyleProtocol
-from david8.protocols.sql import QueryProtocol
+from david8.protocols.sql import QueryProtocol, AliasedProtocol, IntervalProtocol
 from tests.base_test import BaseTest
 
 
@@ -165,7 +165,48 @@ class TestExpressions(BaseTest):
             {'p1': 'active', 'p2': 'online', 'p3': 1, 'p4': 'blocked', 'p5': -1},
         ),
     ])
-    def test_case(self, expr: case, exp_sql: str, params: dict):
+    def test_case(self, expr: AliasedProtocol, exp_sql: str, params: dict):
         query = self.qb.select(expr)
         self.assertEqual(query.get_sql(), exp_sql)
         self.assertEqual(query.get_parameters(), params)
+
+    @parameterized.expand([
+        # as int
+        (
+            interval().year(1).as_('interval_value'),
+            'SELECT INTERVAL 1 YEAR AS interval_value',
+        ),
+        (
+            interval()
+                .year(1)
+                .quarter(2)
+                .month(3)
+                .week(4)
+                .day(5)
+                .hour(6)
+                .minute(7)
+                .second(8)
+                .as_('interval_value'),
+            'SELECT INTERVAL 1 YEAR 2 QUARTER 3 MONTH 4 WEEK 5 DAY 6 HOUR 7 MINUTE 8 SECOND AS interval_value',
+        ),
+        # as str
+        (
+            interval(False).year(1).as_('interval_value'),
+            "SELECT INTERVAL '1 YEAR' AS interval_value",
+        ),
+        (
+            interval(False)
+                .year(1)
+                .quarter(2)
+                .month(3)
+                .week(4)
+                .day(5)
+                .hour(6)
+                .minute(7)
+                .second(8)
+                .as_('interval_value'),
+            "SELECT INTERVAL '1 YEAR 2 QUARTER 3 MONTH 4 WEEK 5 DAY 6 HOUR 7 MINUTE 8 SECOND' AS interval_value",
+        ),
+    ])
+    def test_interval(self, expr: IntervalProtocol, exp_sql: str):
+        self.assertEqual(self.qb.select(expr).get_sql(), exp_sql)

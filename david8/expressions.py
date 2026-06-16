@@ -6,6 +6,7 @@ from david8.protocols.dialect import DialectProtocol
 from david8.protocols.sql import (
     AliasedProtocol,
     ExprProtocol,
+    IntervalProtocol,
     LogicalOperatorProtocol,
     PredicateProtocol,
     ValueProtocol,
@@ -43,6 +44,64 @@ class _BaseCase(BaseAliased):
 
         return f'CASE {" ".join(conditions)} ELSE {else_} END'
 
+
+class _Interval(BaseAliased, IntervalProtocol):
+    def __init__(self, as_int: bool = True):
+        super().__init__()
+        self._as_int = as_int
+        self._second: int | None = None
+        self._minute: int | None = None
+        self._hour: int | None = None
+        self._day: int | None = None
+        self._week: int | None = None
+        self._month: int | None = None
+        self._year: int | None = None
+        self._quarter: int | None = None
+
+    def second(self, value: int) -> 'IntervalProtocol':
+        self._second = value
+        return self
+
+    def minute(self, value: int) -> 'IntervalProtocol':
+        self._minute = value
+        return self
+
+    def hour(self, value: int) -> 'IntervalProtocol':
+        self._hour = value
+        return self
+
+    def day(self, value: int) -> 'IntervalProtocol':
+        self._day = value
+        return self
+
+    def week(self, value: int) -> 'IntervalProtocol':
+        self._week = value
+        return self
+
+    def month(self, value: int) -> 'IntervalProtocol':
+        self._month = value
+        return self
+
+    def quarter(self, value: int) -> 'IntervalProtocol':
+        self._quarter = value
+        return self
+
+    def year(self, value: int) -> 'IntervalProtocol':
+        self._year = value
+        return self
+
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        values = []
+        for prop in ('year', 'quarter', 'month', 'week', 'day', 'hour', 'minute', 'second'):
+            value = getattr(self, f'_{prop}')
+            if isinstance(value, int):
+                values.append(f'{value} {prop.upper()}')
+
+        if self._as_int:
+            return f'INTERVAL {" ".join(values)}'
+        return f'INTERVAL \'{" ".join(values)}\''
+
+
 def val(value: str | int | float) -> ValueProtocol:
     return _Value(value)
 
@@ -57,3 +116,6 @@ def case(
     else_: str | int | float | ExprProtocol,
 ) -> AliasedProtocol:
     return _BaseCase(conditions=conditions, else_=else_)
+
+def interval(as_int: bool = True) -> IntervalProtocol:
+    return _Interval(as_int=as_int)

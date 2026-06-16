@@ -150,3 +150,29 @@ class CreateTableProtocol(QueryProtocol):
 class DropProtocol(QueryProtocol):
     def table(self, table_name: str, db_name: str = '') -> 'DropProtocol':
         pass
+
+
+class IntervalProtocol(AliasedProtocol):
+    def second(self, value: int) -> 'IntervalProtocol':
+        pass
+
+    def minute(self, value: int) -> 'IntervalProtocol':
+        pass
+
+    def hour(self, value: int) -> 'IntervalProtocol':
+        pass
+
+    def day(self, value: int) -> 'IntervalProtocol':
+        pass
+
+    def week(self, value: int) -> 'IntervalProtocol':
+        pass
+
+    def month(self, value: int) -> 'IntervalProtocol':
+        pass
+
+    def quarter(self, value: int) -> 'IntervalProtocol':
+        pass
+
+    def year(self, value: int) -> 'IntervalProtocol':
+        pass
