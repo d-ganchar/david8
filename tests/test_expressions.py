@@ -1,7 +1,7 @@
 from parameterized import parameterized
 
 from david8 import get_default_qb
-from david8.expressions import case, col, param, val, interval
+from david8.expressions import case, col, interval, param, val
 from david8.logical_operators import or_
 from david8.param_styles import (
     FormatParamStyle,
@@ -12,7 +12,7 @@ from david8.param_styles import (
 )
 from david8.predicates import eq
 from david8.protocols.dialect import ParamStyleProtocol
-from david8.protocols.sql import QueryProtocol, AliasedProtocol, IntervalProtocol
+from david8.protocols.sql import AliasedProtocol, IntervalProtocol, QueryProtocol
 from tests.base_test import BaseTest
 
 
