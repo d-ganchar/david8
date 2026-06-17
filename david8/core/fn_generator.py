@@ -1,10 +1,10 @@
 import dataclasses
 
-from david8.core.arg_convertors import to_col_or_expr
-from david8.core.base_aliased import BaseAliased
-from david8.expressions import val
-from david8.protocols.dialect import DialectProtocol
-from david8.protocols.sql import ExprProtocol, FunctionProtocol
+from ..expressions import val
+from ..protocols.dialect import DialectProtocol
+from ..protocols.sql import ExprProtocol, FrameModeProtocol, FunctionProtocol, WindowSpecProtocol
+from .arg_convertors import to_col_or_expr
+from .base_aliased import BaseAliased
 
 
 @dataclasses.dataclass(slots=True)
@@ -64,10 +64,69 @@ class _OneArgDistinctFn(Function):
         return f"{name}{dialect.quote_ident(self.column)})"
 
 
+@dataclasses.dataclass
+class _WindowSpecFunction(_OneArgDistinctFn, WindowSpecProtocol):
+    _window: str = ''
+    _partition_by: list[str | FunctionProtocol] = dataclasses.field(default_factory=list)
+    _order_by: list[str | list[str]] = dataclasses.field(default_factory=list)
+    _frame_mode: FrameModeProtocol = None
+
+    def over(
+        self,
+        partition_by: list[str | FunctionProtocol] = None,
+        order_by: list[str | tuple[str, int]] = None,
+        window: str = '',
+        frame_mode: FrameModeProtocol = None,
+    ) -> 'WindowSpecProtocol':
+        self._window = window
+        self._frame_mode = frame_mode
+        self._partition_by = partition_by or []
+        self._order_by = order_by or []
+
+        return self
+
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        sql = super()._get_sql(dialect)
+        if not any([self._window, self._partition_by, self._order_by]):
+            return sql
+
+        parts = ()
+        if self._partition_by:
+            parts += ('PARTITION BY',)
+            for part in self._partition_by:
+                if isinstance(part, str):
+                    parts += (dialect.quote_ident(part),)
+                elif isinstance(part, FunctionProtocol):
+                    parts += (part.get_sql(dialect),)
+
+        if self._order_by:
+            order_by_items = ()
+            for part in self._order_by:
+                if isinstance(part, str):
+                    order_by_items += (dialect.quote_ident(part), )
+                if isinstance(part, list) and len(part) == 1:
+                    if isinstance(part[0], str):
+                        order_by_items += (f'{dialect.quote_ident(part[0])} DESC', )
+
+            parts += ('ORDER BY', ', '.join(order_by_items))
+
+        if self._frame_mode:
+            parts += (self._frame_mode.get_sql(dialect),)
+
+        window_name = f'{self._window} ' if self._window else ''
+        return f"{sql} OVER ({window_name}{' '.join(parts)})"
+
+
 @dataclasses.dataclass(slots=True)
 class OneArgDistinctFactory(FnCallableFactory):
     def __call__(self, column: str, distinct: bool = False) -> FunctionProtocol:
         return _OneArgDistinctFn(self.name, column, distinct)
+
+
+@dataclasses.dataclass(slots=True)
+class OneArgDistinctWindowFactory(FnCallableFactory):
+    def __call__(self, column: str, distinct: bool = False) -> _WindowSpecFunction:
+        return _WindowSpecFunction(self.name, column, distinct)
 
 
 @dataclasses.dataclass(slots=True)

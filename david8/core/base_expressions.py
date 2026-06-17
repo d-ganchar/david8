@@ -1,7 +1,7 @@
 import dataclasses
 
-from david8.protocols.dialect import DialectProtocol
-from david8.protocols.sql import ExprProtocol
+from ..protocols.dialect import DialectProtocol
+from ..protocols.sql import ExprProtocol
 
 
 @dataclasses.dataclass(slots=True)

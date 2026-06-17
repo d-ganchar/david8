@@ -52,6 +52,32 @@ class FunctionProtocol(AliasedProtocol):
     pass
 
 
+class FrameModeProtocol(ExprProtocol):
+    """
+    SQL:2003 (ISO/IEC 9075-2:2003)
+    """
+
+
+class FrameBoundProtocol(ExprProtocol):
+    """
+    SQL:2003 (ISO/IEC 9075-2:2003)
+    """
+
+
+class WindowSpecProtocol(FunctionProtocol):
+    """
+    SQL:2003 (ISO/IEC 9075-2:2003)
+    """
+    def over(
+        self,
+        partition_by: list[str | FunctionProtocol] = None,
+        order_by: list[str | tuple[str, int]] = None,
+        window: str = '',
+        frame_mode: FrameModeProtocol = None,
+    ) -> 'WindowSpecProtocol':
+        pass
+
+
 class LogicalOperatorProtocol(ExprProtocol):
     pass
 

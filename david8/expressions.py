@@ -1,9 +1,9 @@
-from david8.core.base_aliased import BaseAliased
-from david8.core.base_aliased import Column as _Column
-from david8.core.base_aliased import Parameter as _Parameter
-from david8.core.base_aliased import Value as _Value
-from david8.protocols.dialect import DialectProtocol
-from david8.protocols.sql import (
+from .core.base_aliased import BaseAliased
+from .core.base_aliased import Column as _Column
+from .core.base_aliased import Parameter as _Parameter
+from .core.base_aliased import Value as _Value
+from .protocols.dialect import DialectProtocol
+from .protocols.sql import (
     AliasedProtocol,
     ExprProtocol,
     IntervalProtocol,

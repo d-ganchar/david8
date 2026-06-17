@@ -1,4 +1,4 @@
-from david8.core.base_params import BaseParams
+from .core.base_params import BaseParams
 
 
 class NumericParamStyle(BaseParams):
