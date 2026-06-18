@@ -1,43 +1,39 @@
-from david8.core.fn_generator import (
+from .core.fn_generator import (
     CastFactory as _CastCallableFactory,
 )
-from david8.core.fn_generator import (
+from .core.fn_generator import (
     FirstCol1StrArgFactory as _FirstCol1StrArgFactory,
 )
-from david8.core.fn_generator import (
+from .core.fn_generator import (
     FirstCol1ValFactory as _FirstCol1ValFactory,
 )
-from david8.core.fn_generator import (
+from .core.fn_generator import (
     FirstCol2IntArgFactory as _FirstCol2IntArgFactory,
 )
-from david8.core.fn_generator import (
+from .core.fn_generator import (
     FirstCol2StrArgFactory as _FirstCol2StrArgFactory,
 )
-from david8.core.fn_generator import (
+from .core.fn_generator import (
     GenerateSeriesFactory as _GenerateSeriesFactory,
 )
-from david8.core.fn_generator import (
-    OneArgDistinctFactory as _OneArgDistinctCallableFactory,
-)
-from david8.core.fn_generator import (
+from .core.fn_generator import OneArgDistinctWindowFactory as _OneArgDistinctWindowFactory
+from .core.fn_generator import (
     SeparatedArgsFnFactory as _SeparatedArgsFnFactory,
 )
-from david8.core.fn_generator import (
+from .core.fn_generator import (
     StrArgFactory as _StrArgCallableFactory,
 )
 
-# length('col_name') | length(val('MyVAR')) | length(param('myParam')) | length(concat('col1', 'col2'))
 lower = _StrArgCallableFactory(name='lower')
 upper = _StrArgCallableFactory(name='upper')
 length = _StrArgCallableFactory(name='length')
 trim = _StrArgCallableFactory(name='trim')
 
-# count('name', True) => count(DISTINCT name), min_('age', True) => min(DISTINCT age) = 33
-count = _OneArgDistinctCallableFactory(name='count')
-avg = _OneArgDistinctCallableFactory(name='avg')
-sum_ = _OneArgDistinctCallableFactory(name='sum')
-max_ = _OneArgDistinctCallableFactory(name='max')
-min_ = _OneArgDistinctCallableFactory(name='min')
+count = _OneArgDistinctWindowFactory(name='count')
+avg = _OneArgDistinctWindowFactory(name='avg')
+sum_ = _OneArgDistinctWindowFactory(name='sum')
+max_ = _OneArgDistinctWindowFactory(name='max')
+min_ = _OneArgDistinctWindowFactory(name='min')
 
 concat = _SeparatedArgsFnFactory(name='concat')
 add = _SeparatedArgsFnFactory(name='', separator=' + ')

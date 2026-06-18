@@ -1,7 +1,10 @@
 from parameterized import parameterized
 
 from david8 import QueryBuilderProtocol
+from david8.expressions import window_spec
+from david8.functions import sum_
 from david8.predicates import eq
+from david8.protocols.sql import SelectProtocol
 from tests.base_test import BaseTest
 
 
@@ -72,3 +75,28 @@ class TestSelect(BaseTest):
         )
 
         self.assertEqual(query.get_parameters(), {'p1': 'Port-Royal', 'p2': 'Anya: Sehnsucht EP'})
+
+    @parameterized.expand([
+        (
+            BaseTest.qb.select(
+                sum_('salary').over(order_by=['salary'], window='w').as_('by_dept')
+            )
+            .from_table('events')
+            .window('w', window_spec(partition_by=['debt'])),
+            'SELECT sum(salary) OVER (w ORDER BY salary) AS by_dept FROM events WINDOW w AS (PARTITION BY debt)',
+        ),
+        (
+            BaseTest.qb.select('*').from_table('events')
+            .window('base', window_spec(partition_by=['debt']))
+            .window('new_window', window_spec(window='base', order_by=['salary'])),
+            'SELECT * FROM events WINDOW base AS (PARTITION BY debt), new_window AS (base ORDER BY salary)',
+        ),
+        (
+            BaseTest.qb_w.select('*').from_table('events')
+            .window('base', window_spec(partition_by=['debt']))
+            .window('new_window', window_spec(window='base', order_by=['salary'])),
+            'SELECT "*" FROM "events" WINDOW base AS (PARTITION BY "debt"), new_window AS (base ORDER BY "salary")'
+        )
+    ])
+    def test_window(self, query: SelectProtocol, exp_sql: str):
+        self.assertEqual(query.get_sql(), exp_sql)

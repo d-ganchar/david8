@@ -2,7 +2,8 @@ from parameterized import parameterized
 
 from david8 import QueryBuilderProtocol
 from david8.cast_types import bigint, char, date_, integer, smallint, text, time_, timestamp_, varchar
-from david8.expressions import param, val
+from david8.expressions import desc, param, val
+from david8.frames import current_row, following, preceding, range_, rows, unbounded_following, unbounded_preceding
 from david8.functions import (
     add,
     avg,
@@ -388,4 +389,273 @@ class TestArithmeticFunctions(BaseTest):
         ),
     ])
     def test_base_arithmetic_fn(self, fn: FunctionProtocol, sql_exp: str):
+        self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)
+
+
+class TestWindowFunctions(BaseTest):
+    @parameterized.expand([
+        # partition_by
+        (
+            sum_('salary').over(['dept']).as_('by_dept'),
+            'SELECT sum(salary) OVER (PARTITION BY dept) AS by_dept',
+        ),
+        (
+            avg('salary').over(['dept']).as_('by_dept'),
+            'SELECT avg(salary) OVER (PARTITION BY dept) AS by_dept',
+        ),
+        (
+            max_('salary').over(['dept']).as_('by_dept'),
+            'SELECT max(salary) OVER (PARTITION BY dept) AS by_dept',
+        ),
+        (
+            min_('salary').over(['dept']).as_('by_dept'),
+            'SELECT min(salary) OVER (PARTITION BY dept) AS by_dept',
+        ),
+        (
+            sum_('salary').over([null_if('dept', 0)]).as_('by_dept'),
+            'SELECT sum(salary) OVER (PARTITION BY nullif(dept, 0)) AS by_dept',
+        ),
+        (
+            avg('salary').over([null_if('dept', 0)]).as_('by_dept'),
+            'SELECT avg(salary) OVER (PARTITION BY nullif(dept, 0)) AS by_dept',
+        ),
+        (
+            max_('salary').over([null_if('dept', 0)]).as_('by_dept'),
+            'SELECT max(salary) OVER (PARTITION BY nullif(dept, 0)) AS by_dept',
+        ),
+        (
+            min_('salary').over([null_if('dept', 0)]).as_('by_dept'),
+            'SELECT min(salary) OVER (PARTITION BY nullif(dept, 0)) AS by_dept',
+        ),
+        # partition_by + order_by
+        (
+            sum_('salary').over(partition_by=['dept'], order_by=[desc('salary'), 'name']).as_('by_dept'),
+            'SELECT sum(salary) OVER (PARTITION BY dept ORDER BY salary DESC, name) AS by_dept',
+        ),
+        (
+            avg('salary').over(partition_by=['dept'], order_by=[desc('salary', 'name')]).as_('by_dept'),
+            'SELECT avg(salary) OVER (PARTITION BY dept ORDER BY salary DESC, name DESC) AS by_dept',
+        ),
+        (
+            max_('salary').over(partition_by=['dept'], order_by=[desc('name'), 'salary']).as_('by_dept'),
+            'SELECT max(salary) OVER (PARTITION BY dept ORDER BY name DESC, salary) AS by_dept',
+        ),
+        (
+            min_('salary').over(partition_by=['dept'], order_by=['salary', 'name']).as_('by_dept'),
+            'SELECT min(salary) OVER (PARTITION BY dept ORDER BY salary, name) AS by_dept',
+        ),
+        (
+            sum_('salary').over(
+                partition_by=['dept'],
+                order_by=[desc('salary'), 'name'],
+                frame_mode=rows(unbounded_preceding())
+            ).as_('by_dept'),
+            'SELECT sum(salary) OVER (PARTITION BY dept ORDER BY salary DESC, name ROWS UNBOUNDED PRECEDING) '
+            'AS by_dept',
+        ),
+        (
+            avg('salary').over(
+                partition_by=['dept'],
+                order_by=[desc('salary', 'name')],
+                frame_mode=rows(unbounded_preceding())
+            ).as_('by_dept'),
+            'SELECT avg(salary) OVER (PARTITION BY dept ORDER BY salary DESC, name DESC ROWS UNBOUNDED PRECEDING) '
+            'AS by_dept',
+        ),
+        (
+            max_('salary').over(
+                partition_by=['dept'],
+                order_by=[desc('name'), 'salary'],
+                frame_mode=rows(unbounded_preceding())
+            ).as_('by_dept'),
+            'SELECT max(salary) OVER (PARTITION BY dept ORDER BY name DESC, salary ROWS UNBOUNDED PRECEDING) '
+            'AS by_dept',
+        ),
+        (
+            min_('salary').over(
+                partition_by=['dept'],
+                order_by=['salary', 'name'],
+                frame_mode=rows(unbounded_preceding())
+            ).as_('by_dept'),
+            'SELECT min(salary) OVER (PARTITION BY dept ORDER BY salary, name ROWS UNBOUNDED PRECEDING) AS by_dept',
+        ),
+        (
+            sum_('salary').over(
+                partition_by=['dept'],
+                order_by=[desc('salary'), 'name'],
+                frame_mode=rows(preceding(), current_row())
+            ).as_('by_dept'),
+            'SELECT sum(salary) OVER (PARTITION BY dept ORDER BY salary DESC, name ROWS BETWEEN PRECEDING AND '
+            'CURRENT ROW) '
+            'AS by_dept',
+        ),
+        (
+            avg('salary').over(
+                partition_by=['dept'],
+                order_by=[desc('salary', 'name')],
+                frame_mode=range_(unbounded_following(), following())
+            ).as_('by_dept'),
+            'SELECT avg(salary) OVER (PARTITION BY dept ORDER BY salary DESC, name DESC RANGE BETWEEN UNBOUNDED '
+            'FOLLOWING AND FOLLOWING) '
+            'AS by_dept',
+        ),
+        (
+            max_('salary').over(
+                partition_by=['dept'],
+                order_by=[desc('name'), 'salary'],
+                frame_mode=range_(current_row())
+            ).as_('by_dept'),
+            'SELECT max(salary) OVER (PARTITION BY dept ORDER BY name DESC, salary RANGE CURRENT ROW) '
+            'AS by_dept',
+        ),
+        (
+            min_('salary').over(
+                partition_by=['dept'],
+                order_by=['salary', 'name'],
+                frame_mode=rows(unbounded_preceding(), current_row())
+            ).as_('by_dept'),
+            'SELECT min(salary) OVER (PARTITION BY dept ORDER BY salary, name ROWS BETWEEN UNBOUNDED PRECEDING AND '
+            'CURRENT ROW) AS by_dept',
+        ),
+    ])
+    def test_unnamed_window_fn(self, fn: FunctionProtocol, sql_exp: str):
+        self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)
+
+    @parameterized.expand([
+        # partition_by
+        (
+            sum_('salary').over(['dept'], window='w_name').as_('by_dept'),
+            'SELECT sum(salary) OVER (w_name PARTITION BY dept) AS by_dept',
+        ),
+        (
+            avg('salary').over(['dept'], window='w_name').as_('by_dept'),
+            'SELECT avg(salary) OVER (w_name PARTITION BY dept) AS by_dept',
+        ),
+        (
+            max_('salary').over(['dept'], window='w_name').as_('by_dept'),
+            'SELECT max(salary) OVER (w_name PARTITION BY dept) AS by_dept',
+        ),
+        (
+            min_('salary').over(['dept'], window='w_name').as_('by_dept'),
+            'SELECT min(salary) OVER (w_name PARTITION BY dept) AS by_dept',
+        ),
+        (
+            sum_('salary').over([null_if('dept', 0)], window='w_name').as_('by_dept'),
+            'SELECT sum(salary) OVER (w_name PARTITION BY nullif(dept, 0)) AS by_dept',
+        ),
+        (
+            avg('salary').over([null_if('dept', 0)], window='w_name').as_('by_dept'),
+            'SELECT avg(salary) OVER (w_name PARTITION BY nullif(dept, 0)) AS by_dept',
+        ),
+        (
+            max_('salary').over([null_if('dept', 0)], window='w_name').as_('by_dept'),
+            'SELECT max(salary) OVER (w_name PARTITION BY nullif(dept, 0)) AS by_dept',
+        ),
+        (
+            min_('salary').over([null_if('dept', 0)], window='w_name').as_('by_dept'),
+            'SELECT min(salary) OVER (w_name PARTITION BY nullif(dept, 0)) AS by_dept',
+        ),
+        # partition_by + order_by
+        (
+            sum_('salary').over(partition_by=['dept'], order_by=[desc('salary'), 'name'], window='w_name')
+            .as_('by_dept'),
+            'SELECT sum(salary) OVER (w_name PARTITION BY dept ORDER BY salary DESC, name) AS by_dept',
+        ),
+        (
+            avg('salary').over(partition_by=['dept'], order_by=[desc('salary'), desc('name')], window='w_name')
+            .as_('by_dept'),
+            'SELECT avg(salary) OVER (w_name PARTITION BY dept ORDER BY salary DESC, name DESC) AS by_dept',
+        ),
+        (
+            max_('salary').over(partition_by=['dept'], order_by=[desc('name'), 'salary'], window='w_name')
+            .as_('by_dept'),
+            'SELECT max(salary) OVER (w_name PARTITION BY dept ORDER BY name DESC, salary) AS by_dept',
+        ),
+        (
+            min_('salary').over(partition_by=['dept'], order_by=['salary', 'name'], window='w_name')
+            .as_('by_dept'),
+            'SELECT min(salary) OVER (w_name PARTITION BY dept ORDER BY salary, name) AS by_dept',
+        ),
+        (
+            sum_('salary').over(
+                partition_by=['dept'],
+                order_by=[desc('salary'), 'name'],
+                frame_mode=rows(unbounded_preceding()),
+                window='w_name'
+            ).as_('by_dept'),
+            'SELECT sum(salary) OVER (w_name PARTITION BY dept ORDER BY salary DESC, name ROWS UNBOUNDED PRECEDING) '
+            'AS by_dept',
+        ),
+        (
+            avg('salary').over(
+                partition_by=['dept'],
+                order_by=[desc('salary', 'name')],
+                frame_mode=rows(unbounded_preceding()),
+                window='w_name',
+            ).as_('by_dept'),
+            'SELECT avg(salary) OVER (w_name PARTITION BY dept ORDER BY salary DESC, name DESC ROWS UNBOUNDED '
+            'PRECEDING) AS by_dept',
+        ),
+        (
+            max_('salary').over(
+                partition_by=['dept'],
+                order_by=[desc('name'), 'salary'],
+                frame_mode=rows(unbounded_preceding()),
+                window='w_name',
+            ).as_('by_dept'),
+            'SELECT max(salary) OVER (w_name PARTITION BY dept ORDER BY name DESC, salary ROWS UNBOUNDED PRECEDING) '
+            'AS by_dept',
+        ),
+        (
+            min_('salary').over(
+                partition_by=['dept'],
+                order_by=['salary', 'name'],
+                frame_mode=rows(unbounded_preceding()),
+                window='w_name',
+            ).as_('by_dept'),
+            'SELECT min(salary) OVER (w_name PARTITION BY dept ORDER BY salary, name ROWS UNBOUNDED PRECEDING) AS '
+            'by_dept',
+        ),
+        (
+            sum_('salary').over(
+                partition_by=['dept'],
+                order_by=[desc('salary'), 'name'],
+                frame_mode=rows(preceding(), current_row()),
+                window='w_name',
+            ).as_('by_dept'),
+            'SELECT sum(salary) OVER (w_name PARTITION BY dept ORDER BY salary DESC, name ROWS BETWEEN PRECEDING AND '
+            'CURRENT ROW) AS by_dept',
+        ),
+        (
+            avg('salary').over(
+                partition_by=['dept'],
+                order_by=[desc('salary', 'name')],
+                frame_mode=range_(unbounded_following(), following()),
+                window='w_name',
+            ).as_('by_dept'),
+            'SELECT avg(salary) OVER (w_name PARTITION BY dept ORDER BY salary DESC, name DESC RANGE BETWEEN '
+            'UNBOUNDED FOLLOWING AND FOLLOWING) AS by_dept',
+        ),
+        (
+            max_('salary').over(
+                partition_by=['dept'],
+                order_by=[desc('name'), 'salary'],
+                frame_mode=range_(current_row()),
+                window='w_name',
+            ).as_('by_dept'),
+            'SELECT max(salary) OVER (w_name PARTITION BY dept ORDER BY name DESC, salary RANGE CURRENT ROW) '
+            'AS by_dept',
+        ),
+        (
+            min_('salary').over(
+                partition_by=['dept'],
+                order_by=['salary', 'name'],
+                frame_mode=rows(unbounded_preceding(), current_row()),
+                window='w_name',
+            ).as_('by_dept'),
+            'SELECT min(salary) OVER (w_name PARTITION BY dept ORDER BY salary, name ROWS BETWEEN UNBOUNDED '
+            'PRECEDING AND CURRENT ROW) AS by_dept',
+        ),
+    ])
+    def test_named_window_fn(self, fn: FunctionProtocol, sql_exp: str):
         self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)

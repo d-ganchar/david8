@@ -1,10 +1,11 @@
 import dataclasses
 
-from david8.core.arg_convertors import to_col_or_expr
-from david8.core.base_aliased import BaseAliased
-from david8.expressions import val
-from david8.protocols.dialect import DialectProtocol
-from david8.protocols.sql import ExprProtocol, FunctionProtocol
+from ..expressions import val
+from ..protocols.dialect import DialectProtocol
+from ..protocols.sql import DescProtocol, ExprProtocol, FrameModeProtocol, FunctionProtocol, OverClauseProtocol
+from .arg_convertors import to_col_or_expr
+from .base_aliased import BaseAliased
+from .base_frames import BaseOverClause
 
 
 @dataclasses.dataclass(slots=True)
@@ -64,10 +65,50 @@ class _OneArgDistinctFn(Function):
         return f"{name}{dialect.quote_ident(self.column)})"
 
 
+@dataclasses.dataclass
+class _OverClauseFunction(_OneArgDistinctFn, OverClauseProtocol):
+    _window: str = ''
+    _partition_by: list[str | FunctionProtocol] = dataclasses.field(default_factory=list)
+    _order_by: list[str | list[str]] = dataclasses.field(default_factory=list)
+    _frame_mode: FrameModeProtocol = None
+
+    def over(
+        self,
+        partition_by: list[str | FunctionProtocol] = None,
+        order_by: list[str | DescProtocol] = None,
+        window: str = '',
+        frame_mode: FrameModeProtocol = None,
+    ) -> 'OverClauseProtocol':
+        self._window = window
+        self._frame_mode = frame_mode
+        self._partition_by = partition_by or []
+        self._order_by = order_by or []
+
+        return self
+
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        sql = super()._get_sql(dialect)
+        spec_sql = BaseOverClause(
+            _window=self._window,
+            _partition_by=self._partition_by,
+            _order_by=self._order_by,
+            _frame_mode=self._frame_mode,
+        ).get_sql(dialect)
+
+        spec_sql = f' OVER {spec_sql}' if spec_sql else ''
+        return f"{sql}{spec_sql}"
+
+
 @dataclasses.dataclass(slots=True)
 class OneArgDistinctFactory(FnCallableFactory):
     def __call__(self, column: str, distinct: bool = False) -> FunctionProtocol:
         return _OneArgDistinctFn(self.name, column, distinct)
+
+
+@dataclasses.dataclass(slots=True)
+class OneArgDistinctWindowFactory(FnCallableFactory):
+    def __call__(self, column: str, distinct: bool = False) -> _OverClauseFunction:
+        return _OverClauseFunction(self.name, column, distinct)
 
 
 @dataclasses.dataclass(slots=True)

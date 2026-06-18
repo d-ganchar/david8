@@ -31,6 +31,16 @@ class ExprProtocol:
         pass
 
 
+class DescProtocol(ExprProtocol):
+    pass
+
+
+class WindowSpecProtocol(ExprProtocol):
+    """
+    SQL:2003 (ISO/IEC 9075-2:2003)
+    """
+
+
 class AliasedProtocol(ExprProtocol):
     def as_(self, alias: str) -> 'AliasedProtocol':
         pass
@@ -50,6 +60,32 @@ class PredicateProtocol(AliasedProtocol):
 
 class FunctionProtocol(AliasedProtocol):
     pass
+
+
+class FrameModeProtocol(ExprProtocol):
+    """
+    SQL:2003 (ISO/IEC 9075-2:2003)
+    """
+
+
+class FrameBoundProtocol(ExprProtocol):
+    """
+    SQL:2003 (ISO/IEC 9075-2:2003)
+    """
+
+
+class OverClauseProtocol(FunctionProtocol):
+    """
+    SQL:2003 (ISO/IEC 9075-2:2003)
+    """
+    def over(
+        self,
+        partition_by: list[str | FunctionProtocol] = None,
+        order_by: list[str | DescProtocol] = None,
+        window: str = '',
+        frame_mode: FrameModeProtocol = None,
+    ) -> 'WindowSpecProtocol':
+        pass
 
 
 class LogicalOperatorProtocol(ExprProtocol):
@@ -79,11 +115,25 @@ class SelectProtocol(QueryProtocol):
     def limit(self, value: int) -> 'SelectProtocol':
         pass
 
-    def order_by(self, *args: str | int) -> 'SelectProtocol':
+    def order_by(self, *args: str | int | DescProtocol) -> 'SelectProtocol':
         pass
 
     def order_by_desc(self, *args: str | int) -> 'SelectProtocol':
-        pass
+        """
+        Deprecated since 1.2.0b1. Will be removed in 0.1.0
+        Use `order_by() + DescProtocol()` instead, example:
+
+        from david8.expressions import desc
+
+        qb.select('*').order_by(
+            'style',
+            desc('height', 'age'),
+            'name',
+            desc('color', 'weight')
+        ).get_sql()
+
+        # SELECT * FROM trees ORDER BY style, height DESC, age DESC, name, color DESC, weight DESC
+        """
 
     def union(self, *args: 'SelectProtocol', all_flag: bool = True) -> 'SelectProtocol':
         pass
@@ -92,6 +142,9 @@ class SelectProtocol(QueryProtocol):
         pass
 
     def join(self, join: JoinProtocol) -> 'SelectProtocol':
+        pass
+
+    def window(self, name: str, spec: WindowSpecProtocol) -> 'SelectProtocol':
         pass
 
 
