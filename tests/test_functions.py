@@ -2,7 +2,7 @@ from parameterized import parameterized
 
 from david8 import QueryBuilderProtocol
 from david8.cast_types import bigint, char, date_, integer, smallint, text, time_, timestamp_, varchar
-from david8.expressions import param, val
+from david8.expressions import desc, param, val
 from david8.frames import current_row, following, preceding, range_, rows, unbounded_following, unbounded_preceding
 from david8.functions import (
     add,
@@ -429,15 +429,15 @@ class TestWindowFunctions(BaseTest):
         ),
         # partition_by + order_by
         (
-            sum_('salary').over(partition_by=['dept'], order_by=[['salary'], 'name']).as_('by_dept'),
+            sum_('salary').over(partition_by=['dept'], order_by=[desc('salary'), 'name']).as_('by_dept'),
             'SELECT sum(salary) OVER (PARTITION BY dept ORDER BY salary DESC, name) AS by_dept',
         ),
         (
-            avg('salary').over(partition_by=['dept'], order_by=[['salary'], ['name']]).as_('by_dept'),
+            avg('salary').over(partition_by=['dept'], order_by=[desc('salary', 'name')]).as_('by_dept'),
             'SELECT avg(salary) OVER (PARTITION BY dept ORDER BY salary DESC, name DESC) AS by_dept',
         ),
         (
-            max_('salary').over(partition_by=['dept'], order_by=[['name'], 'salary']).as_('by_dept'),
+            max_('salary').over(partition_by=['dept'], order_by=[desc('name'), 'salary']).as_('by_dept'),
             'SELECT max(salary) OVER (PARTITION BY dept ORDER BY name DESC, salary) AS by_dept',
         ),
         (
@@ -447,7 +447,7 @@ class TestWindowFunctions(BaseTest):
         (
             sum_('salary').over(
                 partition_by=['dept'],
-                order_by=[['salary'], 'name'],
+                order_by=[desc('salary'), 'name'],
                 frame_mode=rows(unbounded_preceding())
             ).as_('by_dept'),
             'SELECT sum(salary) OVER (PARTITION BY dept ORDER BY salary DESC, name ROWS UNBOUNDED PRECEDING) '
@@ -456,7 +456,7 @@ class TestWindowFunctions(BaseTest):
         (
             avg('salary').over(
                 partition_by=['dept'],
-                order_by=[['salary'], ['name']],
+                order_by=[desc('salary', 'name')],
                 frame_mode=rows(unbounded_preceding())
             ).as_('by_dept'),
             'SELECT avg(salary) OVER (PARTITION BY dept ORDER BY salary DESC, name DESC ROWS UNBOUNDED PRECEDING) '
@@ -465,7 +465,7 @@ class TestWindowFunctions(BaseTest):
         (
             max_('salary').over(
                 partition_by=['dept'],
-                order_by=[['name'], 'salary'],
+                order_by=[desc('name'), 'salary'],
                 frame_mode=rows(unbounded_preceding())
             ).as_('by_dept'),
             'SELECT max(salary) OVER (PARTITION BY dept ORDER BY name DESC, salary ROWS UNBOUNDED PRECEDING) '
@@ -482,7 +482,7 @@ class TestWindowFunctions(BaseTest):
         (
             sum_('salary').over(
                 partition_by=['dept'],
-                order_by=[['salary'], 'name'],
+                order_by=[desc('salary'), 'name'],
                 frame_mode=rows(preceding(), current_row())
             ).as_('by_dept'),
             'SELECT sum(salary) OVER (PARTITION BY dept ORDER BY salary DESC, name ROWS BETWEEN PRECEDING AND '
@@ -492,7 +492,7 @@ class TestWindowFunctions(BaseTest):
         (
             avg('salary').over(
                 partition_by=['dept'],
-                order_by=[['salary'], ['name']],
+                order_by=[desc('salary', 'name')],
                 frame_mode=range_(unbounded_following(), following())
             ).as_('by_dept'),
             'SELECT avg(salary) OVER (PARTITION BY dept ORDER BY salary DESC, name DESC RANGE BETWEEN UNBOUNDED '
@@ -502,7 +502,7 @@ class TestWindowFunctions(BaseTest):
         (
             max_('salary').over(
                 partition_by=['dept'],
-                order_by=[['name'], 'salary'],
+                order_by=[desc('name'), 'salary'],
                 frame_mode=range_(current_row())
             ).as_('by_dept'),
             'SELECT max(salary) OVER (PARTITION BY dept ORDER BY name DESC, salary RANGE CURRENT ROW) '
@@ -557,17 +557,17 @@ class TestWindowFunctions(BaseTest):
         ),
         # partition_by + order_by
         (
-            sum_('salary').over(partition_by=['dept'], order_by=[['salary'], 'name'], window='w_name')
+            sum_('salary').over(partition_by=['dept'], order_by=[desc('salary'), 'name'], window='w_name')
             .as_('by_dept'),
             'SELECT sum(salary) OVER (w_name PARTITION BY dept ORDER BY salary DESC, name) AS by_dept',
         ),
         (
-            avg('salary').over(partition_by=['dept'], order_by=[['salary'], ['name']], window='w_name')
+            avg('salary').over(partition_by=['dept'], order_by=[desc('salary'), desc('name')], window='w_name')
             .as_('by_dept'),
             'SELECT avg(salary) OVER (w_name PARTITION BY dept ORDER BY salary DESC, name DESC) AS by_dept',
         ),
         (
-            max_('salary').over(partition_by=['dept'], order_by=[['name'], 'salary'], window='w_name')
+            max_('salary').over(partition_by=['dept'], order_by=[desc('name'), 'salary'], window='w_name')
             .as_('by_dept'),
             'SELECT max(salary) OVER (w_name PARTITION BY dept ORDER BY name DESC, salary) AS by_dept',
         ),
@@ -579,7 +579,7 @@ class TestWindowFunctions(BaseTest):
         (
             sum_('salary').over(
                 partition_by=['dept'],
-                order_by=[['salary'], 'name'],
+                order_by=[desc('salary'), 'name'],
                 frame_mode=rows(unbounded_preceding()),
                 window='w_name'
             ).as_('by_dept'),
@@ -589,7 +589,7 @@ class TestWindowFunctions(BaseTest):
         (
             avg('salary').over(
                 partition_by=['dept'],
-                order_by=[['salary'], ['name']],
+                order_by=[desc('salary', 'name')],
                 frame_mode=rows(unbounded_preceding()),
                 window='w_name',
             ).as_('by_dept'),
@@ -599,7 +599,7 @@ class TestWindowFunctions(BaseTest):
         (
             max_('salary').over(
                 partition_by=['dept'],
-                order_by=[['name'], 'salary'],
+                order_by=[desc('name'), 'salary'],
                 frame_mode=rows(unbounded_preceding()),
                 window='w_name',
             ).as_('by_dept'),
@@ -619,7 +619,7 @@ class TestWindowFunctions(BaseTest):
         (
             sum_('salary').over(
                 partition_by=['dept'],
-                order_by=[['salary'], 'name'],
+                order_by=[desc('salary'), 'name'],
                 frame_mode=rows(preceding(), current_row()),
                 window='w_name',
             ).as_('by_dept'),
@@ -629,7 +629,7 @@ class TestWindowFunctions(BaseTest):
         (
             avg('salary').over(
                 partition_by=['dept'],
-                order_by=[['salary'], ['name']],
+                order_by=[desc('salary', 'name')],
                 frame_mode=range_(unbounded_following(), following()),
                 window='w_name',
             ).as_('by_dept'),
@@ -639,7 +639,7 @@ class TestWindowFunctions(BaseTest):
         (
             max_('salary').over(
                 partition_by=['dept'],
-                order_by=[['name'], 'salary'],
+                order_by=[desc('name'), 'salary'],
                 frame_mode=range_(current_row()),
                 window='w_name',
             ).as_('by_dept'),

@@ -1,5 +1,5 @@
 from david8 import get_default_qb
-from david8.expressions import val
+from david8.expressions import val, desc
 from david8.functions import max_, min_, sum_, count
 from david8.joins import left
 from david8.predicates import between
@@ -10,24 +10,15 @@ def generate_sql():
     return (
         qb
         .with_(
-            (
-                'base_data',
-                (
-                    qb
+            ('base_data', (qb
+                .select('user_id', 'event_type', 'event_day', 'amount')
+                .from_table('events')
+                .where(between('event_day', val('2023-01-01'), val('2025-01-01')))
+                .union(qb
                     .select('user_id', 'event_type', 'event_day', 'amount')
-                    .from_table('events')
-                    .where(
-                        between('event_day', val('2023-01-01'), val('2025-01-01'))
-                    )
-                    .union(
-                        qb
-                        .select('user_id', 'event_type', 'event_day', 'amount')
-                        .from_table('events_v2')
-                        .where(
-                            between('event_day', '2025-02-02', '2025-09-09')
-                        )
-                    )
-                )
+                    .from_table('events_v2')
+                    .where(between('event_day', '2025-02-02', '2025-09-09'))
+                ))
             )
         )
         .select(
@@ -42,13 +33,11 @@ def generate_sql():
             max_('bd.event_day').as_('last_event_day'),
         )
         .from_table('base_data', alias='bd')
-        .join(
-            left()
+        .join(left()
             .table('event_metadata')
             .as_('m')
             .using('user_id', 'event_type')
         )
         .group_by('bd.user_id', 'bd.event_type', 'm.category')
-        .order_by_desc('bd.event_type')
-        .order_by('bd.user_id')
+        .order_by(desc('bd.event_type'), 'bd.user_id')
     ).get_sql()

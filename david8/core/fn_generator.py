@@ -2,9 +2,10 @@ import dataclasses
 
 from ..expressions import val
 from ..protocols.dialect import DialectProtocol
-from ..protocols.sql import ExprProtocol, FrameModeProtocol, FunctionProtocol, WindowSpecProtocol
+from ..protocols.sql import DescProtocol, ExprProtocol, FrameModeProtocol, FunctionProtocol, OverClauseProtocol
 from .arg_convertors import to_col_or_expr
 from .base_aliased import BaseAliased
+from .base_frames import BaseOverClause
 
 
 @dataclasses.dataclass(slots=True)
@@ -65,7 +66,7 @@ class _OneArgDistinctFn(Function):
 
 
 @dataclasses.dataclass
-class _WindowSpecFunction(_OneArgDistinctFn, WindowSpecProtocol):
+class _OverClauseFunction(_OneArgDistinctFn, OverClauseProtocol):
     _window: str = ''
     _partition_by: list[str | FunctionProtocol] = dataclasses.field(default_factory=list)
     _order_by: list[str | list[str]] = dataclasses.field(default_factory=list)
@@ -74,10 +75,10 @@ class _WindowSpecFunction(_OneArgDistinctFn, WindowSpecProtocol):
     def over(
         self,
         partition_by: list[str | FunctionProtocol] = None,
-        order_by: list[str | tuple[str, int]] = None,
+        order_by: list[str | DescProtocol] = None,
         window: str = '',
         frame_mode: FrameModeProtocol = None,
-    ) -> 'WindowSpecProtocol':
+    ) -> 'OverClauseProtocol':
         self._window = window
         self._frame_mode = frame_mode
         self._partition_by = partition_by or []
@@ -87,34 +88,15 @@ class _WindowSpecFunction(_OneArgDistinctFn, WindowSpecProtocol):
 
     def _get_sql(self, dialect: DialectProtocol) -> str:
         sql = super()._get_sql(dialect)
-        if not any([self._window, self._partition_by, self._order_by]):
-            return sql
+        spec_sql = BaseOverClause(
+            _window=self._window,
+            _partition_by=self._partition_by,
+            _order_by=self._order_by,
+            _frame_mode=self._frame_mode,
+        ).get_sql(dialect)
 
-        parts = ()
-        if self._partition_by:
-            parts += ('PARTITION BY',)
-            for part in self._partition_by:
-                if isinstance(part, str):
-                    parts += (dialect.quote_ident(part),)
-                elif isinstance(part, FunctionProtocol):
-                    parts += (part.get_sql(dialect),)
-
-        if self._order_by:
-            order_by_items = ()
-            for part in self._order_by:
-                if isinstance(part, str):
-                    order_by_items += (dialect.quote_ident(part), )
-                if isinstance(part, list) and len(part) == 1:
-                    if isinstance(part[0], str):
-                        order_by_items += (f'{dialect.quote_ident(part[0])} DESC', )
-
-            parts += ('ORDER BY', ', '.join(order_by_items))
-
-        if self._frame_mode:
-            parts += (self._frame_mode.get_sql(dialect),)
-
-        window_name = f'{self._window} ' if self._window else ''
-        return f"{sql} OVER ({window_name}{' '.join(parts)})"
+        spec_sql = f' OVER {spec_sql}' if spec_sql else ''
+        return f"{sql}{spec_sql}"
 
 
 @dataclasses.dataclass(slots=True)
@@ -125,8 +107,8 @@ class OneArgDistinctFactory(FnCallableFactory):
 
 @dataclasses.dataclass(slots=True)
 class OneArgDistinctWindowFactory(FnCallableFactory):
-    def __call__(self, column: str, distinct: bool = False) -> _WindowSpecFunction:
-        return _WindowSpecFunction(self.name, column, distinct)
+    def __call__(self, column: str, distinct: bool = False) -> _OverClauseFunction:
+        return _OverClauseFunction(self.name, column, distinct)
 
 
 @dataclasses.dataclass(slots=True)

@@ -4,12 +4,14 @@ from typing import Union
 from ..core.base_aliased import AliasedProtocol
 from ..protocols.dialect import DialectProtocol
 from ..protocols.sql import (
+    DescProtocol,
     ExprProtocol,
     FunctionProtocol,
     JoinProtocol,
     LogicalOperatorProtocol,
     PredicateProtocol,
     SelectProtocol,
+    WindowSpecProtocol,
 )
 from .base_expressions import FullTableName
 from .base_query import BaseQuery
@@ -46,6 +48,8 @@ class BaseSelect(BaseQuery, SelectProtocol):
     # True = UNION ALL, False - regular union
     # ((True, query1), (False, query2))
     unions: tuple[tuple[str, SelectProtocol], ...] = dataclasses.field(default_factory=tuple)
+    # (('window_name1', WindowSpecProtocol), ('window_name2', WindowSpecProtocol), ...)
+    windows: tuple[tuple[str, WindowSpecProtocol], ...] = dataclasses.field(default_factory=tuple)
     joins: tuple[JoinProtocol, ...] = dataclasses.field(default_factory=tuple)
     from_table_cnstr: FullTableName = dataclasses.field(default_factory=FullTableName)
     from_query_expr: SelectProtocol | None = None
@@ -90,10 +94,14 @@ class BaseSelect(BaseQuery, SelectProtocol):
         if not self.order_by_expressions:
             return ''
 
-        order_items = tuple(
-            f'{(value if isinstance(value, int) else self.dialect.quote_ident(value))}{ordr_type}'
-            for value, ordr_type in self.order_by_expressions
-        )
+        order_items = ()
+        for value, ordr_type in self.order_by_expressions:
+            if isinstance(value, DescProtocol):
+                order_items += (value.get_sql(self.dialect), )
+                continue
+
+            value = f'{(value if isinstance(value, int) else self.dialect.quote_ident(value))}{ordr_type}'
+            order_items += (value, )
 
         return f" ORDER BY {', '.join(order_items)}"
 
@@ -145,6 +153,15 @@ class BaseSelect(BaseQuery, SelectProtocol):
 
         return f" HAVING {' AND '.join(p.get_sql(dialect) for p in self.having_expressions)}"
 
+    def _windows_to_sql(self, dialect: DialectProtocol) -> str:
+        if not self.windows:
+            return ''
+
+        items = ()
+        for name, spec in self.windows:
+            items += (f'{name} AS {spec.get_sql(dialect)}', )
+        return f" WINDOW {', '.join(items)}"
+
     def _joins_to_sql(self, dialect: DialectProtocol) -> str:
         if not self.joins:
             return ''
@@ -180,17 +197,18 @@ class BaseSelect(BaseQuery, SelectProtocol):
         where = self.where_construction.get_sql(dialect)
         group_by = self._group_by_to_sql(dialect)
         having = self._having_to_sql(dialect)
+        window = self._windows_to_sql(dialect)
         union = self._union_to_sql(dialect)
         order_by = self._order_by_to_sql()
 
         limit = f' LIMIT {self.limit_value}' if self.limit_value else ''
-        return f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{limit}{union}'
+        return f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{window}{limit}{union}'
 
     def _add_to_order_by(self, *args: str | int, desc: bool = False):
         for arg in args:
             self.order_by_expressions += ((arg, ' DESC' if desc else ''), )
 
-    def order_by(self, *args: str | int) -> SelectProtocol:
+    def order_by(self, *args: str | int | DescProtocol) -> SelectProtocol:
         self._add_to_order_by(*args)
         return self
 
@@ -210,4 +228,8 @@ class BaseSelect(BaseQuery, SelectProtocol):
 
     def join(self, join: JoinProtocol) -> SelectProtocol:
         self.joins += (join,)
+        return self
+
+    def window(self, name: str, spec: WindowSpecProtocol) -> 'SelectProtocol':
+        self.windows += (name, spec, ),
         return self
