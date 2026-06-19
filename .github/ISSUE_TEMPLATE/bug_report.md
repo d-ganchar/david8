@@ -16,7 +16,6 @@ describe the problem here...
 **Environment**
  - `david8` version_here
  - `python` version_here
- - `dialect` dialect_name_here
 
 **Expected behavior**
 expected result here...
