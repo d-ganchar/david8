@@ -17,6 +17,15 @@ class Function(BaseAliased, FunctionProtocol):
 
 
 @dataclasses.dataclass(slots=True)
+class Fn2Args(Function):
+    arg1: str | ExprProtocol
+    arg2: str | ExprProtocol
+
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        return f"{self.name}({to_col_or_expr(self.arg1, dialect)}, {to_col_or_expr(self.arg2, dialect)})"
+
+
+@dataclasses.dataclass(slots=True)
 class SeparatedArgsFn(Function):
     fn_items: tuple[str | int | float | ExprProtocol, ...]
     separator: str = ', '
@@ -51,7 +60,7 @@ class SeparatedArgsFnFactory(FnCallableFactory):
 
 
 @dataclasses.dataclass(slots=True)
-class _OneArgDistinctFn(Function):
+class OneArgDistinctFn(Function):
     """
     SUM(DISTINCT price)
     AVG(DISTINCT quantity)
@@ -66,7 +75,7 @@ class _OneArgDistinctFn(Function):
 
 
 @dataclasses.dataclass
-class _OverClauseFunction(_OneArgDistinctFn, OverClauseProtocol):
+class BaseOverClauseFunction(Function, OverClauseProtocol):
     _window: str = ''
     _partition_by: list[str | FunctionProtocol] = dataclasses.field(default_factory=list)
     _order_by: list[str | list[str]] = dataclasses.field(default_factory=list)
@@ -99,16 +108,38 @@ class _OverClauseFunction(_OneArgDistinctFn, OverClauseProtocol):
         return f"{sql}{spec_sql}"
 
 
+@dataclasses.dataclass
+class OverClauseFunction(BaseOverClauseFunction, OneArgDistinctFn):
+    pass
+
+
+@dataclasses.dataclass
+class OverClause2ArgFunction(BaseOverClauseFunction, Fn2Args):
+    pass
+
+
 @dataclasses.dataclass(slots=True)
 class OneArgDistinctFactory(FnCallableFactory):
     def __call__(self, column: str, distinct: bool = False) -> FunctionProtocol:
-        return _OneArgDistinctFn(self.name, column, distinct)
+        return OneArgDistinctFn(self.name, column, distinct)
 
 
 @dataclasses.dataclass(slots=True)
 class OneArgDistinctWindowFactory(FnCallableFactory):
-    def __call__(self, column: str, distinct: bool = False) -> _OverClauseFunction:
-        return _OverClauseFunction(self.name, column, distinct)
+    def __call__(self, column: str, distinct: bool = False) -> OverClauseProtocol:
+        return OverClauseFunction(self.name, column, distinct=distinct)
+
+
+@dataclasses.dataclass(slots=True)
+class OneArgWindowFactory(FnCallableFactory):
+    def __call__(self, column: str) -> OverClauseProtocol:
+        return OverClauseFunction(self.name, column)
+
+
+@dataclasses.dataclass(slots=True)
+class TwoArgWindowFactory(FnCallableFactory):
+    def __call__(self, arg1: str | ExprProtocol, arg2: str | ExprProtocol) -> OverClauseProtocol:
+        return OverClause2ArgFunction(self.name, arg1, arg2)
 
 
 @dataclasses.dataclass(slots=True)
@@ -198,7 +229,7 @@ class FirstCol2IntArgFactory(FnCallableFactory):
 
 
 @dataclasses.dataclass(slots=True)
-class _CastFn(Function):
+class CastFn(Function):
     value: str | ExprProtocol
     cast_type: str
 
@@ -211,7 +242,7 @@ class _CastFn(Function):
 class CastFactory(FnCallableFactory):
     name = 'CAST'
     def __call__(self, value: str | ExprProtocol, cast_type: str) -> FunctionProtocol:
-        return _CastFn('CAST', value, cast_type)
+        return CastFn('CAST', value, cast_type)
 
 
 @dataclasses.dataclass(slots=True)
