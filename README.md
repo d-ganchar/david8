@@ -1,17 +1,16 @@
 # david8
 
-A fast, lightweight, and elegant SQL query builder for Python.
-Designed with clarity and minimalism in mind, it provides a clean, expressive interface for constructing 
-SQL queries without sacrificing control or performance.
+`david8` is a lightweight Python SQL builder with zero dependencies.
+Clean API. Safe parameters. No ORM magic.
 
-The builder automatically generates safe parameter placeholders and binds parameters for you, keeping your code 
-concise and secure.
+No manual parameter naming. Just pass values - `david8` handles the rest:
 
-Whether you're assembling simple filters or composing complex queries, this query builder gives you a 
-predictable and ergonomic workflow 
+    .where(eq('age', 18), lt('score', 100))
+    # WHERE age = %(p1)s AND score < %(p2)s
+    # {'p1': 18, 'p2': 100}
 
-- Zero dependencies
-- Zero global objects
-- Built-in base support for ClickHouse, PostgreSQL, DuckDB, MySQL and SQLite
+100% test coverage · thousands of downloads
+
+Built-in dialect support: ClickHouse · DuckDB · PostgreSQL · MySQL · SQLite
 
 See [Wiki](https://github.com/d-ganchar/david8/wiki)
