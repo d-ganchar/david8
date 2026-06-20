@@ -1,4 +1,5 @@
 import dataclasses
+from typing import Union
 
 from ..core.base_aliased import Column
 from ..protocols.dialect import DialectProtocol
@@ -84,7 +85,7 @@ class BaseInsert(BaseQuery, InsertProtocol):
     dialect: DialectProtocol = None
     alias: str = ''
     target_table: FullTableName = dataclasses.field(default_factory=FullTableName)
-    values: tuple[str | float | int] = dataclasses.field(default_factory=tuple)
+    _values: tuple[str | float | int | tuple | list] = dataclasses.field(default_factory=tuple)
     column_set: tuple[str, ...] = dataclasses.field(default_factory=tuple)
 
     def _get_sql(self, dialect: DialectProtocol) -> str:
@@ -92,23 +93,35 @@ class BaseInsert(BaseQuery, InsertProtocol):
         sql = f'INSERT INTO {self.target_table.get_sql(dialect)}{columns}'
 
         if self.from_query_expr:
-            sql = f'{sql} {self.from_query_expr.get_sql(dialect)}'
-        else:
-            placeholders = ()
-            for value in self.values:
-                _, placeholder = dialect.get_paramstyle().add_param(value)
-                placeholders += (placeholder,)
+            return f'{sql} {self.from_query_expr.get_sql(dialect)}'
 
-            sql = f'{sql} VALUES ({", ".join(placeholders)})'
+        placeholders = ()
+        if len(self._values) > 0:
+            if isinstance(self._values[0], (list, tuple)):
+                records = ()
+                for value in self._values:
+                    record_placeholders = ()
+                    for field in value:
+                        _, placeholder = dialect.get_paramstyle().add_param(field)
+                        record_placeholders += (placeholder, )
 
-        return sql
+                    records += (', '.join(record_placeholders), )
+
+                placeholders += (', '.join(f'({r})' for r in records), )
+                return f'{sql} VALUES {", ".join(placeholders)}'
+
+        for value in self._values:
+            _, placeholder = dialect.get_paramstyle().add_param(value)
+            placeholders += (placeholder,)
+
+        return f'{sql} VALUES ({", ".join(placeholders)})'
 
     def into(self, table_name: str, db_name: str = '') -> 'InsertProtocol':
         self.target_table.set_names(table_name, db_name)
         return self
 
     def value(self, col_name: str, value: str | float | int) -> 'InsertProtocol':
-        self.values += (value, )
+        self._values += (value, )
         self.column_set += (col_name, )
         self.from_query_expr = None
         return self
@@ -119,13 +132,27 @@ class BaseInsert(BaseQuery, InsertProtocol):
 
     def from_select(self, query: SelectProtocol) -> 'InsertProtocol':
         self.from_query_expr = query
-        self.values = tuple()
+        self._values = tuple()
+        return self
+
+    def from_expr(
+        self,
+        columns: tuple[str] | list[str],
+        expr: Union['SelectProtocol', ExprProtocol]
+    ) -> 'InsertProtocol':
+        self.column_set = tuple(columns)
+        self.from_query_expr = expr
         return self
 
     def record(self, record: dict) -> 'InsertProtocol':
         for key, value in record.items():
-            self.values += (value,)
+            self._values += (value,)
             self.column_set += (key,)
+        return self
+
+    def values(self, columns: tuple[str] | list[str], data: tuple | list) -> 'InsertProtocol':
+        self.column_set = tuple(columns)
+        self._values = tuple(data)
         return self
 
 
