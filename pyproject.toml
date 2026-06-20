@@ -47,8 +47,6 @@ dev = [
     "parameterized",
     "pytest",
     "pytest-benchmark",
-    "sqlalchemy>=2.0.44",
-    "pypika>=0.48.9",
     "psrecord>=1.4",
     "rich>=14.2.0",
     "pytest-cov>=7.0.0",
