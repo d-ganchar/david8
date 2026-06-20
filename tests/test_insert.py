@@ -1,7 +1,7 @@
 from parameterized import parameterized
 
 from david8.predicates import eq
-from david8.protocols.sql import UpdateProtocol
+from david8.protocols.sql import InsertProtocol
 from tests.base_test import BaseTest
 
 
@@ -44,6 +44,28 @@ class TestInsert(BaseTest):
             {'p1': 'Aliens'},
         ),
     ])
-    def test_insert(self, query: UpdateProtocol, exp_sql: str, exp_params: dict):
+    def test_insert(self, query: InsertProtocol, exp_sql: str, exp_params: dict):
+        self.assertEqual(query.get_sql(), exp_sql)
+        self.assertEqual(query.get_parameters(), exp_params)
+
+    @parameterized.expand([
+        (
+            BaseTest.qb
+            .insert()
+            .into('movie', 'art')
+            .record({'name': 'Aliens', 'year': 1986}),
+            'INSERT INTO art.movie (name, year) VALUES (%(p1)s, %(p2)s)',
+            {'p1': 'Aliens', 'p2': 1986},
+        ),
+        (
+            BaseTest.qb_w
+            .insert()
+            .into('movie')
+            .record({'name': 'Aliens', 'year': 1986}),
+            'INSERT INTO "movie" ("name", "year") VALUES (%(p1)s, %(p2)s)',
+            {'p1': 'Aliens', 'p2': 1986},
+        ),
+    ])
+    def test_insert_record(self, query: InsertProtocol, exp_sql: str, exp_params: dict):
         self.assertEqual(query.get_sql(), exp_sql)
         self.assertEqual(query.get_parameters(), exp_params)
