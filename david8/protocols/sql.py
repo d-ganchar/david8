@@ -181,12 +181,47 @@ class InsertProtocol(QueryProtocol):
         pass
 
     def value(self, col_name: str, value: str | float | int) -> 'InsertProtocol':
-        pass
+        """
+        Deprecated since 1.5.0b1. Will be removed in 0.1.0
+        Use record():
+            qb
+            .insert()
+            .into('movie')
+            .record({'name': 'Aliens', 'year': 1986}),
+        """
 
     def columns(self, *args: str) -> 'InsertProtocol':
-        pass
+        """
+        Deprecated since 1.5.0b1. Will be removed in 0.1.0
+        Use from_expr():
+            qb
+            .into('movie', 'art')
+            .from_expr(
+                ['name', 'year'],
+                qb.select('col1', 'col2').from_table('old_movie')
+            )
+        """
 
     def from_select(self, query: SelectProtocol) -> 'InsertProtocol':
+        """
+        Deprecated since 1.5.0b1. Will be removed in 0.1.0
+        Use from_expr():
+            qb
+            .into('movie', 'art')
+            .from_expr(
+                ['name', 'year'],
+                qb.select('col1', 'col2').from_table('old_movie')
+            )
+        """
+
+    def values(self, columns: tuple[str] | list[str], data: tuple | list) -> 'InsertProtocol':
+        pass
+
+    def from_expr(
+        self,
+        columns: tuple[str] | list[str],
+        expr: Union['SelectProtocol', ExprProtocol]
+    ) -> 'InsertProtocol':
         pass
 
     def record(self, record: dict) -> 'InsertProtocol':
