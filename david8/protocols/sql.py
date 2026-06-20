@@ -166,6 +166,9 @@ class UpdateProtocol(QueryProtocol):
     def table(self, table_name: str, alias: str = '', db_name: str = '') -> 'UpdateProtocol':
         pass
 
+    def set_record(self, record: dict) -> 'UpdateProtocol':
+        pass
+
     def set_(self, column: str, value: str | int | float | ExprProtocol | SelectProtocol) -> 'UpdateProtocol':
         pass
 

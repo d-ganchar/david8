@@ -46,6 +46,17 @@ class TestUpdate(BaseTest):
             'UPDATE movie SET name = new_name WHERE movie = %(p1)s',
             {'p1': ''},
         ),
+        (
+            BaseTest.qb
+            .update()
+            .table('movie')
+            .set_('name', 'aliens')
+            .set_record({'year': 1986, 'killer': 'Ripley'})
+            .set_('cat', 'Jones')
+            .where(eq('movie', '')),
+            'UPDATE movie SET name = %(p1)s, year = %(p2)s, killer = %(p3)s, cat = %(p4)s WHERE movie = %(p5)s',
+            {'p1': 'aliens', 'p2': 1986, 'p3': 'Ripley', 'p4': 'Jones', 'p5': ''},
+        ),
     ])
     def test_update(self, query: UpdateProtocol, exp_sql: str, exp_params: dict):
         self.assertEqual(query.get_sql(), exp_sql)

@@ -33,6 +33,11 @@ class BaseUpdate(BaseQuery, UpdateProtocol):
         self.alias = alias
         return self
 
+    def set_record(self, record: dict) -> 'UpdateProtocol':
+        for col, val in record.items():
+            self.set_construction += ((col, val,),)
+        return self
+
     def set_(self, column: str, value: str | int | float | ExprProtocol | SelectProtocol) -> 'UpdateProtocol':
         self.set_construction += ((column, value, ), )
         return self
