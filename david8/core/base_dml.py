@@ -122,6 +122,12 @@ class BaseInsert(BaseQuery, InsertProtocol):
         self.values = tuple()
         return self
 
+    def record(self, record: dict) -> 'InsertProtocol':
+        for key, value in record.items():
+            self.values += (value,)
+            self.column_set += (key,)
+        return self
+
 
 @dataclasses.dataclass(slots=True)
 class BaseDelete(BaseQuery, DeleteProtocol):

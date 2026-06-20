@@ -189,6 +189,9 @@ class InsertProtocol(QueryProtocol):
     def from_select(self, query: SelectProtocol) -> 'InsertProtocol':
         pass
 
+    def record(self, record: dict) -> 'InsertProtocol':
+        pass
+
 
 class DeleteProtocol(QueryProtocol):
     def from_table(self, table_name: str, db_name: str = '') -> 'DeleteProtocol':
