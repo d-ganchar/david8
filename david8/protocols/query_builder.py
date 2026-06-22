@@ -1,7 +1,16 @@
 from typing import Protocol
 
-from ..protocols.sql import DeleteProtocol, InsertProtocol, SelectProtocol, UpdateProtocol
-from .sql import AliasedProtocol, CreateTableProtocol, DropProtocol, ExprProtocol, FunctionProtocol
+from .sql import (
+    AliasedProtocol,
+    CreateTableProtocol,
+    DeleteProtocol,
+    DropProtocol,
+    ExprProtocol,
+    FunctionProtocol,
+    InsertProtocol,
+    SelectProtocol,
+    UpdateProtocol,
+)
 
 
 class QueryBuilderProtocol(Protocol):

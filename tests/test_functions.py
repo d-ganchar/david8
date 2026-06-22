@@ -13,16 +13,23 @@ from david8.functions import (
     count,
     covar_pop,
     covar_samp,
+    cume_dist,
     div,
+    first_value,
     generate_series,
+    lag,
+    lead,
     length,
     lower,
     max_,
     min_,
     mul,
     now_,
+    nth_value,
     null_if,
+    percent_rank,
     position,
+    rank,
     regr_avgx,
     regr_count,
     regr_intercept,
@@ -763,6 +770,45 @@ class TestAggFunctions(BaseTest):
             .over(partition_by=['dept'], order_by=['date']),
             'SELECT stddev_samp(salary) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
             {'p1': 'ok'},
+        ),
+        (
+            first_value('salary').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT first_value(salary) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            nth_value('salary', 3).filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT nth_value(salary, 3) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            lag('salary', 3).filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT lag(salary, 3) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            lead('salary', 3).filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT lead(salary, 3) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            percent_rank().over(partition_by=['dept'], order_by=['date']),
+            'SELECT percent_rank() OVER (PARTITION BY dept ORDER BY date)',
+            {},
+        ),
+        (
+            rank().over(partition_by=['dept'], order_by=['date']),
+            'SELECT rank() OVER (PARTITION BY dept ORDER BY date)',
+            {},
+        ),
+        (
+            cume_dist().over(partition_by=['dept'], order_by=['date']),
+            'SELECT cume_dist() OVER (PARTITION BY dept ORDER BY date)',
+            {},
         ),
         (
             corr('salary', 'bonus').filter(eq('status', 'ok'))

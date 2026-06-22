@@ -46,9 +46,6 @@ dev = [
     "ruff",
     "parameterized",
     "pytest",
-    "pytest-benchmark",
-    "psrecord>=1.4",
-    "rich>=14.2.0",
     "pytest-cov>=7.0.0",
 ]
 

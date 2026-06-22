@@ -137,6 +137,12 @@ class OverClause2ArgFunction(BaseOverClauseFunction, Fn2Args):
 
 
 @dataclasses.dataclass(slots=True)
+class ZeroArgAggFactory(FnCallableFactory):
+    def __call__(self) -> AggFunctionProtocol:
+        return OverClauseFunction(self.name, distinct=False)
+
+
+@dataclasses.dataclass(slots=True)
 class OneArgDistinctFactory(FnCallableFactory):
     def __call__(self, column: str, distinct: bool = False) -> FunctionProtocol:
         return OneArgDistinctFn(self.name, column, distinct)
@@ -157,6 +163,12 @@ class OneArgWindowFactory(FnCallableFactory):
 @dataclasses.dataclass(slots=True)
 class TwoArgWindowFactory(FnCallableFactory):
     def __call__(self, arg1: str | ExprProtocol, arg2: str | ExprProtocol) -> AggFunctionProtocol:
+        return OverClause2ArgFunction(self.name, arg1, arg2)
+
+
+@dataclasses.dataclass(slots=True)
+class TwoArgIntWindowFactory(FnCallableFactory):
+    def __call__(self, arg1: str | ExprProtocol, arg2: int | ExprProtocol) -> AggFunctionProtocol:
         return OverClause2ArgFunction(self.name, arg1, arg2)
 
 
