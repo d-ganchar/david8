@@ -1,3 +1,8 @@
+"""
+Deprecated since 1.6.0b1. Will be removed in 0.1.0
+Use `functions` module instead, example:
+from david8.functions import stddev_samp
+"""
 from parameterized import parameterized
 
 from david8.functions_pg_duck import (

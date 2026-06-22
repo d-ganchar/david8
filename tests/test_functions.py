@@ -9,7 +9,10 @@ from david8.functions import (
     avg,
     cast,
     concat,
+    corr,
     count,
+    covar_pop,
+    covar_samp,
     div,
     generate_series,
     length,
@@ -20,17 +23,28 @@ from david8.functions import (
     now_,
     null_if,
     position,
+    regr_avgx,
+    regr_count,
+    regr_intercept,
+    regr_r2,
+    regr_slope,
+    regr_sxx,
+    regr_syy,
     replace_,
+    stddev_pop,
+    stddev_samp,
     sub,
     substring,
     sum_,
     trim,
     upper,
     uuid_,
+    var_pop,
+    var_samp,
 )
 from david8.logical_operators import and_, or_, xor
 from david8.predicates import eq
-from david8.protocols.sql import FunctionProtocol
+from david8.protocols.sql import AggFunctionProtocol, FunctionProtocol
 from tests.base_test import BaseTest
 
 
@@ -368,31 +382,6 @@ class TestAggFunctions(BaseTest):
     def test_null_if(self, fn: FunctionProtocol, sql_exp: str):
         self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)
 
-
-class TestArithmeticFunctions(BaseTest):
-    @parameterized.expand([
-        (
-            add('col1', 'col2', 'col3'),
-            'SELECT (col1 + col2 + col3)',
-        ),
-        (
-            div('col1', 'col2', 'col3'),
-            'SELECT (col1 / col2 / col3)',
-        ),
-        (
-            sub('col1', 'col2', 'col3'),
-            'SELECT (col1 - col2 - col3)',
-        ),
-        (
-            mul('col1', 'col2', 'col3'),
-            'SELECT (col1 * col2 * col3)',
-        ),
-    ])
-    def test_base_arithmetic_fn(self, fn: FunctionProtocol, sql_exp: str):
-        self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)
-
-
-class TestWindowFunctions(BaseTest):
     @parameterized.expand([
         # partition_by
         (
@@ -658,4 +647,208 @@ class TestWindowFunctions(BaseTest):
         ),
     ])
     def test_named_window_fn(self, fn: FunctionProtocol, sql_exp: str):
+        self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)
+
+    @parameterized.expand([
+        (
+            var_pop('salary').over(partition_by=['dept'], order_by=['date']),
+            'SELECT var_pop(salary) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+        (
+            var_samp('salary').over(partition_by=['dept'], order_by=['date']),
+            'SELECT var_samp(salary) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+        (
+            stddev_pop('salary').over(partition_by=['dept'], order_by=['date']),
+            'SELECT stddev_pop(salary) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+        (
+            stddev_samp('salary').over(partition_by=['dept'], order_by=['date']),
+            'SELECT stddev_samp(salary) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+    ])
+    def test_1_arg_fn(self, fn: AggFunctionProtocol, exp_sql: str):
+        self.assertEqual(BaseTest.qb.select(fn).get_sql(), exp_sql)
+
+    @parameterized.expand([
+        (
+            corr('salary', 'bonus').over(partition_by=['dept'], order_by=['date']),
+            'SELECT corr(salary, bonus) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+        (
+            covar_pop('salary', 'bonus').over(partition_by=['dept'], order_by=['date']),
+            'SELECT covar_pop(salary, bonus) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+        (
+            regr_slope('salary', 'experience').over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_slope(salary, experience) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+        (
+            regr_r2('salary', 'experience').over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_r2(salary, experience) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+        (
+            regr_sxx('salary', 'experience').over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_sxx(salary, experience) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+        (
+            regr_syy('salary', 'experience').over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_syy(salary, experience) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+        (
+            regr_avgx('salary', 'experience').over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_avgx(salary, experience) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+        (
+            regr_count('salary', 'experience').over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_count(salary, experience) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+        (
+            regr_intercept('salary', 'experience').over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_intercept(salary, experience) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+        (
+            covar_samp('salary', 'experience').over(partition_by=['dept'], order_by=['date']),
+            'SELECT covar_samp(salary, experience) OVER (PARTITION BY dept ORDER BY date)',
+        ),
+    ])
+    def test_2_arg_fn(self, fn: AggFunctionProtocol, exp_sql: str):
+        self.assertEqual(BaseTest.qb.select(fn).get_sql(), exp_sql)
+
+    @parameterized.expand([
+        (
+            min_('salary').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT min(salary) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            max_('salary').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT max(salary) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            avg('salary').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT avg(salary) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            count('salary').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT count(salary) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            var_pop('salary').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT var_pop(salary) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            var_samp('salary').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT var_samp(salary) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            stddev_pop('salary').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT stddev_pop(salary) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            stddev_samp('salary').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT stddev_samp(salary) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            corr('salary', 'bonus').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT corr(salary, bonus) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            covar_pop('salary', 'bonus').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT covar_pop(salary, bonus) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            regr_slope('salary', 'experience').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_slope(salary, experience) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            regr_r2('salary', 'experience').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_r2(salary, experience) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            regr_sxx('salary', 'experience').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_sxx(salary, experience) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            regr_syy('salary', 'experience').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_syy(salary, experience) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            regr_avgx('salary', 'experience').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_avgx(salary, experience) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            regr_count('salary', 'experience').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_count(salary, experience) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            regr_intercept('salary', 'experience').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT regr_intercept(salary, experience) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+        (
+            covar_samp('salary', 'experience').filter(eq('status', 'ok'))
+            .over(partition_by=['dept'], order_by=['date']),
+            'SELECT covar_samp(salary, experience) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date)',
+            {'p1': 'ok'},
+        ),
+    ])
+    def test_filter(self, fn: AggFunctionProtocol, exp_sql: str, exp_params: dict):
+        query = BaseTest.qb.select(fn)
+        self.assertEqual(query.get_sql(), exp_sql)
+        self.assertEqual(query.get_parameters(), exp_params)
+
+
+class TestArithmeticFunctions(BaseTest):
+    @parameterized.expand([
+        (
+            add('col1', 'col2', 'col3'),
+            'SELECT (col1 + col2 + col3)',
+        ),
+        (
+            div('col1', 'col2', 'col3'),
+            'SELECT (col1 / col2 / col3)',
+        ),
+        (
+            sub('col1', 'col2', 'col3'),
+            'SELECT (col1 - col2 - col3)',
+        ),
+        (
+            mul('col1', 'col2', 'col3'),
+            'SELECT (col1 * col2 * col3)',
+        ),
+    ])
+    def test_base_arithmetic_fn(self, fn: FunctionProtocol, sql_exp: str):
         self.assertEqual(self.qb.select(fn).get_sql(), sql_exp)
