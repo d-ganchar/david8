@@ -74,7 +74,26 @@ class FrameBoundProtocol(ExprProtocol):
     """
 
 
+class LogicalOperatorProtocol(ExprProtocol):
+    pass
+
+
 class OverClauseProtocol(FunctionProtocol):
+    """
+    Deprecated since 1.6.0b1. Will be removed in 0.1.0
+    Replaced with AggFunctionProtocol()
+    """
+    def over(
+        self,
+        partition_by: list[str | FunctionProtocol] = None,
+        order_by: list[str | DescProtocol] = None,
+        window: str = '',
+        frame_mode: FrameModeProtocol = None,
+    ) -> 'WindowSpecProtocol':
+        pass
+
+
+class AggFunctionProtocol(FunctionProtocol):
     """
     SQL:2003 (ISO/IEC 9075-2:2003)
     """
@@ -87,9 +106,8 @@ class OverClauseProtocol(FunctionProtocol):
     ) -> 'WindowSpecProtocol':
         pass
 
-
-class LogicalOperatorProtocol(ExprProtocol):
-    pass
+    def filter(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'AggFunctionProtocol':
+        pass
 
 
 class JoinProtocol(AliasedProtocol):

@@ -48,7 +48,6 @@ class TestInsert(BaseTest):
             BaseTest.qb
             .insert()
             .into('movie', 'art')
-            .columns('name', 'year')
             .from_expr(
                 ['name', 'year'],
                 BaseTest.qb.select('name', 'year').from_table('old_movie').where(eq('name', 'Aliens'))

@@ -2,7 +2,15 @@ import dataclasses
 
 from ..expressions import val
 from ..protocols.dialect import DialectProtocol
-from ..protocols.sql import DescProtocol, ExprProtocol, FrameModeProtocol, FunctionProtocol, OverClauseProtocol
+from ..protocols.sql import (
+    AggFunctionProtocol,
+    DescProtocol,
+    ExprProtocol,
+    FrameModeProtocol,
+    FunctionProtocol,
+    LogicalOperatorProtocol,
+    PredicateProtocol,
+)
 from .arg_convertors import to_col_or_expr
 from .base_aliased import BaseAliased
 from .base_frames import BaseOverClause
@@ -75,11 +83,12 @@ class OneArgDistinctFn(Function):
 
 
 @dataclasses.dataclass
-class BaseOverClauseFunction(Function, OverClauseProtocol):
+class BaseOverClauseFunction(Function, AggFunctionProtocol):
     _window: str = ''
     _partition_by: list[str | FunctionProtocol] = dataclasses.field(default_factory=list)
     _order_by: list[str | list[str]] = dataclasses.field(default_factory=list)
     _frame_mode: FrameModeProtocol = None
+    _filter: tuple[LogicalOperatorProtocol | PredicateProtocol, ...] = dataclasses.field(default_factory=tuple)
 
     def over(
         self,
@@ -87,12 +96,16 @@ class BaseOverClauseFunction(Function, OverClauseProtocol):
         order_by: list[str | DescProtocol] = None,
         window: str = '',
         frame_mode: FrameModeProtocol = None,
-    ) -> 'OverClauseProtocol':
+    ) -> 'AggFunctionProtocol':
         self._window = window
         self._frame_mode = frame_mode
         self._partition_by = partition_by or []
         self._order_by = order_by or []
 
+        return self
+
+    def filter(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'AggFunctionProtocol':
+        self._filter = args
         return self
 
     def _get_sql(self, dialect: DialectProtocol) -> str:
@@ -104,7 +117,12 @@ class BaseOverClauseFunction(Function, OverClauseProtocol):
             _frame_mode=self._frame_mode,
         ).get_sql(dialect)
 
-        spec_sql = f' OVER {spec_sql}' if spec_sql else ''
+        filter_sql = ''
+        if self._filter:
+            conditions = ', '.join(f.get_sql(dialect) for f in self._filter)
+            filter_sql = f' FILTER ({conditions})'
+
+        spec_sql = f'{filter_sql} OVER {spec_sql}' if spec_sql else ''
         return f"{sql}{spec_sql}"
 
 
@@ -119,6 +137,12 @@ class OverClause2ArgFunction(BaseOverClauseFunction, Fn2Args):
 
 
 @dataclasses.dataclass(slots=True)
+class ZeroArgAggFactory(FnCallableFactory):
+    def __call__(self) -> AggFunctionProtocol:
+        return OverClauseFunction(self.name, distinct=False)
+
+
+@dataclasses.dataclass(slots=True)
 class OneArgDistinctFactory(FnCallableFactory):
     def __call__(self, column: str, distinct: bool = False) -> FunctionProtocol:
         return OneArgDistinctFn(self.name, column, distinct)
@@ -126,19 +150,25 @@ class OneArgDistinctFactory(FnCallableFactory):
 
 @dataclasses.dataclass(slots=True)
 class OneArgDistinctWindowFactory(FnCallableFactory):
-    def __call__(self, column: str, distinct: bool = False) -> OverClauseProtocol:
+    def __call__(self, column: str, distinct: bool = False) -> AggFunctionProtocol:
         return OverClauseFunction(self.name, column, distinct=distinct)
 
 
 @dataclasses.dataclass(slots=True)
 class OneArgWindowFactory(FnCallableFactory):
-    def __call__(self, column: str) -> OverClauseProtocol:
+    def __call__(self, column: str) -> AggFunctionProtocol:
         return OverClauseFunction(self.name, column)
 
 
 @dataclasses.dataclass(slots=True)
 class TwoArgWindowFactory(FnCallableFactory):
-    def __call__(self, arg1: str | ExprProtocol, arg2: str | ExprProtocol) -> OverClauseProtocol:
+    def __call__(self, arg1: str | ExprProtocol, arg2: str | ExprProtocol) -> AggFunctionProtocol:
+        return OverClause2ArgFunction(self.name, arg1, arg2)
+
+
+@dataclasses.dataclass(slots=True)
+class TwoArgIntWindowFactory(FnCallableFactory):
+    def __call__(self, arg1: str | ExprProtocol, arg2: int | ExprProtocol) -> AggFunctionProtocol:
         return OverClause2ArgFunction(self.name, arg1, arg2)
 
 

@@ -33,11 +33,7 @@ def generate_sql():
             max_('bd.event_day').as_('last_event_day'),
         )
         .from_table('base_data', alias='bd')
-        .join(left()
-            .table('event_metadata')
-            .as_('m')
-            .using('user_id', 'event_type')
-        )
+        .join(left().table('event_metadata').as_('m').using('user_id', 'event_type'))
         .group_by('bd.user_id', 'bd.event_type', 'm.category')
         .order_by(desc('bd.event_type'), 'bd.user_id')
     ).get_sql()

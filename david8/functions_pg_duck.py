@@ -1,3 +1,8 @@
+"""
+Deprecated since 1.6.0b1. Will be removed in 0.1.0
+Use `functions` module instead, example:
+from david8.functions import stddev_samp
+"""
 from .core.fn_generator import OneArgWindowFactory as _OneArgWindowFactory
 from .core.fn_generator import TwoArgWindowFactory as _TwoArgWindowFactory
 
