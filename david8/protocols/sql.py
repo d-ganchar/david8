@@ -183,6 +183,14 @@ class Sql92JoinProtocol(JoinProtocol):
         pass
 
 
+class LiteralJoinProtocol(JoinProtocol):
+    def on(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'LiteralJoinProtocol':
+        pass
+
+    def expression(self, expression: ExprProtocol) -> 'LiteralJoinProtocol':
+        pass
+
+
 class UpdateProtocol(QueryProtocol):
     def table(self, table_name: str, alias: str = '', db_name: str = '') -> 'UpdateProtocol':
         pass

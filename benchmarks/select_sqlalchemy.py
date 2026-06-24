@@ -66,7 +66,7 @@ def generate_sql():
         )
     ).cte("base_data")
 
-    bd = base_data.alias("bd")
+    bd = base_data._alias("bd")
     stmt = (
         select(
             bd.c.user_id,
