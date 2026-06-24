@@ -133,6 +133,9 @@ class SelectProtocol(QueryProtocol):
     def limit(self, value: int) -> 'SelectProtocol':
         pass
 
+    def offset(self, value: int) -> 'SelectProtocol':
+        pass
+
     def order_by(self, *args: str | int | DescProtocol) -> 'SelectProtocol':
         pass
 
