@@ -2,6 +2,7 @@ import dataclasses
 
 from ..protocols.dialect import DialectProtocol
 from ..protocols.sql import DescProtocol, ExprProtocol
+from .arg_convertors import to_col_or_expr
 
 
 @dataclasses.dataclass(slots=True)
@@ -33,3 +34,17 @@ class BaseDesc(DescProtocol):
             items += (f'{dialect.quote_ident(item) if isinstance(item, str) else item} DESC',)
 
         return ', '.join(items)
+
+
+@dataclasses.dataclass(slots=True)
+class BaseDistinct(ExprProtocol):
+    _items: tuple[str | ExprProtocol, ...] = dataclasses.field(default_factory=tuple)
+    _on_items: tuple[str | ExprProtocol, ...] = dataclasses.field(default_factory=tuple)
+
+    def get_sql(self, dialect: DialectProtocol) -> str:
+        on = ''
+        if self._on_items:
+            on = f' ON ({", ".join(to_col_or_expr(i, dialect) for i in self._on_items)})'
+
+        field = f' {", ".join(to_col_or_expr(i, dialect) for i in self._items)}'
+        return f'DISTINCT{on}{field}'
