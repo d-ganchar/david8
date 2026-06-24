@@ -1,7 +1,8 @@
 from parameterized import parameterized
 
 from david8 import get_default_qb
-from david8.expressions import case, col, interval, param, val
+from david8.expressions import case, col, distinct, interval, param, val
+from david8.functions import lower
 from david8.logical_operators import or_
 from david8.param_styles import (
     FormatParamStyle,
@@ -210,3 +211,20 @@ class TestExpressions(BaseTest):
     ])
     def test_interval(self, expr: IntervalProtocol, exp_sql: str):
         self.assertEqual(self.qb.select(expr).get_sql(), exp_sql)
+
+    @parameterized.expand([
+        (
+            BaseTest.qb.select(
+                distinct('customer_id', lower('amount'), 'created_at', on=['customer_id'])
+            ).from_table('users'),
+            'SELECT DISTINCT ON (customer_id) customer_id, lower(amount), created_at FROM users',
+        ),
+        (
+            BaseTest.qb.select(
+                distinct('*', on=[lower('customer_id'), 'customer_id'])
+            ).from_table('users'),
+            'SELECT DISTINCT ON (lower(customer_id), customer_id) * FROM users',
+        )
+    ])
+    def test_distinct(self, query: QueryProtocol, exp_sql: str):
+        self.assertEqual(query.get_sql(), exp_sql)

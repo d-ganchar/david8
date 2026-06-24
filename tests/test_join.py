@@ -1,8 +1,8 @@
 from parameterized import parameterized
 
-from david8.joins import inner, left, right
-from david8.predicates import eq_c
-from david8.protocols.sql import QueryProtocol
+from david8.joins import inner, lateral, left, right
+from david8.predicates import eq_c, lt_c
+from david8.protocols.sql import JoinProtocol, QueryProtocol
 from tests.base_test import BaseTest
 
 
@@ -174,4 +174,24 @@ class TestJoin(BaseTest):
         ),
     ])
     def test_join_from_query(self, query: QueryProtocol, exp_sql: str):
+        self.assertEqual(query.get_sql(), exp_sql)
+
+    @parameterized.expand([
+        (
+            (
+                lateral()
+                .expression(
+                    BaseTest.qb
+                    .select('store_id', 'distance')
+                    .from_table('stores', alias='s')
+                )
+                .as_('nearby')
+                .on(lt_c('nearby.distance', 'c.max_km'))
+            ),
+            'SELECT * FROM customers AS c '
+            'INNER JOIN LATERAL (SELECT store_id, distance FROM stores AS s) AS nearby ON (nearby.distance < c.max_km)'
+        ),
+    ])
+    def test_literal_join(self, join: JoinProtocol, exp_sql: str):
+        query = self.qb.select('*').from_table('customers', alias='c').join(join)
         self.assertEqual(query.get_sql(), exp_sql)

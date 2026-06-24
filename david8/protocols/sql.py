@@ -133,6 +133,9 @@ class SelectProtocol(QueryProtocol):
     def limit(self, value: int) -> 'SelectProtocol':
         pass
 
+    def offset(self, value: int) -> 'SelectProtocol':
+        pass
+
     def order_by(self, *args: str | int | DescProtocol) -> 'SelectProtocol':
         pass
 
@@ -177,6 +180,14 @@ class Sql92JoinProtocol(JoinProtocol):
         pass
 
     def using(self, *args: str) -> 'Sql92JoinProtocol':
+        pass
+
+
+class LiteralJoinProtocol(JoinProtocol):
+    def on(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'LiteralJoinProtocol':
+        pass
+
+    def expression(self, expression: ExprProtocol) -> 'LiteralJoinProtocol':
         pass
 
 
@@ -260,7 +271,10 @@ class CreateTableProtocol(QueryProtocol):
 
 
 class DropProtocol(QueryProtocol):
-    def table(self, table_name: str, db_name: str = '') -> 'DropProtocol':
+    def table(self, table_name: str, db_name: str = '', if_exists: bool = False) -> 'DropProtocol':
+        pass
+
+    def view(self, view_name: str, db_name: str = '', if_exists: bool = False) -> 'DropProtocol':
         pass
 
 

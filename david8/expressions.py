@@ -4,6 +4,7 @@ from .core.base_aliased import Column as _Column
 from .core.base_aliased import create_parameter as _create_parameter
 from .core.base_aliased import create_value
 from .core.base_expressions import BaseDesc as _BaseDesc
+from .core.base_expressions import BaseDistinct
 from .core.base_frames import BaseOverClause as _BaseOverClause
 from .protocols.sql import (
     AliasedProtocol,
@@ -53,3 +54,9 @@ def window_spec(
         _order_by=order_by,
         _frame_mode=frame_mode,
     )
+
+def distinct(
+    *args: str | ExprProtocol,
+    on: tuple[str, ExprProtocol, ...] | list[str | ExprProtocol] = None,
+) -> ExprProtocol:
+    return BaseDistinct(_on_items=on or (), _items=args)

@@ -24,14 +24,18 @@ class BaseCreateTable(BaseQuery, CreateTableProtocol):
 
 
 @dataclasses.dataclass(slots=True)
-class BaseDropTable(BaseQuery):
-    table: FullTableName = dataclasses.field(default_factory=FullTableName)
+class BaseDropTableView(BaseQuery):
+    _object_name: str
+    _name: FullTableName = dataclasses.field(default_factory=FullTableName)
+    _if_exists: bool = False
 
     def _render_sql_prefix(self, dialect: DialectProtocol) -> str:
-        return 'TABLE '
+        if self._if_exists:
+            return f'{self._object_name} IF EXISTS '
+        return f'{self._object_name} '
 
     def _render_sql(self, dialect: DialectProtocol) -> str:
-        return self.table.get_sql(dialect)
+        return self._name.get_sql(dialect)
 
 
 @dataclasses.dataclass(slots=True)
@@ -46,6 +50,20 @@ class BaseDrop(BaseQuery, DropProtocol):
             return f'{self.query.get_sql(dialect)}'
         return ''
 
-    def table(self, table_name: str, db_name: str = '') -> DropProtocol:
-        self.query = BaseDropTable(dialect=self.dialect, table=FullTableName(table_name, db_name))
+    def table(self, table_name: str, db_name: str = '', if_exists: bool = False) -> DropProtocol:
+        self.query = BaseDropTableView(
+            _object_name='TABLE',
+            dialect=self.dialect,
+            _name=FullTableName(table_name, db_name),
+            _if_exists=if_exists
+        )
+        return self
+
+    def view(self, view_name: str, db_name: str = '', if_exists: bool = False) -> 'DropProtocol':
+        self.query = BaseDropTableView(
+            _object_name='VIEW',
+            dialect=self.dialect,
+            _name=FullTableName(view_name, db_name),
+            _if_exists=if_exists
+        )
         return self

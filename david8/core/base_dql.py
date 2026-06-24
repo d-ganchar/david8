@@ -54,6 +54,7 @@ class BaseSelect(BaseQuery, SelectProtocol):
     from_table_cnstr: FullTableName = dataclasses.field(default_factory=FullTableName)
     from_query_expr: SelectProtocol | None = None
     limit_value: int | None = None
+    offset_value: int | None = None
 
     def select(self, *args: str | AliasedProtocol | ExprProtocol | FunctionProtocol) -> SelectProtocol:
         self.select_columns += args
@@ -81,6 +82,10 @@ class BaseSelect(BaseQuery, SelectProtocol):
 
     def limit(self, value: int) -> SelectProtocol:
         self.limit_value = value
+        return self
+
+    def offset(self, value: int) -> 'SelectProtocol':
+        self.offset_value = value
         return self
 
     def _columns_to_sql(self, dialect: DialectProtocol) -> str:
@@ -189,6 +194,7 @@ class BaseSelect(BaseQuery, SelectProtocol):
         [ { UNION | INTERSECT | EXCEPT } [ ALL | DISTINCT ] <query_expression> ]
         [ ORDER BY <sort_specification_list> ]
         [ LIMIT <limit_value> ]
+        [ OFFSET <offset> ]
         """
         with_query = self._with_queries_to_sql(dialect)
         select = self._columns_to_sql(dialect)
@@ -200,9 +206,21 @@ class BaseSelect(BaseQuery, SelectProtocol):
         window = self._windows_to_sql(dialect)
         union = self._union_to_sql(dialect)
         order_by = self._order_by_to_sql()
+        select_str = ''.join([
+            select,
+            from_ref,
+            joins,
+            where,
+            group_by,
+            order_by,
+            having,
+            window,
+            f' LIMIT {self.limit_value}' if self.limit_value else '',
+            f' OFFSET {self.offset_value}' if self.offset_value else '',
+            union,
+        ])
 
-        limit = f' LIMIT {self.limit_value}' if self.limit_value else ''
-        return f'{with_query}SELECT {select}{from_ref}{joins}{where}{group_by}{order_by}{having}{window}{limit}{union}'
+        return f'{with_query}SELECT {select_str}'
 
     def _add_to_order_by(self, *args: str | int, desc: bool = False):
         for arg in args:

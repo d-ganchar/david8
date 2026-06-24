@@ -100,3 +100,9 @@ class TestSelect(BaseTest):
     ])
     def test_window(self, query: SelectProtocol, exp_sql: str):
         self.assertEqual(query.get_sql(), exp_sql)
+
+    def test_limit_offset(self):
+        self.assertEqual(
+            self.qb.select('*').from_table('events').limit(100).offset(100).get_sql(),
+            'SELECT * FROM events LIMIT 100 OFFSET 100'
+        )
