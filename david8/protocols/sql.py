@@ -263,7 +263,10 @@ class CreateTableProtocol(QueryProtocol):
 
 
 class DropProtocol(QueryProtocol):
-    def table(self, table_name: str, db_name: str = '') -> 'DropProtocol':
+    def table(self, table_name: str, db_name: str = '', if_exists: bool = False) -> 'DropProtocol':
+        pass
+
+    def view(self, view_name: str, db_name: str = '', if_exists: bool = False) -> 'DropProtocol':
         pass
 
 
