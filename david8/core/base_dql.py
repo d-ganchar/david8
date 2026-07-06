@@ -244,8 +244,8 @@ class BaseSelect(BaseQuery, SelectProtocol):
         self.having_expressions += args
         return self
 
-    def join(self, join: JoinProtocol) -> SelectProtocol:
-        self.joins += (join,)
+    def join(self, *join: JoinProtocol) -> SelectProtocol:
+        self.joins += join
         return self
 
     def window(self, name: str, spec: WindowSpecProtocol) -> 'SelectProtocol':

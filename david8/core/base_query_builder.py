@@ -10,6 +10,7 @@ from ..protocols.sql import (
     ExprProtocol,
     FunctionProtocol,
     InsertProtocol,
+    QueryProtocol,
     SelectProtocol,
     UpdateProtocol,
 )
@@ -20,6 +21,15 @@ from .base_dml import BaseInsert as _Insert
 from .base_dml import BaseUpdate as _Update
 from .base_dql import BaseSelect as _Select
 from .base_expressions import FullTableName
+from .base_query import BaseQuery
+
+
+@dataclass()
+class ExprQuery(BaseQuery):
+    _expr: ExprProtocol
+
+    def _get_sql(self, dialect: DialectProtocol) -> str:
+        return self._expr.get_sql(dialect)
 
 
 @dataclass(slots=True)
@@ -47,3 +57,6 @@ class BaseQueryBuilder(QueryBuilderProtocol):
 
     def drop(self) -> DropProtocol:
         return BaseDrop(dialect=self._dialect)
+
+    def query(self, expr: ExprProtocol) -> QueryProtocol:
+        return ExprQuery(_expr=expr, dialect=self._dialect)

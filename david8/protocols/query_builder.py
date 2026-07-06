@@ -8,6 +8,7 @@ from .sql import (
     ExprProtocol,
     FunctionProtocol,
     InsertProtocol,
+    QueryProtocol,
     SelectProtocol,
     UpdateProtocol,
 )
@@ -33,4 +34,7 @@ class QueryBuilderProtocol(Protocol):
         pass
 
     def drop(self) -> DropProtocol:
+        pass
+
+    def query(self, expr: ExprProtocol) -> QueryProtocol:
         pass

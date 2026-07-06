@@ -13,5 +13,11 @@ def right() -> _Sql92JoinProtocol:
 def inner() -> _Sql92JoinProtocol:
     return _Sql92Join(join_type='INNER JOIN')
 
+def asof() -> _Sql92JoinProtocol:
+    return _Sql92Join(join_type='ASOF JOIN')
+
+def asof_left() -> _Sql92JoinProtocol:
+    return _Sql92Join(join_type='ASOF LEFT JOIN')
+
 def lateral() -> _LiteralJoinProtocol:
     return _LiteralJoin()

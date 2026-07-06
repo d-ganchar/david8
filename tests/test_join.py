@@ -1,7 +1,10 @@
 from parameterized import parameterized
 
-from david8.joins import inner, lateral, left, right
-from david8.predicates import eq_c, lt_c
+from david8.expressions import col as c
+from david8.expressions import desc as d
+from david8.expressions import val as v
+from david8.joins import asof, asof_left, inner, lateral, left, right
+from david8.predicates import between, eq, eq_c, ge_c, gt, gt_c, le_c, lt_c
 from david8.protocols.sql import JoinProtocol, QueryProtocol
 from tests.base_test import BaseTest
 
@@ -195,3 +198,96 @@ class TestJoin(BaseTest):
     def test_literal_join(self, join: JoinProtocol, exp_sql: str):
         query = self.qb.select('*').from_table('customers', alias='c').join(join)
         self.assertEqual(query.get_sql(), exp_sql)
+
+    @parameterized.expand([
+        (
+            BaseTest
+            .qb
+            .select('*')
+            .from_table('table_1')
+            .join(asof().table('table_2').using('user_id', 'ts')),
+            'SELECT * FROM table_1 ASOF JOIN table_2 USING (user_id, ts)'
+        ),
+        (
+            BaseTest
+            .qb
+            .select('*')
+            .from_table('table_1')
+            .join(asof().table('table_2').on(
+                eq_c('table_1.user_id', 'table_2.user_id'),
+                gt_c('table_1.ts', 'table_2.ts'),
+            )),
+            'SELECT * FROM table_1 ASOF JOIN table_2 ON (table_1.user_id = table_2.user_id AND '
+            'table_1.ts > table_2.ts)'
+        ),
+        # left
+        (
+            BaseTest
+            .qb
+            .select('*')
+            .from_table('table_1')
+            .join(asof_left().table('table_2').using('user_id', 'ts')),
+            'SELECT * FROM table_1 ASOF LEFT JOIN table_2 USING (user_id, ts)'
+        ),
+        (
+            BaseTest
+            .qb
+            .select('*')
+            .from_table('table_1')
+            .join(asof_left().table('table_2').on(
+                eq_c('table_1.user_id', 'table_2.user_id'),
+                gt_c('table_1.ts', 'table_2.ts'),
+            )),
+            'SELECT * FROM table_1 ASOF LEFT JOIN table_2 ON (table_1.user_id = table_2.user_id AND '
+            'table_1.ts > table_2.ts)'
+        ),
+    ])
+    def test_asof(self, query: QueryProtocol, exp_sql: str):
+        self.assertEqual(query.get_sql(), exp_sql)
+
+    def test_all_joins(self):
+        query = (
+            self.qb.select('*').from_table('orders', alias='o')
+            .join(
+                inner().table('customers').as_('c').on(eq_c('o.user_id', 'c.user_id')),
+                left().table('shipping').as_('s').on(eq_c('o.order_id', 's.order_id')),
+                right().table('discounts').as_('d').on(
+                    eq_c('o.product_id', 'd.product_id'),
+                    between('o.order_ts', c('d.valid_from'), c('d.valid_to'))
+                ),
+                asof().table('prices').as_('pr').on(
+                    eq_c('o.product_id', 'pr.product_id'),
+                    ge_c('o.order_ts', 'pr.price_ts')
+                ),
+                asof_left().table('order_status_history').as_('hist').on(
+                    eq_c('o.order_id', 'hist.order_id'),
+                    ge_c('o.order_ts', 'hist.status_ts')
+                ),
+                lateral().expression(
+                    BaseTest.qb.select('note', 'distance')
+                    .from_table('manager_notes', alias='mn')
+                    .where(
+                        eq_c('mn.user_id', 'c.user_id'),
+                        le_c('mn.note_ts', 'o.order_ts')
+                    )
+                    .order_by(d('mn.note_ts'))
+                    .limit(1)
+                ).on(eq(v(1), v(1)))
+            )
+            .where(gt('o.order_ts', 1767225661))
+            .order_by('o.order_id')
+        )
+
+        sql = query.get_sql()
+        self.assertEqual(
+            sql,
+            'SELECT * FROM orders AS o INNER JOIN customers AS c ON (o.user_id = c.user_id) LEFT JOIN '
+            'shipping AS s ON (o.order_id = s.order_id) RIGHT JOIN discounts AS d ON (o.product_id = d.product_id '
+            'AND o.order_ts BETWEEN d.valid_from AND d.valid_to) ASOF JOIN prices AS pr ON '
+            '(o.product_id = pr.product_id AND o.order_ts >= pr.price_ts) ASOF LEFT JOIN order_status_history AS hist '
+            'ON (o.order_id = hist.order_id AND o.order_ts >= hist.status_ts) INNER JOIN LATERAL (SELECT note, '
+            'distance FROM manager_notes AS mn WHERE mn.user_id = c.user_id AND mn.note_ts <= o.order_ts ORDER BY '
+            'mn.note_ts DESC LIMIT 1) AS  ON (1 = 1) WHERE o.order_ts > %(p1)s ORDER BY o.order_id',
+        )
+
+        self.assertEqual(query.get_parameters(), {'p1': 1767225661})
