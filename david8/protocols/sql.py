@@ -162,7 +162,7 @@ class SelectProtocol(QueryProtocol):
     def having(self, *args: PredicateProtocol) -> 'SelectProtocol':
         pass
 
-    def join(self, join: JoinProtocol) -> 'SelectProtocol':
+    def join(self, *join: JoinProtocol) -> 'SelectProtocol':
         pass
 
     def window(self, name: str, spec: WindowSpecProtocol) -> 'SelectProtocol':
