@@ -291,3 +291,14 @@ class TestJoin(BaseTest):
         )
 
         self.assertEqual(query.get_parameters(), {'p1': 1767225661})
+
+    def test_join_db_name(self):
+        # https://github.com/d-ganchar/david8/issues/60
+        self.assertEqual(
+            BaseTest.qb
+            .select('*')
+            .from_table('table1', alias='t1')
+            .join(inner().table('table2', 'db2').as_('t2').using('p_id'))
+            .get_sql(),
+            'SELECT * FROM table1 AS t1 INNER JOIN db2.table2 AS t2 USING (p_id)'
+        )
