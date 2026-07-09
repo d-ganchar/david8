@@ -3,6 +3,7 @@ from typing import Self
 
 from ..protocols.dialect import DialectProtocol
 from ..protocols.sql import JoinProtocol, LogicalOperatorProtocol, PredicateProtocol, SelectProtocol, Sql92JoinProtocol
+from .base_expressions import FullTableName
 
 
 @dataclasses.dataclass(slots=True)
@@ -11,7 +12,7 @@ class Sql92Join(Sql92JoinProtocol):
     join_type: str = ''
     on_expr: tuple[LogicalOperatorProtocol | PredicateProtocol, ...] = dataclasses.field(default_factory=tuple)
     using_expr: tuple[str, ...] = dataclasses.field(default_factory=tuple)
-    from_table: tuple[str, str] = dataclasses.field(default_factory=tuple)  # ('table', 'db',)
+    source_table: FullTableName = dataclasses.field(default_factory=FullTableName)
     from_query: SelectProtocol = None
 
     def as_(self, alias: str) -> Self:
@@ -22,8 +23,7 @@ class Sql92Join(Sql92JoinProtocol):
         if self.from_query:
             source = f'({self.from_query.get_sql(dialect)})'
         else:
-            table, db = self.from_table
-            source = dialect.quote_ident(table)
+            source = self.source_table.get_sql(dialect)
 
         alias = f' AS {dialect.quote_ident(self.alias)}' if self.alias else ''
         if self.using_expr:
@@ -39,7 +39,7 @@ class Sql92Join(Sql92JoinProtocol):
         return self
 
     def table(self, name: str, db: str = '') -> 'JoinProtocol':
-        self.from_table = (name, db, )
+        self.source_table.set_names(name, db)
         return self
 
     def query(self, query: SelectProtocol) -> 'JoinProtocol':

@@ -11,6 +11,6 @@ No manual parameter naming. Just pass values - `david8` handles the rest:
 
 100% test coverage · thousands of downloads
 
-Built-in dialect support: ClickHouse · DuckDB · PostgreSQL · MySQL · SQLite
+Built-in dialect support: ClickHouse · DuckDB · PostgreSQL · Apache Doris · MySQL · SQLite
 
 See [Wiki](https://github.com/d-ganchar/david8/wiki)
