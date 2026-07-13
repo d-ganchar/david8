@@ -4,10 +4,10 @@ on:
   push:
 #    branches:
 #      - main
-    paths:
-      - 'docs/**'
-      - 'overrides/**'
-      - 'mkdocs.yml'
+#    paths:
+#      - 'docs/**'
+#      - 'overrides/**'
+#      - 'mkdocs.yml'
 
 permissions:
   pages: write

@@ -10,6 +10,7 @@ on:
       - 'overrides/**'
       - 'mkdocs.yml'
       - '*.md'
+      - '.github/workflows/docs.yml'
 
 permissions:
   contents: write
