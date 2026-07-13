@@ -1,0 +1,39 @@
+site_name: david8
+site_url: https://d-ganchar.github.io/david8/
+nav:
+  - Home: index.md
+  - DQL: dql.md
+  - ClickHouse:
+      - Install: clickhouse/index.md
+  - DuckDB:
+      - Install: duckdb/index.md
+  - PostgreSQL:
+      - Install: postgresql/index.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+repo_url: https://github.com/d-ganchar/david8
+repo_name: d-ganchar/david8
+theme:
+  name: material
+  custom_dir: overrides
+  palette:
+    - scheme: slate
+      primary: yellow
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: default
+      primary: black
+      accent: lime
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode

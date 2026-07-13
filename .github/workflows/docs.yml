@@ -1,0 +1,44 @@
+name: Docs
+
+on:
+  push:
+#    branches:
+#      - main
+    paths:
+      - 'docs/**'
+      - 'overrides/**'
+      - 'mkdocs.yml'
+
+permissions:
+  pages: write
+  id-token: write
+  contents: read
+
+jobs:
+  docs:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: 3.11
+
+      - run: uv sync --dev
+
+      - run: mkdocs build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: docs
+    runs-on: ubuntu-22.04
+
+    environment:
+      name: github-pages
+
+    steps:
+      - uses: actions/deploy-pages@v4
