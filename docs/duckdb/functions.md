@@ -3,9 +3,11 @@
 See [functions](https://github.com/d-ganchar/david8_duckdb/blob/main/david8_duckdb/functions.py) and [test_functions](https://github.com/d-ganchar/david8_duckdb/blob/main/tests/test_functions.py), example:
 
 ```python
-age('start', 'end')                          # age(start, end)
-json_keys('column_name')                     # json_keys(column_name)
-json_keys('column_name', '$.ducks.country')  # json_keys(column_name, '$.ducks.country')
+age('start', 'end')       # age(start, end)
+json_keys('column_name')  # json_keys(column_name)
+
+# json_keys(column_name, '$.ducks.country')
+json_keys('column_name', '$.ducks.country')
 
 # json_extract(column_name, '$.ducks.country[0]')
 json_extract('column_name', '$.ducks.country[0]')

@@ -24,6 +24,9 @@ from .core.fn_generator import (
     StrArgFactory as _StrArgCallableFactory,
 )
 from .core.fn_generator import (
+    StrIntArgsFactory as _StrIntArgsFactory,
+)
+from .core.fn_generator import (
     TwoArgIntWindowFactory as _TwoArgIntWindowFactory,
 )
 from .core.fn_generator import (
@@ -41,10 +44,14 @@ first_value = _OneArgDistinctWindowFactory(name='first_value')
 
 nth_value = _TwoArgIntWindowFactory(name='nth_value')
 lag = _TwoArgIntWindowFactory(name='lag')
+round_ = _TwoArgIntWindowFactory(name='round')
 lead = _TwoArgIntWindowFactory(name='lead')
 percent_rank = _ZeroArgAggFnFactory(name='percent_rank')
 rank = _ZeroArgAggFnFactory(name='rank')
 cume_dist = _ZeroArgAggFnFactory(name='cume_dist')
+
+greatest = _StrIntArgsFactory(name='greatest')
+least = _StrIntArgsFactory(name='least')
 
 corr = _TwoArgWindowFactory(name='corr')
 covar_pop = _TwoArgWindowFactory(name='covar_pop')

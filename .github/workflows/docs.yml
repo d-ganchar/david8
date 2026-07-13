@@ -2,12 +2,12 @@ name: Docs
 
 on:
   push:
-#    branches:
-#      - main
-#    paths:
-#      - 'docs/**'
-#      - 'overrides/**'
-#      - 'mkdocs.yml'
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'overrides/**'
+      - 'mkdocs.yml'
 
 permissions:
   pages: write

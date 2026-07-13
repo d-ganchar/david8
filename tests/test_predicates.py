@@ -1,6 +1,7 @@
 from parameterized import parameterized
 
-from david8.expressions import param, val
+from david8.expressions import param as p
+from david8.expressions import val as v
 from david8.functions import lower
 from david8.predicates import (
     between,
@@ -38,7 +39,7 @@ class TestPredicates(BaseTest):
             {'p1': 14, 'p2': 18}
         ),
         (
-            between('created_day', val('2025-01-01'), val('2026-01-01')),
+            between('created_day', v('2025-01-01'), v('2026-01-01')),
             "SELECT created_day BETWEEN '2025-01-01' AND '2026-01-01'",
             {}
         ),
@@ -59,7 +60,7 @@ class TestPredicates(BaseTest):
             {'p1': 27}
         ),
         (
-            eq('status', val('active')),
+            eq('status', v('active')),
             "SELECT status = 'active'",
             {}
         ),
@@ -156,49 +157,49 @@ class TestPredicates(BaseTest):
         ),
         # eq_e
         (
-            eq(val(1), param(1)),
+            eq(v(1), p(1)),
             'SELECT 1 = %(p1)s',
             {'p1': 1}
         ),
         # ge_e
         (
-            ge(val(1), param(1)),
+            ge(v(1), p(1)),
             'SELECT 1 >= %(p1)s',
             {'p1': 1}
         ),
         # gt_e
         (
-            gt(val(1), param(1)),
+            gt(v(1), p(1)),
             'SELECT 1 > %(p1)s',
             {'p1': 1}
         ),
         # le_e
         (
-            le(val(1), param(1)),
+            le(v(1), p(1)),
             'SELECT 1 <= %(p1)s',
             {'p1': 1}
         ),
         # lt_e
         (
-            lt(val(1), param(1)),
+            lt(v(1), p(1)),
             'SELECT 1 < %(p1)s',
             {'p1': 1}
         ),
         # le_e
         (
-            le(val(1), param(1)),
+            le(v(1), p(1)),
             'SELECT 1 <= %(p1)s',
             {'p1': 1}
         ),
         # lt_e
         (
-            lt(val(1), param(1)),
+            lt(v(1), p(1)),
             'SELECT 1 < %(p1)s',
             {'p1': 1}
         ),
         # ne_e
         (
-            ne(val(1), param(1)),
+            ne(v(1), p(1)),
             'SELECT 1 != %(p1)s',
             {'p1': 1}
         ),
@@ -239,7 +240,7 @@ class TestPredicates(BaseTest):
             {}
         ),
         (
-            is_('last_update_dt', param(1)),
+            is_('last_update_dt', p(1)),
             'SELECT last_update_dt IS %(p1)s',
             {'p1': 1}
         ),
@@ -264,12 +265,12 @@ class TestPredicates(BaseTest):
             {'p1': 'closed', 'p2': 'cancelled'},
         ),
         (
-            in_('status', [lower('old_status'), lower('new_status'), lower(val('NewValue'))]),
+            in_('status', [lower('old_status'), lower('new_status'), lower(v('NewValue'))]),
             "SELECT status IN (lower(old_status), lower(new_status), lower('NewValue'))",
             {},
         ),
         (
-            in_('status', [lower('old_status'), lower('new_status'), lower(param('NewValue'))]),
+            in_('status', [lower('old_status'), lower('new_status'), lower(p('NewValue'))]),
             'SELECT status IN (lower(old_status), lower(new_status), lower(%(p1)s))',
             {'p1': 'NewValue'},
         ),
