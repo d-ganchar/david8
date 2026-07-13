@@ -42,8 +42,6 @@ qb.select(
 # {'p1': 'one', 'p2': 0.5, 'p3': 1}
 ```
 
-See how [predicates](https://github.com/d-ganchar/david8/wiki/Predicates) works
-
 ## DISTINCT
 
 ```python
@@ -63,7 +61,8 @@ qb.select(d('*', on=[lower('customer_id'), 'customer_id']))
 ## LIMIT, OFFSET
 
 ```python
-qb.select('*').from_table('events').limit(100).offset(100) # SELECT * FROM events LIMIT 100 OFFSET 100
+qb.select('*').from_table('events').limit(100).offset(100)
+# SELECT * FROM events LIMIT 100 OFFSET 100
 ```
 
 ## UNION
@@ -102,7 +101,8 @@ qb.select('*').from_table('events').limit(100).offset(100) # SELECT * FROM event
     .select('*').from_table('alias1')
     .union(qb.select('*').from_table('alias2'))
 ).get_sql()
-# [INFO]: WITH alias1 AS (SELECT col1 AS fixed FROM table1), alias2 AS (SELECT col2 AS fixed FROM table2) 
+# WITH alias1 AS (SELECT col1 AS fixed FROM table1),
+#      alias2 AS (SELECT col2 AS fixed FROM table2) 
 #  SELECT * FROM alias1 UNION ALL SELECT * FROM alias2
 # {}
 ```
@@ -121,17 +121,25 @@ from david8.predicates import eq_c, lt_c
     .from_table('order_contacts', alias='oc')
     .join(inner().table('order_details').as_('od').using('order_id', 'user_id'))
 ).get_sql()
-# SELECT * FROM order_contacts AS oc INNER JOIN order_details AS od USING (order_id, user_id)
+# SELECT * FROM order_contacts AS oc
+# INNER JOIN order_details AS od USING (order_id, user_id)
 
 # left + right
 (
     qb
     .select('*')
     .from_table('table1', alias='t1')
-    .join(left().table('table2').as_('t2').on(eq_c('t1.col1', 't2.col1'), eq_c('t1.col2', 't2.col2')))
-    .join(right().table('table3').as_('t3').on(eq_c('t1.col1', 't3.col3'), eq_c('t1.col2', 't3.col3')))
+    .join(left().table('table2').as_('t2').on(
+        eq_c('t1.col1', 't2.col1'),
+        eq_c('t1.col2', 't2.col2'))
+    )
+    .join(right().table('table3').as_('t3').on(
+        eq_c('t1.col1', 't3.col3'),
+        eq_c('t1.col2', 't3.col3'))
+    )
 ).get_sql()
-# SELECT * FROM table1 AS t1 LEFT JOIN table2 AS t2 ON (t1.col1 = t2.col1 AND t1.col2 = t2.col2)
+# SELECT * FROM table1 AS t1
+# LEFT JOIN table2 AS t2 ON (t1.col1 = t2.col1 AND t1.col2 = t2.col2)
 # RIGHT JOIN table3 AS t3 ON (t1.col1 = t3.col3 AND t1.col2 = t3.col3)
 
 # lateral
@@ -151,7 +159,8 @@ from david8.predicates import eq_c, lt_c
 )
 # SELECT * FROM customers AS c 
 # INNER JOIN LATERAL (
-#      SELECT store_id, distance FROM stores AS s
+#      SELECT store_id, distance
+#        FROM stores AS s
 # ) AS nearby ON (nearby.distance < c.max_km)
 
 # join query example
@@ -166,7 +175,8 @@ from david8.predicates import eq_c, lt_c
         .as_('o')
     )
 ).get_sql()
-# SELECT * FROM users AS u LEFT JOIN (SELECT * FROM orders) AS o ON (o.user_id = u.id)
+# SELECT * FROM users AS u
+# LEFT JOIN (SELECT * FROM orders) AS o ON (o.user_id = u.id)
 ```
 
 multiple `joins` as a positional argument:
@@ -213,14 +223,22 @@ query = (
 # SELECT * FROM orders AS o
 # INNER JOIN customers AS c ON (o.user_id = c.user_id)
 # LEFT JOIN shipping AS s ON (o.order_id = s.order_id)
-# RIGHT JOIN discounts AS d ON (o.product_id = d.product_id AND o.order_ts BETWEEN d.valid_from AND d.valid_to)
-# ASOF JOIN prices AS pr ON (o.product_id = pr.product_id AND o.order_ts >= pr.price_ts)
-# ASOF LEFT JOIN order_status_history AS hist ON (o.order_id = hist.order_id AND o.order_ts >= hist.status_ts)
+# RIGHT JOIN discounts AS d ON (
+#       o.product_id = d.product_id AND 
+#       o.order_ts BETWEEN d.valid_from AND d.valid_to
+# )
+# ASOF JOIN prices AS pr ON (
+#   o.product_id = pr.product_id AND o.order_ts >= pr.price_ts
+# )
+# ASOF LEFT JOIN order_status_history AS hist ON (
+#   o.order_id = hist.order_id AND o.order_ts >= hist.status_ts
+# )
 # INNER JOIN LATERAL (
 #       SELECT note, distance
 #         FROM manager_notes AS mn
 #        WHERE mn.user_id = c.user_id AND mn.note_ts <= o.order_ts
-#        ORDER BY mn.note_ts DESC LIMIT 1
+#        ORDER BY mn.note_ts DESC
+#        LIMIT 1
 # ) AS ON (1 = 1)
 # WHERE o.order_ts > %(p1)s
 # ORDER BY o.order_id
@@ -271,8 +289,6 @@ query.get_sql()
 # SELECT * FROM t WHERE col1 = %(p1)s AND col3 = %(p2)s
 # {'p1': 'val1', 'p2': 65}
 ```
-
-💡 See [predicates](https://github.com/d-ganchar/david8/wiki/Predicates)
 
 ## CASE
 
@@ -325,135 +341,4 @@ qb.select(
 # SELECT INTERVAL 2020 YEAR,
 #        INTERVAL 2026 YEAR 2 QUARTER 3 MONTH 4 WEEK 5 DAY 6 HOUR 7 MINUTE 8 SECOND AS interval_expr,
 #        INTERVAL '1 WEEK' AS week_value
-```
-
-## Functions
-
-Use [functions.py](https://github.com/d-ganchar/david8/blob/main/david8/functions.py) module to find core functions, see [test_functions.py](https://github.com/d-ganchar/david8/blob/main/tests/test_functions.py), example:
-
-```python
-from david8.expressions import val as v, param as p
-from david8.functions import (
-    concat,
-    count,
-    null_if,
-    trim,
-)
-
-query = (
-    qb
-    .select(
-        count('name').as_('total_counter'),
-        count('name', True).as_('distinct_total_counter'),
-        concat(
-            'column1',
-            v('val1'),
-            p('param1'),
-            1,
-            1.5
-        ).as_('concat_val'),
-        trim('column2'),
-        null_if('column3', 0.9).as_('null_val'),
-    )
-).get_sql()
-
-# SELECT count(name) AS total_counter,
-#        count(DISTINCT name) AS distinct_total_counter,
-#        concat(column1, 'val1', %(p1)s, '1', '1.5') AS concat_val,
-#        trim(column2),
-#        nullif(column3, 0.9) AS null_val
-# {'p1': 'param1'}
-```
-
-## WINDOW Functions
-
-Aliased windows example:
-
-```python
-from david8 import get_default_qb
-from david8.frames import rows, unbounded_preceding, current_row, unbounded_following
-from david8.expressions import window_spec, desc
-from david8.functions import sum_, null_if
-
-qb = get_default_qb()
-query = (
-    qb
-    .select(
-        'category',
-        'order_date',
-        sum_('revenue').over(
-            order_by=['order_date'],
-            frame_mode=rows(unbounded_preceding(), current_row()),
-            window='w',
-        ).as_('running_revenue'),
-        sum_('revenue').over(
-            order_by=['order_date'],
-            frame_mode=rows(unbounded_preceding(), unbounded_following()),
-            window='w',
-        ).as_('total_revenue'),
-    )
-    .from_table('orders')
-    .window('base', window_spec(partition_by=['category']))
-    .window('w', window_spec(window='base'))
-    .order_by('category', 'order_date')
-)
-```
-
-SQL:
-```sql
-SELECT category,
-       order_date,
-       sum(revenue) OVER (w ORDER BY order_date ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) AS running_revenue,
-       sum(revenue) OVER (w ORDER BY order_date ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS total_revenue
-  FROM orders
- ORDER BY category, order_date
-WINDOW base AS (PARTITION BY category),
-          w AS (base)
-```
-
-inline window specification:
-
-```python
-query = (
-    qb
-    .select(
-        sum_('salary').over(
-            partition_by=[null_if('dept', 0)],
-            order_by=[desc('category')]
-        ).as_('by_dept')
-    )
-)
-```
-
-SQL:
-
-```sql
-SELECT sum(salary) OVER (PARTITION BY nullif(dept, 0) ORDER BY category DESC) AS by_dept
-```
-
-See [window](https://github.com/d-ganchar/david8/blob/main/tests/test_select.py), [window_fn](https://github.com/d-ganchar/david8/blob/main/tests/test_functions.py) `tests`
-
-## FILTER
-
-```python
-from david8.functions import var_pop, min_
-from david8.predicates import eq
-
-query = (
-    qb
-    .select(
-        var_pop('salary')
-            .filter(eq('status', 'ok'))
-            .over(partition_by=['dept'], order_by=['date'])
-            .as_('alias1'),
-        min_('salary')
-            .filter(eq('status', 'ok'))
-            .over(partition_by=['dept'], order_by=['date'])
-            .as_('alias2'),
-    )
-).get_sql()
-
-# SELECT var_pop(salary) FILTER (status = %(p1)s) OVER (PARTITION BY dept ORDER BY date) AS alias1,
-#        min(salary) FILTER (status = %(p2)s) OVER (PARTITION BY dept ORDER BY date) AS alias2
-# {'p1': 'ok', 'p2': 'ok'}
 ```

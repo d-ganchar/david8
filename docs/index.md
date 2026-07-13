@@ -1,31 +1,55 @@
-## Install and Initialization
+## Install
+
+To install the query builder for a specific database
+
+```bash
+$ pip install david8-clickhouse
+$ pip install david8-duckdb
+$ pip install david8-postgresql
+```
+
+To install the core / default query builder
 
 ```bash
 $ pip install david8
 ```
 
-```python
-from logging.config import dictConfig
-from david8 import get_default_qb
-# enable logging if you need
-dictConfig({
-    'version': 1,
-    'formatters': {'standard': {'format': '[%(levelname)s]: %(message)s'}},
-    'handlers': {
-        'default': {
-            'level': 'INFO',
-            'formatter': 'standard',
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://sys.stdout',
-        },
-    },
-    'loggers': {
-        '': {'handlers': ['default'], 'level': 'INFO'},
-        'david8': {'propagate': True},
-    }
-})
+## Init
 
+```python
+# clickhouse
+from david8_clickhouse import get_qb
+qb = get_qb()
+
+# duckdb
+from david8_duckdb import get_qb
+qb = get_qb()
+
+# postgresql
+from david8_postgresql import get_qb
+qb = get_qb()
+
+# core query builder
+from david8 import get_default_qb
 qb = get_default_qb()
+```
+
+## Logging
+
+Enable `david8` logger if you need
+
+```python
+import logging
+import sys
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.INFO)
+
+root_logger = logging.getLogger()
+root_logger.setLevel(logging.INFO)
+root_logger.addHandler(handler)
+
+logging.getLogger('david8').propagate = True
 ```
 
 ## Placeholders and quote mode

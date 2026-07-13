@@ -1,14 +1,26 @@
 site_name: david8
 site_url: https://d-ganchar.github.io/david8/
 nav:
-  - Home: index.md
+  - Installation: index.md
   - DQL: dql.md
+  - DML: dml.md
+  - DDL: ddl.md
+  - Predicates: predicates.md
+  - Functions: functions.md
+  - Custom expressions: custom_expressions.md
   - ClickHouse:
-      - Install: clickhouse/index.md
+      - DQL: clickhouse/dql.md
+      - DDL: clickhouse/ddl.md
+      - Functions: clickhouse/functions.md
+      - Manipulating Partitions: clickhouse/manipulating_partitions.md
   - DuckDB:
-      - Install: duckdb/index.md
+      - DQL: duckdb/dql.md
+      - DML: duckdb/dml.md
+      - Functions: duckdb/functions.md
+      - SQL Statements: duckdb/sql_statements.md
   - PostgreSQL:
-      - Install: postgresql/index.md
+      - DML: postgresql/dml.md
+      - Functions: postgresql/functions.md
 
 markdown_extensions:
   - pymdownx.highlight:
