@@ -11,6 +11,7 @@ from ..protocols.sql import (
     LogicalOperatorProtocol,
     PredicateProtocol,
     SelectProtocol,
+    SourceProtocol,
     WindowSpecProtocol,
 )
 from .base_expressions import FullTableName
@@ -52,7 +53,7 @@ class BaseSelect(BaseQuery, SelectProtocol):
     windows: tuple[tuple[str, WindowSpecProtocol], ...] = dataclasses.field(default_factory=tuple)
     joins: tuple[JoinProtocol, ...] = dataclasses.field(default_factory=tuple)
     from_table_cnstr: FullTableName = dataclasses.field(default_factory=FullTableName)
-    from_query_expr: SelectProtocol | None = None
+    from_query_expr: SelectProtocol | SourceProtocol | None = None
     limit_value: int | None = None
     offset_value: int | None = None
 
@@ -74,6 +75,12 @@ class BaseSelect(BaseQuery, SelectProtocol):
         self.from_query_expr = expr
         self.source_alias = alias
         self.from_table_cnstr.set_names('')
+        return self
+
+    def from_source(self, source: SourceProtocol):
+        self.from_query_expr = source
+        self.source_alias = ''
+        self.from_table_cnstr.set_names('', '')
         return self
 
     def group_by(self, *args: str | int) -> SelectProtocol:

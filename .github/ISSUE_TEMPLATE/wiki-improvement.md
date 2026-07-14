@@ -1,7 +1,7 @@
 ---
 name: Doc improvement
 about: Documentation bugs / improvements
-title: 'Wiki:'
+title: 'Docs:'
 labels: documentation
 assignees: d-ganchar
 

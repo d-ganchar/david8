@@ -172,3 +172,4 @@ cython_debug/
 
 uv.lock
 debug.py
+site/

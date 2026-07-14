@@ -1,3 +1,8 @@
+from dataclasses import dataclass
+from dataclasses import field as _field
+from typing import ClassVar
+
+from .core.base_aliased import BaseAliased as _BaseAliased
 from .core.base_aliased import BaseCase as _BaseCase
 from .core.base_aliased import BaseInterval as _BaseInterval
 from .core.base_aliased import Column as _Column
@@ -5,7 +10,9 @@ from .core.base_aliased import create_parameter as _create_parameter
 from .core.base_aliased import create_value
 from .core.base_expressions import BaseDesc as _BaseDesc
 from .core.base_expressions import BaseDistinct
+from .core.base_expressions import FullTableName as _FullTableName
 from .core.base_frames import BaseOverClause as _BaseOverClause
+from .protocols.dialect import DialectProtocol
 from .protocols.sql import (
     AliasedProtocol,
     DescProtocol,
@@ -16,6 +23,7 @@ from .protocols.sql import (
     LogicalOperatorProtocol,
     ParameterProtocol,
     PredicateProtocol,
+    SourceProtocol,
     ValueProtocol,
     WindowSpecProtocol,
 )
@@ -60,3 +68,43 @@ def distinct(
     on: tuple[str, ExprProtocol, ...] | list[str | ExprProtocol] = None,
 ) -> ExprProtocol:
     return BaseDistinct(_on_items=on or (), _items=args)
+
+
+def field_(name: str):
+    return _field(default_factory=lambda: col(name))
+
+
+@dataclass(slots=True)
+class Source(SourceProtocol):
+    _david8_source: ClassVar[str]
+    _david8_db: ClassVar[str] = ''
+    _david8_alias: str = ''
+
+    @classmethod
+    def get_source(cls) -> str:
+        return cls._david8_source
+
+    @classmethod
+    def get_db(cls) -> str:
+        return cls._david8_db
+
+    def as_(self, alias: str) -> 'Source':
+        self._david8_alias = alias
+        return self
+
+    def __getattribute__(self, name, /):
+        value = object.__getattribute__(self, name)
+        if value is not self and isinstance(value, _BaseAliased):
+            return _FullTableName(name, db=self._david8_alias)
+
+        return value
+
+    def get_sql(self, dialect: DialectProtocol) -> str:
+        if self._david8_db:
+            name = f'{dialect.quote_ident(self._david8_db)}.{dialect.quote_ident(self._david8_source)}'
+        else:
+            name = f'{dialect.quote_ident(self._david8_source)}'
+
+        if self._david8_alias:
+            return f'{name} AS {dialect.quote_ident(self._david8_alias)}'
+        return name

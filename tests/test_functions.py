@@ -2,7 +2,9 @@ from parameterized import parameterized
 
 from david8 import QueryBuilderProtocol
 from david8.cast_types import bigint, char, date_, integer, smallint, text, time_, timestamp_, varchar
-from david8.expressions import desc, param, val
+from david8.expressions import desc
+from david8.expressions import param as p
+from david8.expressions import val as v
 from david8.frames import current_row, following, preceding, range_, rows, unbounded_following, unbounded_preceding
 from david8.functions import (
     add,
@@ -17,8 +19,10 @@ from david8.functions import (
     div,
     first_value,
     generate_series,
+    greatest,
     lag,
     lead,
+    least,
     length,
     lower,
     max_,
@@ -38,6 +42,7 @@ from david8.functions import (
     regr_sxx,
     regr_syy,
     replace_,
+    round_,
     stddev_pop,
     stddev_samp,
     sub,
@@ -76,25 +81,66 @@ class TestFunctions(BaseTest):
             .select(
                 concat(
                     'col_name1',
-                    val('val1'),
-                    param('param1'),
+                    v('val1'),
+                    p('param1'),
                     1,
                     1.5,
                     concat(
                         'col_name2',
-                        val('val2'),
-                        param('param2'),
+                        v('val2'),
+                        p('param2'),
                         2,
                         2.5,
                     ),
                 ),
-                concat('col3', param('param3'), 'col_name3').as_('alias')
+                concat('col3', p('param3'), 'col_name3').as_('alias')
             )
             .from_table('test')
         )
 
         self.assertEqual(query.get_sql(), exp_sql)
         self.assertEqual({'p1': 'param1', 'p2': 'param2', 'p3': 'param3'}, query.get_parameters())
+
+    def test_round(self):
+        self.assertEqual(
+            self.qb.select(round_('col1', 2)).get_sql(),
+            'SELECT round(col1, 2)'
+        )
+
+    @parameterized.expand([
+        (
+            greatest('col1', 'col2', 'col3'),
+            'SELECT greatest(col1, col2, col3)',
+            {}
+        ),
+        (
+            greatest(1, p(25), 'col'),
+            'SELECT greatest(1, %(p1)s, col)',
+            {'p1': 25}
+        ),
+    ])
+    def test_greatest(self, fn: FunctionProtocol, sql_exp: str, params: dict):
+        query = self.qb.select(fn)
+        self.assertEqual(query.get_sql(), sql_exp)
+        self.assertEqual(query.get_parameters(), params)
+
+
+    @parameterized.expand([
+        (
+            least('col1', 'col2', 'col3'),
+            'SELECT least(col1, col2, col3)',
+            {}
+        ),
+        (
+            least(1, p(25), 'col'),
+            'SELECT least(1, %(p1)s, col)',
+            {'p1': 25}
+        ),
+    ])
+    def test_least(self, fn: FunctionProtocol, sql_exp: str, params: dict):
+        query = self.qb.select(fn)
+        self.assertEqual(query.get_sql(), sql_exp)
+        self.assertEqual(query.get_parameters(), params)
 
 
 class TestAggFunctions(BaseTest):
@@ -104,20 +150,20 @@ class TestAggFunctions(BaseTest):
             self.qb
             .select('*')
             .from_table('test')
-            .having(eq(count('*'), val(1)))
+            .having(eq(count('*'), v(1)))
         )
 
         for expr in [
-            eq(count('name'), val(2)),
-            eq(max_('price'), val(1000)),
-            eq(min_('age'), val(27)),
-            eq(sum_('money'), val(100)),
-            eq(avg('success'), val(99)),
-            eq(count('name', True), val(3)),
-            eq(max_('price', True), val(2000)),
-            eq(min_('age', True), val(33)),
-            eq(sum_('money', True), val(200)),
-            eq(avg('success', True), val(299)),
+            eq(count('name'), v(2)),
+            eq(max_('price'), v(1000)),
+            eq(min_('age'), v(27)),
+            eq(sum_('money'), v(100)),
+            eq(avg('success'), v(99)),
+            eq(count('name', True), v(3)),
+            eq(max_('price', True), v(2000)),
+            eq(min_('age', True), v(33)),
+            eq(sum_('money', True), v(200)),
+            eq(avg('success', True), v(299)),
         ]:
             query.having(expr)
 
@@ -136,15 +182,15 @@ class TestAggFunctions(BaseTest):
             .from_table('test')
             .having(
                 or_(
-                    eq(count('name'), val(2)),
-                    eq(max_('price'), val(1000)),
+                    eq(count('name'), v(2)),
+                    eq(max_('price'), v(1000)),
                     and_(
-                        eq(min_('age'), val(27)),
-                        eq(sum_('money'), val(100)),
+                        eq(min_('age'), v(27)),
+                        eq(sum_('money'), v(100)),
                     ),
                     xor(
-                        eq(avg('success'), val(99)),
-                        eq(avg('happiness'), val(101)),
+                        eq(avg('success'), v(99)),
+                        eq(avg('happiness'), v(101)),
                     )
                 )
             )
@@ -171,13 +217,13 @@ class TestAggFunctions(BaseTest):
             {},
         ),
         (
-            length(val('MyVAR')),
+            length(v('MyVAR')),
             "SELECT length('MyVAR')",
             "SELECT length('MyVAR')",
             {},
         ),
         (
-            length(param('myParam')),
+            length(p('myParam')),
             'SELECT length(%(p1)s)',
             'SELECT length(%(p1)s)',
             {'p1': 'myParam'},
@@ -190,13 +236,13 @@ class TestAggFunctions(BaseTest):
             {},
         ),
         (
-            upper(val('MyVAR')),
+            upper(v('MyVAR')),
             "SELECT upper('MyVAR')",
             "SELECT upper('MyVAR')",
             {},
         ),
         (
-            upper(param('myParam')),
+            upper(p('myParam')),
             'SELECT upper(%(p1)s)',
             'SELECT upper(%(p1)s)',
             {'p1': 'myParam'},
@@ -209,13 +255,13 @@ class TestAggFunctions(BaseTest):
             {},
         ),
         (
-            lower(val('MyVAR')),
+            lower(v('MyVAR')),
             "SELECT lower('MyVAR')",
             "SELECT lower('MyVAR')",
             {},
         ),
         (
-            lower(param('myParam')),
+            lower(p('myParam')),
             'SELECT lower(%(p1)s)',
             'SELECT lower(%(p1)s)',
             {'p1': 'myParam'},
@@ -228,13 +274,13 @@ class TestAggFunctions(BaseTest):
             {},
         ),
         (
-            trim(val('MyVAR')),
+            trim(v('MyVAR')),
             "SELECT trim('MyVAR')",
             "SELECT trim('MyVAR')",
             {},
         ),
         (
-            trim(param('myParam')),
+            trim(p('myParam')),
             'SELECT trim(%(p1)s)',
             'SELECT trim(%(p1)s)',
             {'p1': 'myParam'},
@@ -284,19 +330,19 @@ class TestAggFunctions(BaseTest):
             'SELECT CAST(col_name AS VARCHAR(9))',
         ),
         (
-            cast(val('1'), smallint).as_('small_int_val'),
+            cast(v('1'), smallint).as_('small_int_val'),
             "SELECT CAST('1' AS SMALLINT) AS small_int_val",
         ),
         (
-            cast(val('2025-11-27 15:54:34.173122+00'), timestamp_),
+            cast(v('2025-11-27 15:54:34.173122+00'), timestamp_),
             "SELECT CAST('2025-11-27 15:54:34.173122+00' AS TIMESTAMP)",
         ),
         (
-            cast(val('2025-11-27 15:54:34.173122+00'), date_),
+            cast(v('2025-11-27 15:54:34.173122+00'), date_),
             "SELECT CAST('2025-11-27 15:54:34.173122+00' AS DATE)",
         ),
         (
-            cast(val('2025-11-27 15:54:34.173122+00'), time_),
+            cast(v('2025-11-27 15:54:34.173122+00'), time_),
             "SELECT CAST('2025-11-27 15:54:34.173122+00' AS TIME)",
         ),
     ])
@@ -310,7 +356,7 @@ class TestAggFunctions(BaseTest):
             {},
         ),
         (
-            replace_('col_name', 'Saruman', param('Gandalf')),
+            replace_('col_name', 'Saruman', p('Gandalf')),
             "SELECT replace(col_name, 'Saruman', %(p1)s)",
             {'p1': 'Gandalf'},
         ),
@@ -327,7 +373,7 @@ class TestAggFunctions(BaseTest):
             {},
         ),
         (
-            substring('col_name', 1, param(3)),
+            substring('col_name', 1, p(3)),
             'SELECT substring(col_name, 1, %(p1)s)',
             {'p1': 3},
         ),
@@ -344,7 +390,7 @@ class TestAggFunctions(BaseTest):
             {},
         ),
         (
-            position('col_name', param('Matrix')),
+            position('col_name', p('Matrix')),
             'SELECT position(col_name IN %(p1)s)',
             {'p1': 'Matrix'},
         ),

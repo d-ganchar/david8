@@ -5,6 +5,12 @@ on:
   push:
     branches:
       - '**'
+    paths-ignore:
+      - 'docs/**'
+      - 'overrides/**'
+      - 'mkdocs.yml'
+      - '*.md'
+      - '.github/workflows/docs.yml'
 
 permissions:
   contents: write

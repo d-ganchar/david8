@@ -8,14 +8,19 @@ assignees: d-ganchar
 ---
 
 **Description**
+
 describe the problem here...
 
 **To Reproduce**
-`python` script here...
+
+```python
+
+```
 
 **Environment**
- - `david8` version_here
- - `python` version_here
+ - _david8_ `version_here`
+ - _python_ `version_here`
 
 **Expected behavior**
+
 expected result here...
