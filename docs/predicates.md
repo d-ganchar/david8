@@ -1,4 +1,3 @@
-## Overview
 Use [predicates.py](https://github.com/d-ganchar/david8/blob/main/david8/predicates.py) module to compare _columns, values, parameters or function results_. Basic predicates (_without suffix_) compares a column with SQL parameter / value / expression. Example:
 
 ```python

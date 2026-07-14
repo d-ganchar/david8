@@ -24,11 +24,11 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/d-ganchar/david8"
+Homepage = "https://github.com/d-ganchar/david8/wiki"
 Changelog = "https://github.com/d-ganchar/david8/releases"
 Issues = "https://github.com/d-ganchar/david8/issues"
 CI = "https://github.com/d-ganchar/david8/actions"
-Documentation = "https://github.com/d-ganchar/david8/wiki"
+Documentation = "https://d-ganchar.github.io/david8/"
 Source = "https://github.com/d-ganchar/david8"
 
 

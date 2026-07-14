@@ -7,6 +7,7 @@ nav:
   - DDL: ddl.md
   - Predicates: predicates.md
   - Functions: functions.md
+  - Source definitions: source_definitions.md
   - Custom expressions: custom_expressions.md
   - ClickHouse:
       - DQL: clickhouse/dql.md

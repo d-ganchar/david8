@@ -1,12 +1,44 @@
+from dataclasses import dataclass
+
 from parameterized import parameterized
 
+from david8.expressions import Source, field_
 from david8.expressions import col as c
 from david8.expressions import desc as d
 from david8.expressions import val as v
+from david8.functions import concat
 from david8.joins import asof, asof_left, inner, lateral, left, right
 from david8.predicates import between, eq, eq_c, ge_c, gt, gt_c, le_c, lt_c
-from david8.protocols.sql import JoinProtocol, QueryProtocol
+from david8.protocols.sql import AliasedProtocol, JoinProtocol, QueryProtocol
 from tests.base_test import BaseTest
+
+
+@dataclass(slots=True)
+class _UsersTable(Source):
+    _david8_source = 'users'
+
+    id: AliasedProtocol = field_('id')
+    name: AliasedProtocol = field_('name')
+    country: AliasedProtocol = field_('country')
+
+
+@dataclass(slots=True)
+class _OrdersTable(Source):
+    _david8_source = 'orders'
+
+    id: AliasedProtocol = field_('id')
+    user_id: AliasedProtocol = field_('user_id')
+    product_id: AliasedProtocol = field_('product_id')
+    billing_address: AliasedProtocol = field_('billing_address')
+    shipping_address: AliasedProtocol = field_('shipping_address')
+
+
+@dataclass(slots=True)
+class _ProductsTable(Source):
+    _david8_source = 'products'
+
+    id: AliasedProtocol = field_('id')
+    title: AliasedProtocol = field_('title')
 
 
 class TestJoin(BaseTest):
@@ -302,3 +334,37 @@ class TestJoin(BaseTest):
             .get_sql(),
             'SELECT * FROM table1 AS t1 INNER JOIN db2.table2 AS t2 USING (p_id)'
         )
+
+    def test_source(self):
+        u = _UsersTable().as_('u')
+        o = _OrdersTable().as_('o')
+        p = _ProductsTable().as_('p')
+
+        query = (
+            self
+            .qb
+            .select(
+                u.name.as_('username'),
+                o.id.as_('order_id'),
+                p.title.as_('product_name'),
+                concat(o.billing_address, v('|'), o.shipping_address).as_('addresses'),
+            )
+            .from_source(u)
+            .join(
+                inner().source(o).on(eq(o.user_id, u.id)),
+                inner().source(p).on(eq(p.id, o.product_id)),
+            )
+            .where(eq(u.country, 'PL'))
+        )
+
+        self.assertEqual(
+            query.get_sql(),
+            "SELECT u.name AS username, o.id AS order_id, p.title AS product_name, "
+            "concat(o.billing_address, '|', o.shipping_address) AS addresses "
+            "FROM users AS u "
+            "INNER JOIN orders AS o ON (o.user_id = u.id) "
+            "INNER JOIN products AS p ON (p.id = o.product_id) "
+            "WHERE u.country = %(p1)s"
+        )
+
+        self.assertEqual(query.get_parameters(), {'p1': 'PL'})

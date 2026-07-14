@@ -3,10 +3,11 @@ import dataclasses
 from ..protocols.dialect import DialectProtocol
 from ..protocols.sql import DescProtocol, ExprProtocol
 from .arg_convertors import to_col_or_expr
+from .base_aliased import BaseAliased
 
 
 @dataclasses.dataclass(slots=True)
-class FullTableName(ExprProtocol):
+class FullTableName(BaseAliased):
     table: str = ''
     db: str = ''
 
@@ -14,7 +15,7 @@ class FullTableName(ExprProtocol):
         self.table = table
         self.db = db
 
-    def get_sql(self, dialect: DialectProtocol) -> str:
+    def _get_sql(self, dialect: DialectProtocol) -> str:
         if self.db:
             return f'{dialect.quote_ident(self.db)}.{dialect.quote_ident(self.table)}'
 

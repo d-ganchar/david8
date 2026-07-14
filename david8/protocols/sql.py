@@ -4,35 +4,22 @@ from ..protocols.dialect import DialectProtocol
 
 
 class QueryProtocol(Protocol):
-    """
-    Full SQL query
-    """
-    def get_sql(self, dialect: DialectProtocol = None) -> str:
-        pass
+    def get_sql(self, dialect: DialectProtocol = None) -> str: ...
 
-    def get_parameters(self) -> dict:
-        pass
+    def get_parameters(self) -> dict: ...
 
-    def get_list_parameters(self) -> list[Any]:
-        pass
+    def get_list_parameters(self) -> list[Any]: ...
 
-    def get_tuple_parameters(self) -> tuple[Any]:
-        pass
+    def get_tuple_parameters(self) -> tuple[Any]: ...
 
-    def get_dialect(self) -> DialectProtocol:
-        pass
+    def get_dialect(self) -> DialectProtocol: ...
 
 
 class ExprProtocol:
-    """
-    Common SQL expression
-    """
-    def get_sql(self, dialect: DialectProtocol) -> str:
-        pass
+    def get_sql(self, dialect: DialectProtocol) -> str: ...
 
 
-class DescProtocol(ExprProtocol):
-    pass
+class DescProtocol(ExprProtocol): ...
 
 
 class WindowSpecProtocol(ExprProtocol):
@@ -42,24 +29,27 @@ class WindowSpecProtocol(ExprProtocol):
 
 
 class AliasedProtocol(ExprProtocol):
-    def as_(self, alias: str) -> 'AliasedProtocol':
-        pass
+    def as_(self, alias: str) -> 'AliasedProtocol': ...
 
 
-class ParameterProtocol(AliasedProtocol):
-    pass
+class SourceProtocol(AliasedProtocol):
+    @classmethod
+    def get_source(cls) -> str: ...
+
+    @classmethod
+    def get_db(cls) -> str: ...
 
 
-class ValueProtocol(AliasedProtocol):
-    pass
+class ParameterProtocol(AliasedProtocol): ...
 
 
-class PredicateProtocol(AliasedProtocol):
-    pass
+class ValueProtocol(AliasedProtocol): ...
 
 
-class FunctionProtocol(AliasedProtocol):
-    pass
+class PredicateProtocol(AliasedProtocol): ...
+
+
+class FunctionProtocol(AliasedProtocol): ...
 
 
 class FrameModeProtocol(ExprProtocol):
@@ -74,8 +64,7 @@ class FrameBoundProtocol(ExprProtocol):
     """
 
 
-class LogicalOperatorProtocol(ExprProtocol):
-    pass
+class LogicalOperatorProtocol(ExprProtocol): ...
 
 
 class OverClauseProtocol(FunctionProtocol):
@@ -89,8 +78,7 @@ class OverClauseProtocol(FunctionProtocol):
         order_by: list[str | DescProtocol] = None,
         window: str = '',
         frame_mode: FrameModeProtocol = None,
-    ) -> 'WindowSpecProtocol':
-        pass
+    ) -> 'WindowSpecProtocol': ...
 
 
 class AggFunctionProtocol(FunctionProtocol):
@@ -103,41 +91,40 @@ class AggFunctionProtocol(FunctionProtocol):
         order_by: list[str | DescProtocol] = None,
         window: str = '',
         frame_mode: FrameModeProtocol = None,
-    ) -> 'WindowSpecProtocol':
-        pass
+    ) -> 'WindowSpecProtocol': ...
 
-    def filter(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'AggFunctionProtocol':
-        pass
+    def filter(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'AggFunctionProtocol': ...
 
 
-class JoinProtocol(AliasedProtocol):
-    pass
+class JoinProtocol(AliasedProtocol): ...
 
 
 class SelectProtocol(QueryProtocol):
-    def select(self, *args: str | AliasedProtocol | ExprProtocol | FunctionProtocol) -> 'SelectProtocol':
-        pass
+    def select(self, *args: str | AliasedProtocol | ExprProtocol | FunctionProtocol) -> 'SelectProtocol': ...
 
-    def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'SelectProtocol':
-        pass
+    def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'SelectProtocol': ...
 
-    def from_table(self, table_name: str, alias: str = '', db_name: str = '') -> 'SelectProtocol':
-        pass
+    def from_source(self, source: SourceProtocol) -> 'SelectProtocol': ...
 
-    def from_expr(self, expr: Union['SelectProtocol', FunctionProtocol], alias: str = '') -> 'SelectProtocol':
-        pass
+    def from_table(self, table_name: str, alias: str = '', db_name: str = '') -> 'SelectProtocol': ...
 
-    def group_by(self, *args: str | int) -> 'SelectProtocol':
-        pass
+    def from_expr(self, expr: Union['SelectProtocol', FunctionProtocol], alias: str = '') -> 'SelectProtocol': ...
 
-    def limit(self, value: int) -> 'SelectProtocol':
-        pass
+    def group_by(self, *args: str | int) -> 'SelectProtocol': ...
 
-    def offset(self, value: int) -> 'SelectProtocol':
-        pass
+    def limit(self, value: int) -> 'SelectProtocol': ...
 
-    def order_by(self, *args: str | int | DescProtocol) -> 'SelectProtocol':
-        pass
+    def offset(self, value: int) -> 'SelectProtocol': ...
+
+    def order_by(self, *args: str | int | DescProtocol) -> 'SelectProtocol': ...
+
+    def union(self, *args: 'SelectProtocol', all_flag: bool = True) -> 'SelectProtocol': ...
+
+    def join(self, *join: JoinProtocol) -> 'SelectProtocol': ...
+
+    def window(self, name: str, spec: WindowSpecProtocol) -> 'SelectProtocol': ...
+
+    def having(self, *args: PredicateProtocol) -> 'SelectProtocol': ...
 
     def order_by_desc(self, *args: str | int) -> 'SelectProtocol':
         """
@@ -156,58 +143,37 @@ class SelectProtocol(QueryProtocol):
         # SELECT * FROM trees ORDER BY style, height DESC, age DESC, name, color DESC, weight DESC
         """
 
-    def union(self, *args: 'SelectProtocol', all_flag: bool = True) -> 'SelectProtocol':
-        pass
-
-    def having(self, *args: PredicateProtocol) -> 'SelectProtocol':
-        pass
-
-    def join(self, *join: JoinProtocol) -> 'SelectProtocol':
-        pass
-
-    def window(self, name: str, spec: WindowSpecProtocol) -> 'SelectProtocol':
-        pass
-
 
 class Sql92JoinProtocol(JoinProtocol):
-    def on(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'Sql92JoinProtocol':
-        pass
+    def on(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'Sql92JoinProtocol': ...
 
-    def table(self, name: str, db: str = '') -> 'Sql92JoinProtocol':
-        pass
+    def table(self, name: str, db: str = '') -> 'Sql92JoinProtocol': ...
 
-    def query(self, query: SelectProtocol) -> 'Sql92JoinProtocol':
-        pass
+    def query(self, query: SelectProtocol) -> 'Sql92JoinProtocol': ...
 
-    def using(self, *args: str) -> 'Sql92JoinProtocol':
-        pass
+    def using(self, *args: str) -> 'Sql92JoinProtocol': ...
+
+    def source(self, source: SourceProtocol) -> 'Sql92JoinProtocol': ...
 
 
 class LiteralJoinProtocol(JoinProtocol):
-    def on(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'LiteralJoinProtocol':
-        pass
+    def on(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'LiteralJoinProtocol': ...
 
-    def expression(self, expression: ExprProtocol) -> 'LiteralJoinProtocol':
-        pass
+    def expression(self, expression: ExprProtocol) -> 'LiteralJoinProtocol': ...
 
 
 class UpdateProtocol(QueryProtocol):
-    def table(self, table_name: str, alias: str = '', db_name: str = '') -> 'UpdateProtocol':
-        pass
+    def table(self, table_name: str, alias: str = '', db_name: str = '') -> 'UpdateProtocol': ...
 
-    def set_record(self, record: dict) -> 'UpdateProtocol':
-        pass
+    def set_record(self, record: dict) -> 'UpdateProtocol': ...
 
-    def set_(self, column: str, value: str | int | float | ExprProtocol | SelectProtocol) -> 'UpdateProtocol':
-        pass
+    def set_(self, column: str, value: str | int | float | ExprProtocol | SelectProtocol) -> 'UpdateProtocol': ...
 
-    def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'UpdateProtocol':
-        pass
+    def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'UpdateProtocol': ...
 
 
 class InsertProtocol(QueryProtocol):
-    def into(self, table_name: str, db_name: str = '') -> 'InsertProtocol':
-        pass
+    def into(self, table_name: str, db_name: str = '') -> 'InsertProtocol': ...
 
     def value(self, col_name: str, value: str | float | int) -> 'InsertProtocol':
         """
@@ -243,62 +209,46 @@ class InsertProtocol(QueryProtocol):
             )
         """
 
-    def values(self, columns: tuple[str] | list[str], data: tuple | list) -> 'InsertProtocol':
-        pass
+    def values(self, columns: tuple[str] | list[str], data: tuple | list) -> 'InsertProtocol': ...
 
     def from_expr(
         self,
         columns: tuple[str] | list[str],
         expr: Union['SelectProtocol', ExprProtocol]
-    ) -> 'InsertProtocol':
-        pass
+    ) -> 'InsertProtocol': ...
 
-    def record(self, record: dict) -> 'InsertProtocol':
-        pass
+    def record(self, record: dict) -> 'InsertProtocol': ...
 
 
 class DeleteProtocol(QueryProtocol):
-    def from_table(self, table_name: str, db_name: str = '') -> 'DeleteProtocol':
-        pass
+    def from_table(self, table_name: str, db_name: str = '') -> 'DeleteProtocol': ...
 
-    def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'DeleteProtocol':
-        pass
+    def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'DeleteProtocol': ...
 
 
 class CreateTableProtocol(QueryProtocol):
-    def as_(self, query: SelectProtocol, table: str, db: str = '') -> 'CreateTableProtocol':
-        pass
+    def as_(self, query: SelectProtocol, table: str, db: str = '') -> 'CreateTableProtocol': ...
 
 
 class DropProtocol(QueryProtocol):
-    def table(self, table_name: str, db_name: str = '', if_exists: bool = False) -> 'DropProtocol':
-        pass
+    def table(self, table_name: str, db_name: str = '', if_exists: bool = False) -> 'DropProtocol': ...
 
-    def view(self, view_name: str, db_name: str = '', if_exists: bool = False) -> 'DropProtocol':
-        pass
+    def view(self, view_name: str, db_name: str = '', if_exists: bool = False) -> 'DropProtocol': ...
 
 
 class IntervalProtocol(AliasedProtocol):
-    def second(self, value: int) -> 'IntervalProtocol':
-        pass
+    def second(self, value: int) -> 'IntervalProtocol': ...
 
-    def minute(self, value: int) -> 'IntervalProtocol':
-        pass
+    def minute(self, value: int) -> 'IntervalProtocol': ...
 
-    def hour(self, value: int) -> 'IntervalProtocol':
-        pass
+    def hour(self, value: int) -> 'IntervalProtocol': ...
 
-    def day(self, value: int) -> 'IntervalProtocol':
-        pass
+    def day(self, value: int) -> 'IntervalProtocol': ...
 
-    def week(self, value: int) -> 'IntervalProtocol':
-        pass
+    def week(self, value: int) -> 'IntervalProtocol': ...
 
-    def month(self, value: int) -> 'IntervalProtocol':
-        pass
+    def month(self, value: int) -> 'IntervalProtocol': ...
 
-    def quarter(self, value: int) -> 'IntervalProtocol':
-        pass
+    def quarter(self, value: int) -> 'IntervalProtocol': ...
 
-    def year(self, value: int) -> 'IntervalProtocol':
-        pass
+    def year(self, value: int) -> 'IntervalProtocol': ...

@@ -1,7 +1,10 @@
 from parameterized import parameterized
 
 from david8 import get_default_qb
-from david8.expressions import case, col, distinct, interval, param, val
+from david8.expressions import case, distinct, interval
+from david8.expressions import col as c
+from david8.expressions import param as p
+from david8.expressions import val as v
 from david8.functions import lower
 from david8.logical_operators import or_
 from david8.param_styles import (
@@ -22,69 +25,69 @@ class TestExpressions(BaseTest):
     @parameterized.expand([
         # qb
         (
-            BaseTest.qb.select(col('name')).from_table('users'),
+            BaseTest.qb.select(c('name')).from_table('users'),
             'SELECT name FROM users'
         ),
         (
-            BaseTest.qb.select(col('legacy').as_('fixed')).from_table('users'),
+            BaseTest.qb.select(c('legacy').as_('fixed')).from_table('users'),
             'SELECT legacy AS fixed FROM users'
         ),
         # qb_w
         (
-            BaseTest.qb_w.select(col('name')).from_table('users'),
+            BaseTest.qb_w.select(c('name')).from_table('users'),
             'SELECT "name" FROM "users"'
         ),
         (
-            BaseTest.qb_w.select(col('legacy').as_('fixed')).from_table('users'),
+            BaseTest.qb_w.select(c('legacy').as_('fixed')).from_table('users'),
             'SELECT "legacy" AS "fixed" FROM "users"'
         ),
     ])
-    def test_col(self, query: QueryProtocol, exp_sql: str):
+    def test_c(self, query: QueryProtocol, exp_sql: str):
         self.assertEqual(query.get_sql(), exp_sql)
 
     @parameterized.expand([
         (
-            BaseTest.qb.select(param('name')).from_table('users'),
+            BaseTest.qb.select(p('name')).from_table('users'),
             'SELECT %(p1)s FROM users',
             {'p1': 'name'}
         ),
         (
-            BaseTest.qb.select(param('name').as_('alias')).from_table('users'),
+            BaseTest.qb.select(p('name').as_('alias')).from_table('users'),
             'SELECT %(p1)s AS alias FROM users',
             {'p1': 'name'}
         )
     ])
-    def test_param(self, query: QueryProtocol, exp_sql: str, exp_params: dict):
+    def test_p(self, query: QueryProtocol, exp_sql: str, exp_params: dict):
         self.assertEqual(query.get_sql(), exp_sql)
         self.assertEqual(query.get_parameters(), exp_params)
 
     @parameterized.expand([
         (
-            BaseTest.qb.select(val('name')).from_table('users'),
+            BaseTest.qb.select(v('name')).from_table('users'),
             "SELECT 'name' FROM users",
         ),
         (
-            BaseTest.qb_w.select(val('name').as_('alias')).from_table('users'),
+            BaseTest.qb_w.select(v('name').as_('alias')).from_table('users'),
             'SELECT \'name\' AS "alias" FROM "users"',
         ),
         (
-            BaseTest.qb.select(val(1)).from_table('users'),
+            BaseTest.qb.select(v(1)).from_table('users'),
             "SELECT 1 FROM users",
         ),
         (
-            BaseTest.qb_w.select(val(1).as_('alias')).from_table('users'),
+            BaseTest.qb_w.select(v(1).as_('alias')).from_table('users'),
             'SELECT 1 AS "alias" FROM "users"',
         ),
         (
-            BaseTest.qb.select(val(0.69)).from_table('users'),
+            BaseTest.qb.select(v(0.69)).from_table('users'),
             "SELECT 0.69 FROM users",
         ),
         (
-            BaseTest.qb_w.select(val(0.96).as_('alias')).from_table('users'),
+            BaseTest.qb_w.select(v(0.96).as_('alias')).from_table('users'),
             'SELECT 0.96 AS "alias" FROM "users"',
         )
     ])
-    def test_val(self, query: QueryProtocol, exp_sql: str):
+    def test_v(self, query: QueryProtocol, exp_sql: str):
         self.assertEqual(query.get_sql(), exp_sql)
 
     @parameterized.expand([
@@ -126,7 +129,7 @@ class TestExpressions(BaseTest):
         exp_dict_params: dict,
         exp_list_params: list
     ):
-        query = get_default_qb(style).select(param('p_name'), param(2), param(0.5))
+        query = get_default_qb(style).select(p('p_name'), p(2), p(0.5))
 
         self.assertEqual(query.get_sql(), exp_sql)
         self.assertEqual(query.get_parameters(), exp_dict_params)
@@ -159,7 +162,7 @@ class TestExpressions(BaseTest):
                     1
                 ),
                 (eq('status', 'blocked'), -1),
-                else_=col('status_num'),
+                else_=c('status_num'),
             ),
             'SELECT CASE WHEN (status = %(p1)s OR status = %(p2)s) THEN %(p3)s WHEN '
             'status = %(p4)s THEN %(p5)s ELSE status_num END',

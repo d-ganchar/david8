@@ -1,5 +1,3 @@
-## Functions
-
 Use [functions.py](https://github.com/d-ganchar/david8/blob/main/david8/functions.py) module to find core functions, see [test_functions.py](https://github.com/d-ganchar/david8/blob/main/tests/test_functions.py)
 
 ```python
