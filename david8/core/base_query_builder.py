@@ -40,8 +40,8 @@ class BaseQueryBuilder(QueryBuilderProtocol):
     def select(self, *args: str | AliasedProtocol | ExprProtocol | FunctionProtocol) -> SelectProtocol:
         return _Select(select_columns=args, dialect=self._dialect)
 
-    def with_(self, *args: tuple[str, SelectProtocol]) -> SelectProtocol:
-        return _Select(with_queries=args, dialect=self._dialect)
+    def with_(self, *args: tuple[str, SelectProtocol], recursive: bool = False) -> SelectProtocol:
+        return _Select(with_queries=args, dialect=self._dialect, with_recursive=recursive)
 
     def update(self) -> UpdateProtocol:
         return _Update(dialect=self._dialect)
