@@ -17,6 +17,7 @@ class UsersTable(Source):
     _david8_source   = 'users'      # table name or view name
     # _david8_db     = 'analytics'  # database name
 
+    # property_name  = f(DATABASE_COLUMN_NAME)
     id: Aliased      = f('id')
     name: Aliased    = f('name')
     country: Aliased = f('country')
@@ -25,7 +26,7 @@ class UsersTable(Source):
 @dataclass(slots=True)
 class OrdersTable(Source):
     _david8_source            = 'orders'
-
+    
     id: Aliased               = f('id')
     user_id: Aliased          = f('user_id')
     product_id: Aliased       = f('product_id')

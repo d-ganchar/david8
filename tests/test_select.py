@@ -3,11 +3,13 @@ from dataclasses import dataclass
 from parameterized import parameterized
 
 from david8 import QueryBuilderProtocol
-from david8.expressions import Source, field_, window_spec
+from david8.expressions import Source, window_spec
+from david8.expressions import field_ as f
 from david8.expressions import val as v
 from david8.functions import concat, sum_
 from david8.predicates import eq, ne
-from david8.protocols.sql import AliasedProtocol, SelectProtocol
+from david8.protocols.sql import AliasedProtocol as A
+from david8.protocols.sql import SelectProtocol
 from tests.base_test import BaseTest
 
 
@@ -15,16 +17,16 @@ from tests.base_test import BaseTest
 class _UsersTable(Source):
     _david8_source = 'users'
 
-    name: AliasedProtocol = field_('name')
-    last_name: AliasedProtocol = field_('name')
+    name: A = f('u_name')
+    last_name: A = f('ul_name')
 
 @dataclass(slots=True)
 class _AccountsTable(Source):
     _david8_source = 'accounts'
     _david8_db = 'legacy'
 
-    name: AliasedProtocol = field_('name')
-    last_name: AliasedProtocol = field_('name')
+    name: A = f('f_name')
+    last_name: A = f('l_name')
 
 
 class TestSelect(BaseTest):
@@ -129,27 +131,29 @@ class TestSelect(BaseTest):
     @parameterized.expand([
         (
             _UsersTable().as_('u1'),
-            "SELECT u1.name AS user_name, u1.last_name AS user_last_name, "
-            "concat(u1.name, ' ', u1.last_name) AS full_user_name "
-            "FROM users AS u1 "
-            "WHERE concat(u1.name, ' ', u1.last_name) != %(p1)s",
+            "SELECT u1.u_name AS user_name, u1.ul_name AS user_last_name, "
+            "concat(u1.u_name, ' ', u1.ul_name) AS full_user_name "
+            "FROM users AS u1 WHERE concat(u1.u_name, ' ', u1.ul_name) != %(p1)s",
         ),
         (
             _UsersTable(),
-            "SELECT name AS user_name, last_name AS user_last_name, concat(name, ' ', last_name) AS full_user_name "
-            "FROM users WHERE concat(name, ' ', last_name) != %(p1)s",
+            "SELECT u_name AS user_name, ul_name AS user_last_name, concat(u_name, ' ', ul_name) AS full_user_name "
+            "FROM users WHERE concat(u_name, ' ', ul_name) != %(p1)s",
         ),
         # db
         (
             _AccountsTable().as_('u1'),
-            "SELECT u1.name AS user_name, u1.last_name AS user_last_name, "
-            "concat(u1.name, ' ', u1.last_name) AS full_user_name "
-            "FROM legacy.accounts AS u1 WHERE concat(u1.name, ' ', u1.last_name) != %(p1)s",
+            "SELECT u1.f_name AS user_name, u1.l_name AS user_last_name, "
+            "concat(u1.f_name, ' ', u1.l_name) AS full_user_name "
+            "FROM legacy.accounts AS u1 "
+            "WHERE concat(u1.f_name, ' ', u1.l_name) != %(p1)s",
         ),
         (
             _AccountsTable(),
-            "SELECT name AS user_name, last_name AS user_last_name, concat(name, ' ', last_name) AS full_user_name "
-            "FROM legacy.accounts WHERE concat(name, ' ', last_name) != %(p1)s",
+            "SELECT f_name AS user_name, l_name AS user_last_name, "
+            "concat(f_name, ' ', l_name) AS full_user_name "
+            "FROM legacy.accounts "
+            "WHERE concat(f_name, ' ', l_name) != %(p1)s",
         ),
     ])
     def test_table_source(self, source: Source, exp_sql: str):

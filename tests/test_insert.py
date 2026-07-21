@@ -1,8 +1,24 @@
+from dataclasses import dataclass
+
 from parameterized import parameterized
 
+from david8.expressions import Source
+from david8.expressions import field_ as f
 from david8.predicates import eq
+from david8.protocols.sql import AliasedProtocol as Aliased
 from david8.protocols.sql import InsertProtocol
 from tests.base_test import BaseTest
+
+
+@dataclass(slots=True)
+class _MovieTable(Source):
+    _david8_source = 'movie'
+
+    name: Aliased = f('m_name')
+    year: Aliased = f('m_year')
+
+
+_movie = _MovieTable()
 
 
 class TestInsert(BaseTest):
@@ -21,7 +37,12 @@ class TestInsert(BaseTest):
             .insert()
             .into('movie', 'art')
             .columns('name', 'year')
-            .from_select(BaseTest.qb.select('name', 'year').from_table('old_movie').where(eq('name', 'Aliens'))),
+            .from_select(
+                BaseTest.qb
+                .select('name', 'year')
+                .from_table('old_movie')
+                .where(eq('name', 'Aliens'))
+            ),
             'INSERT INTO art.movie (name, year) SELECT name, year FROM old_movie WHERE name = %(p1)s',
             {'p1': 'Aliens'},
         ),
@@ -39,7 +60,12 @@ class TestInsert(BaseTest):
             .insert()
             .into('movie', 'art')
             .columns('name', 'year')
-            .from_select(BaseTest.qb.select('name', 'year').from_table('old_movie').where(eq('name', 'Aliens'))),
+            .from_select(
+                BaseTest.qb
+                .select('name', 'year')
+                .from_table('old_movie')
+                .where(eq('name', 'Aliens'))
+            ),
             'INSERT INTO "art"."movie" ("name", "year") SELECT "name", "year" FROM "old_movie" WHERE "name" = %(p1)s',
             {'p1': 'Aliens'},
         ),
@@ -50,7 +76,10 @@ class TestInsert(BaseTest):
             .into('movie', 'art')
             .from_expr(
                 ['name', 'year'],
-                BaseTest.qb.select('name', 'year').from_table('old_movie').where(eq('name', 'Aliens'))
+                BaseTest.qb
+                .select('name', 'year')
+                .from_table('old_movie')
+                .where(eq('name', 'Aliens'))
             ),
             'INSERT INTO art.movie (name, year) SELECT name, year FROM old_movie WHERE name = %(p1)s',
             {'p1': 'Aliens'},
@@ -78,6 +107,14 @@ class TestInsert(BaseTest):
             .into('movie', 'art')
             .record({'name': 'Aliens', 'year': 1986}),
             'INSERT INTO art.movie (name, year) VALUES (%(p1)s, %(p2)s)',
+            {'p1': 'Aliens', 'p2': 1986},
+        ),
+        (
+            BaseTest.qb
+            .insert()
+            .into_source(_movie)
+            .record({'name': 'Aliens', 'year': 1986}),
+            'INSERT INTO movie (name, year) VALUES (%(p1)s, %(p2)s)',
             {'p1': 'Aliens', 'p2': 1986},
         ),
         (
@@ -110,12 +147,31 @@ class TestInsert(BaseTest):
             'INSERT INTO "movie" ("name", "year") VALUES (%(p1)s, %(p2)s, %(p3)s, %(p4)s)',
             {'p1': 'Aliens', 'p2': 1986, 'p3': 'Prometheus', 'p4': None},
         ),
+        (
+            BaseTest.qb
+            .insert()
+            .into_source(_movie)
+            .records([{'name': 'Aliens', 'year': 1986}, {'name': 'Prometheus'}]),
+            'INSERT INTO movie (name, year) VALUES (%(p1)s, %(p2)s, %(p3)s, %(p4)s)',
+            {'p1': 'Aliens', 'p2': 1986, 'p3': 'Prometheus', 'p4': None},
+        ),
     ])
     def test_records(self, query: InsertProtocol, exp_sql: str, exp_params: dict):
         self.assertEqual(query.get_sql(), exp_sql)
         self.assertEqual(query.get_parameters(), exp_params)
 
     @parameterized.expand([
+        (
+            BaseTest.qb
+            .insert()
+            .into_source(_movie)
+            .values(
+                [_movie.name, _movie.year],
+                [['Aliens', 1986], ['Prometheus', 2012]],
+            ),
+            'INSERT INTO movie (m_name, m_year) VALUES (%(p1)s, %(p2)s), (%(p3)s, %(p4)s)',
+            {'p1': 'Aliens', 'p2': 1986, 'p3': 'Prometheus', 'p4': 2012},
+        ),
         (
             BaseTest.qb
             .insert()

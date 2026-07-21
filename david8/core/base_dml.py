@@ -4,12 +4,14 @@ from typing import Any, Union
 from ..core.base_aliased import Column
 from ..protocols.dialect import DialectProtocol
 from ..protocols.sql import (
+    ColumnProtocol,
     DeleteProtocol,
     ExprProtocol,
     InsertProtocol,
     LogicalOperatorProtocol,
     PredicateProtocol,
     SelectProtocol,
+    SourceProtocol,
     UpdateProtocol,
 )
 from .base_dql import BaseWhereConstruction
@@ -120,6 +122,10 @@ class BaseInsert(BaseQuery, InsertProtocol):
         self.target_table.set_names(table_name, db_name)
         return self
 
+    def into_source(self, source: SourceProtocol) -> 'InsertProtocol':
+        self.target_table.set_names(source.get_source(), source.get_db())
+        return self
+
     def value(self, col_name: str, value: str | float | int) -> 'InsertProtocol':
         self._values += (value, )
         self.column_set += (col_name, )
@@ -149,7 +155,11 @@ class BaseInsert(BaseQuery, InsertProtocol):
         self._values += tuple(record.values())
         return self
 
-    def values(self, columns: tuple[str, ...] | list[str], data: tuple | list) -> 'InsertProtocol':
+    def values(
+        self,
+        columns: tuple[str | ColumnProtocol, ...] | list[str | ColumnProtocol],
+        data: tuple | list
+    ) -> 'InsertProtocol':
         self.column_set = tuple(columns)
         self._values = tuple(data)
         return self
@@ -167,6 +177,10 @@ class BaseDelete(BaseQuery, DeleteProtocol):
 
     def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> DeleteProtocol:
         self.where_construction.add_conditions(*args)
+        return self
+
+    def from_source(self, source: SourceProtocol) -> 'DeleteProtocol':
+        self.target_table.set_names(source.get_source(), source.get_db())
         return self
 
     def from_table(self, table_name: str, db_name: str = '') -> 'DeleteProtocol':

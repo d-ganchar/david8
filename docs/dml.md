@@ -37,7 +37,7 @@ from david8.predicates import eq
    .set_record({'year': 1986, 'killer': 'Ripley'})
    .set_('cat', 'Jones')
    .where(eq('movie', '')
-)
+).get_sql()
 
 # UPDATE movie SET name = %(p1)s, year = %(p2)s, killer = %(p3)s, cat = %(p4)s WHERE movie = %(p5)s'
 # {'p1': 'aliens', 'p2': 1986, 'p3': 'Ripley', 'p4': 'Jones', 'p5': ''}
@@ -56,13 +56,39 @@ from david8.predicates import eq
 # {'p1': '', 'p2': 1888}
 ```
 
+[Source](source_definitions.md) example
+
+```python
+(
+    qb
+    .delete()
+    .from_source(metrics)
+    .where(eq(metrics.name, ''), le(metrics.year, 1888))
+).get_sql()
+# DELETE FROM metrics WHERE name = %(p1)s AND year <= %(p2)s
+# {'p1': '', 'p2': 1888}
+```
+
 ### INSERT
 
 Insert a record / dictionary
+
 ```python
 qb.insert().into('movie', 'art').record({'name': 'Aliens', 'year': 1986})
 # INSERT INTO art.movie (name, year) VALUES (%(p1)s, %(p2)s)
 # {'p1': 'Aliens', 'p2': 1986}
+```
+
+Insert a list of records:
+
+```python
+# keys of the first dictionary are used as the column definitions for all records
+qb.insert().into('movie', 'art').records([
+    {'name': 'Aliens', 'year': 1986},
+    {'name': 'Prometheus'}
+]).get_sql()
+# INSERT INTO art.movie (name, year) VALUES (%(p1)s, %(p2)s, %(p3)s, %(p4)s)
+# {'p1': 'Aliens', 'p2': 1986, 'p3': 'Prometheus', 'p4': None}
 ```
 
 Insert data by column names:
@@ -71,8 +97,24 @@ Insert data by column names:
 qb.insert().into('movie', 'art').values(
     ['name', 'year'],
     [['Aliens', 1986], ['Prometheus', 2012]],
-)
+).get_sql()
 # INSERT INTO art.movie (name, year) VALUES (%(p1)s, %(p2)s), (%(p3)s, %(p4)s)
+# {'p1': 'Aliens', 'p2': 1986, 'p3': 'Prometheus', 'p4': 2012}
+```
+
+[Source](source_definitions.md) example
+
+```python
+(
+    qb
+    .insert()
+    .into_source(movie)
+    .values(
+        [movie.name, movie.year],
+        [['Aliens', 1986], ['Prometheus', 2012]],
+    )
+).get_sql()
+# INSERT INTO movie (m_name, m_year) VALUES (%(p1)s, %(p2)s), (%(p3)s, %(p4)s)
 # {'p1': 'Aliens', 'p2': 1986, 'p3': 'Prometheus', 'p4': 2012}
 ```
 
@@ -81,7 +123,7 @@ Insert from SELECT:
 qb.insert().into('movie', 'art').from_expr(
    ['name', 'year'],
    qb.select('name', 'year').from_table('old_movie').where(eq('name', 'Aliens'))
-)
+).get_sql()
 
 # INSERT INTO art.movie (name, year) SELECT name, year FROM old_movie WHERE name = %(p1)s',
 # {'p1': 'Aliens'}
