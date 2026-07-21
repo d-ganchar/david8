@@ -98,6 +98,28 @@ class TestInsert(BaseTest):
             BaseTest.qb
             .insert()
             .into('movie', 'art')
+            .records([{'name': 'Aliens', 'year': 1986}, {'name': 'Prometheus'}]),
+            'INSERT INTO art.movie (name, year) VALUES (%(p1)s, %(p2)s, %(p3)s, %(p4)s)',
+            {'p1': 'Aliens', 'p2': 1986, 'p3': 'Prometheus', 'p4': None},
+        ),
+        (
+            BaseTest.qb_w
+            .insert()
+            .into('movie')
+            .records([{'name': 'Aliens', 'year': 1986}, {'name': 'Prometheus'}]),
+            'INSERT INTO "movie" ("name", "year") VALUES (%(p1)s, %(p2)s, %(p3)s, %(p4)s)',
+            {'p1': 'Aliens', 'p2': 1986, 'p3': 'Prometheus', 'p4': None},
+        ),
+    ])
+    def test_records(self, query: InsertProtocol, exp_sql: str, exp_params: dict):
+        self.assertEqual(query.get_sql(), exp_sql)
+        self.assertEqual(query.get_parameters(), exp_params)
+
+    @parameterized.expand([
+        (
+            BaseTest.qb
+            .insert()
+            .into('movie', 'art')
             .values(
                 ['name', 'year'],
                 [['Aliens', 1986], ['Prometheus', 2012]],

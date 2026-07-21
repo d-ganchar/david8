@@ -209,7 +209,7 @@ class InsertProtocol(QueryProtocol):
             )
         """
 
-    def values(self, columns: tuple[str] | list[str], data: tuple | list) -> 'InsertProtocol': ...
+    def values(self, columns: tuple[str, ...] | list[str], data: tuple | list) -> 'InsertProtocol': ...
 
     def from_expr(
         self,
@@ -218,6 +218,8 @@ class InsertProtocol(QueryProtocol):
     ) -> 'InsertProtocol': ...
 
     def record(self, record: dict) -> 'InsertProtocol': ...
+
+    def records(self, records: list[dict[str, Any]]) -> 'InsertProtocol': ...
 
 
 class DeleteProtocol(QueryProtocol):

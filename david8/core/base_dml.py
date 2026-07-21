@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Union
+from typing import Any, Union
 
 from ..core.base_aliased import Column
 from ..protocols.dialect import DialectProtocol
@@ -145,15 +145,19 @@ class BaseInsert(BaseQuery, InsertProtocol):
         return self
 
     def record(self, record: dict) -> 'InsertProtocol':
-        for key, value in record.items():
-            self._values += (value,)
-            self.column_set += (key,)
+        self.column_set += tuple(record)
+        self._values += tuple(record.values())
         return self
 
-    def values(self, columns: tuple[str] | list[str], data: tuple | list) -> 'InsertProtocol':
+    def values(self, columns: tuple[str, ...] | list[str], data: tuple | list) -> 'InsertProtocol':
         self.column_set = tuple(columns)
         self._values = tuple(data)
         return self
+
+    def records(self, records: list[dict[str, Any]]) -> 'InsertProtocol':
+        cols = tuple(records[0]) if records else ()
+        data = tuple(rec.get(col) for rec in records for col in cols)
+        return self.values(cols, data)
 
 
 @dataclasses.dataclass(slots=True)
