@@ -3,6 +3,7 @@ import dataclasses
 from ..protocols.dialect import DialectProtocol
 from ..protocols.sql import (
     AliasedProtocol,
+    ColumnProtocol,
     ExprProtocol,
     IntervalProtocol,
     ParameterProtocol,
@@ -74,10 +75,13 @@ class Parameter(BaseAliased, ParameterProtocol):
         return placeholder
 
 
-class Column(BaseAliased):
+class Column(BaseAliased, ColumnProtocol):
     def __init__(self, name: str) -> None:
         super().__init__()
         self._name = name
+
+    def get_name(self) -> str:
+        return self._name
 
     def _get_sql(self, dialect: DialectProtocol) -> str:
         return f'{dialect.quote_ident(self._name)}'

@@ -57,6 +57,8 @@ class BaseSelect(BaseQuery, SelectProtocol):
     limit_value: int | None = None
     offset_value: int | None = None
 
+    with_recursive: bool = False
+
     def select(self, *args: str | AliasedProtocol | ExprProtocol | FunctionProtocol) -> SelectProtocol:
         self.select_columns += args
         return self
@@ -126,7 +128,8 @@ class BaseSelect(BaseQuery, SelectProtocol):
             for alias, query in self.with_queries
         )
 
-        return f'WITH {with_items} '
+        recursive = ' RECURSIVE ' if self.with_recursive else ' '
+        return f'WITH{recursive}{with_items} '
 
     def _from_to_sql(self, dialect: DialectProtocol) -> str:
         if self.from_query_expr:

@@ -32,6 +32,10 @@ class AliasedProtocol(ExprProtocol):
     def as_(self, alias: str) -> 'AliasedProtocol': ...
 
 
+class ColumnProtocol(AliasedProtocol):
+    def get_name(self) -> str: ...
+
+
 class SourceProtocol(AliasedProtocol):
     @classmethod
     def get_source(cls) -> str: ...
@@ -175,6 +179,8 @@ class UpdateProtocol(QueryProtocol):
 class InsertProtocol(QueryProtocol):
     def into(self, table_name: str, db_name: str = '') -> 'InsertProtocol': ...
 
+    def into_source(self, source: SourceProtocol) -> 'InsertProtocol': ...
+
     def value(self, col_name: str, value: str | float | int) -> 'InsertProtocol':
         """
         Deprecated since 1.5.0b1. Will be removed in 0.1.0
@@ -209,7 +215,11 @@ class InsertProtocol(QueryProtocol):
             )
         """
 
-    def values(self, columns: tuple[str] | list[str], data: tuple | list) -> 'InsertProtocol': ...
+    def values(
+        self,
+        columns: tuple[str | ColumnProtocol, ...] | list[str | ColumnProtocol],
+        data: tuple | list
+    ) -> 'InsertProtocol': ...
 
     def from_expr(
         self,
@@ -219,11 +229,15 @@ class InsertProtocol(QueryProtocol):
 
     def record(self, record: dict) -> 'InsertProtocol': ...
 
+    def records(self, records: list[dict[str, Any]]) -> 'InsertProtocol': ...
+
 
 class DeleteProtocol(QueryProtocol):
     def from_table(self, table_name: str, db_name: str = '') -> 'DeleteProtocol': ...
 
     def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> 'DeleteProtocol': ...
+
+    def from_source(self, source: SourceProtocol) -> 'DeleteProtocol': ...
 
 
 class CreateTableProtocol(QueryProtocol):
@@ -252,3 +266,6 @@ class IntervalProtocol(AliasedProtocol):
     def quarter(self, value: int) -> 'IntervalProtocol': ...
 
     def year(self, value: int) -> 'IntervalProtocol': ...
+
+
+class CreateViewProtocol(QueryProtocol): ...

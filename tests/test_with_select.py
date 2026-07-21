@@ -1,11 +1,55 @@
 from parameterized import parameterized
 
 from david8 import QueryBuilderProtocol
-from david8.predicates import eq
+from david8.expressions import val as v
+from david8.functions import add, mul
+from david8.predicates import eq, lt
 from tests.base_test import BaseTest
 
 
 class TestWith(BaseTest):
+    def test_with_recursive(self):
+        qb = self.qb
+        query = (
+            qb
+            .with_(
+                (
+                    'numbers',
+                    qb
+                    .select(v(1).as_('n'))
+                    .union(
+                        qb.select(add('n', v(1)))
+                        .from_table('numbers')
+                        .where(lt('n', 10))
+                    ),
+                ),
+                (
+                    'squares',
+                    qb
+                    .select('n', mul('n', 'n').as_('square'))
+                    .from_table('numbers')
+                ),
+                (
+                    'even_squares',
+                    qb
+                    .select('*')
+                    .from_table('squares')
+                ),
+                recursive=True,
+            )
+            .select('*')
+            .from_table('even_squares')
+        )
+
+        self.assertEqual(
+            query.get_sql(),
+            "WITH RECURSIVE numbers AS (SELECT 1 AS n UNION ALL SELECT (n + 1) FROM numbers WHERE n < %(p1)s), "
+            "squares AS (SELECT n, (n * n) AS square FROM numbers), "
+            "even_squares AS (SELECT * FROM squares) "
+            "SELECT * FROM even_squares"
+        )
+
+        self.assertEqual(query.get_parameters(), {'p1': 10})
 
     @parameterized.expand([
         (

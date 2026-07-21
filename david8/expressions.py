@@ -15,6 +15,7 @@ from .core.base_frames import BaseOverClause as _BaseOverClause
 from .protocols.dialect import DialectProtocol
 from .protocols.sql import (
     AliasedProtocol,
+    ColumnProtocol,
     DescProtocol,
     ExprProtocol,
     FrameModeProtocol,
@@ -32,7 +33,7 @@ from .protocols.sql import (
 def val(value: str | int | float) -> ValueProtocol:
     return create_value(value)
 
-def col(name: str) -> _Column:
+def col(name: str) -> ColumnProtocol:
     return _Column(name)
 
 def param(value: str | int | float, fixed_name: bool = False) -> ParameterProtocol:
@@ -65,12 +66,12 @@ def window_spec(
 
 def distinct(
     *args: str | ExprProtocol,
-    on: tuple[str, ExprProtocol, ...] | list[str | ExprProtocol] = None,
+    on: tuple[str | ExprProtocol, ...] | list[str | ExprProtocol] | None = None,
 ) -> ExprProtocol:
     return BaseDistinct(_on_items=on or (), _items=args)
 
 
-def field_(name: str):
+def field_(name: str) -> ColumnProtocol:
     return _field(default_factory=lambda: col(name))
 
 
@@ -94,7 +95,10 @@ class Source(SourceProtocol):
 
     def __getattribute__(self, name, /):
         value = object.__getattribute__(self, name)
-        if value is not self and isinstance(value, _BaseAliased):
+        if isinstance(value, ColumnProtocol):
+            return _FullTableName(value.get_name(), db=self._david8_alias)
+
+        if isinstance(value, _BaseAliased):
             return _FullTableName(name, db=self._david8_alias)
 
         return value

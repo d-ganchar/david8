@@ -1,7 +1,7 @@
 import dataclasses
 
 from ..protocols.dialect import DialectProtocol
-from ..protocols.sql import CreateTableProtocol, DropProtocol, QueryProtocol, SelectProtocol
+from ..protocols.sql import CreateTableProtocol, CreateViewProtocol, DropProtocol, QueryProtocol, SelectProtocol
 from .base_expressions import FullTableName
 from .base_query import BaseQuery
 
@@ -21,6 +21,26 @@ class BaseCreateTable(BaseQuery, CreateTableProtocol):
 
     def set_table(self, table: str, db: str = '') -> None:
         self.table.set_names(table, db)
+
+
+@dataclasses.dataclass(slots=True)
+class BaseCreateView(BaseQuery, CreateViewProtocol):
+    query: SelectProtocol
+    table: FullTableName = dataclasses.field(default_factory=FullTableName)
+    or_replace: bool = False,
+    if_not_exists: bool = False
+
+    def _render_sql_prefix(self, dialect: DialectProtocol) -> str:
+        if self.or_replace:
+            return 'CREATE OR REPLACE VIEW '
+
+        if self.if_not_exists:
+            return 'CREATE VIEW IF NOT EXISTS '
+
+        return 'CREATE VIEW '
+
+    def _render_sql(self, dialect: DialectProtocol) -> str:
+        return f'{self.table.get_sql(dialect)} AS {self.query.get_sql(dialect)}'
 
 
 @dataclasses.dataclass(slots=True)

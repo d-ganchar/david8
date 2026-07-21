@@ -5,6 +5,7 @@ from ..protocols.query_builder import QueryBuilderProtocol
 from ..protocols.sql import (
     AliasedProtocol,
     CreateTableProtocol,
+    CreateViewProtocol,
     DeleteProtocol,
     DropProtocol,
     ExprProtocol,
@@ -15,6 +16,7 @@ from ..protocols.sql import (
     UpdateProtocol,
 )
 from .base_ddl import BaseCreateTable as _CreateTable
+from .base_ddl import BaseCreateView as _BaseCreateView
 from .base_ddl import BaseDrop
 from .base_dml import BaseDelete as _Delete
 from .base_dml import BaseInsert as _Insert
@@ -40,8 +42,8 @@ class BaseQueryBuilder(QueryBuilderProtocol):
     def select(self, *args: str | AliasedProtocol | ExprProtocol | FunctionProtocol) -> SelectProtocol:
         return _Select(select_columns=args, dialect=self._dialect)
 
-    def with_(self, *args: tuple[str, SelectProtocol]) -> SelectProtocol:
-        return _Select(with_queries=args, dialect=self._dialect)
+    def with_(self, *args: tuple[str, SelectProtocol], recursive: bool = False) -> SelectProtocol:
+        return _Select(with_queries=args, dialect=self._dialect, with_recursive=recursive)
 
     def update(self) -> UpdateProtocol:
         return _Update(dialect=self._dialect)
@@ -60,3 +62,19 @@ class BaseQueryBuilder(QueryBuilderProtocol):
 
     def query(self, expr: ExprProtocol) -> QueryProtocol:
         return ExprQuery(_expr=expr, dialect=self._dialect)
+
+    def create_view(
+        self,
+        query: SelectProtocol,
+        view: str,
+        db: str = '',
+        or_replace: bool = False,
+        if_not_exists: bool = False
+    ) -> CreateViewProtocol:
+        return _BaseCreateView(
+            dialect=self._dialect,
+            table=FullTableName(view, db),
+            or_replace=or_replace,
+            if_not_exists=if_not_exists,
+            query=query,
+        )

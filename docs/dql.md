@@ -88,7 +88,7 @@ qb.select('*').from_table('events').limit(100).offset(100)
 # UNION SELECT col5 FROM table5
 ```
 
-## WITH
+## WITH [RECURSIVE]
 
 ```python
 (
@@ -105,6 +105,51 @@ qb.select('*').from_table('events').limit(100).offset(100)
 #      alias2 AS (SELECT col2 AS fixed FROM table2) 
 #  SELECT * FROM alias1 UNION ALL SELECT * FROM alias2
 # {}
+
+(
+    qb
+    .with_(
+        (
+            'numbers',
+            qb
+            .select(v(1).as_('n'))
+            .union(
+                qb.select(add('n', v(1)))
+                .from_table('numbers')
+                .where(lt('n', 10))
+            ),
+        ),
+        (
+            'squares',
+            qb
+            .select('n', mul('n', 'n').as_('square'))
+            .from_table('numbers')
+        ),
+        (
+            'even_squares',
+            qb
+            .select('*')
+            .from_table('squares')
+        ),
+        recursive=True,
+    )
+    .select('*')
+    .from_table('even_squares')
+).get_sql()
+# WITH RECURSIVE numbers AS (
+#           SELECT 1 AS n
+#           UNION ALL
+#           SELECT (n + 1)
+#           FROM numbers
+#     WHERE n < %(p1)s
+# ),
+# squares AS (
+#   SELECT n, (n * n) AS square FROM numbers
+# ), 
+# even_squares AS (
+#   SELECT * FROM squares
+# ) 
+# SELECT * FROM even_squares
 ```
 
 ## JOIN
