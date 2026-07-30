@@ -95,6 +95,9 @@ class Source(SourceProtocol):
 
     def __getattribute__(self, name, /):
         value = object.__getattribute__(self, name)
+        if isinstance(value, FunctionProtocol):
+            return value
+
         if isinstance(value, ColumnProtocol):
             return _FullTableName(value.get_name(), db=self._david8_alias)
 
