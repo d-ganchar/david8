@@ -1,4 +1,4 @@
-import dataclasses
+from dataclasses import dataclass, field
 
 from ..protocols.dialect import DialectProtocol
 from ..protocols.sql import CreateTableProtocol, CreateViewProtocol, DropProtocol, QueryProtocol, SelectProtocol
@@ -6,10 +6,10 @@ from .base_expressions import FullTableName
 from .base_query import BaseQuery
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseCreateTable(BaseQuery, CreateTableProtocol):
     query: SelectProtocol | None = None
-    table: FullTableName = dataclasses.field(default_factory=FullTableName)
+    table: FullTableName = field(default_factory=FullTableName)
 
     def _render_sql_prefix(self, dialect: DialectProtocol) -> str:
         return 'CREATE TABLE '
@@ -23,30 +23,32 @@ class BaseCreateTable(BaseQuery, CreateTableProtocol):
         self.table.set_names(table, db)
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseCreateView(BaseQuery, CreateViewProtocol):
     query: SelectProtocol
-    table: FullTableName = dataclasses.field(default_factory=FullTableName)
-    or_replace: bool = False,
+    table: FullTableName = field(default_factory=FullTableName)
+    or_replace: bool = False
     if_not_exists: bool = False
+    materialized: bool = False
 
     def _render_sql_prefix(self, dialect: DialectProtocol) -> str:
+        materialized = ' MATERIALIZED ' if self.materialized else ' '
         if self.or_replace:
-            return 'CREATE OR REPLACE VIEW '
+            return f'CREATE OR REPLACE{materialized}VIEW '
 
         if self.if_not_exists:
-            return 'CREATE VIEW IF NOT EXISTS '
+            return f'CREATE{materialized}VIEW IF NOT EXISTS '
 
-        return 'CREATE VIEW '
+        return f'CREATE{materialized}VIEW '
 
     def _render_sql(self, dialect: DialectProtocol) -> str:
         return f'{self.table.get_sql(dialect)} AS {self.query.get_sql(dialect)}'
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseDropTableView(BaseQuery):
     _object_name: str
-    _name: FullTableName = dataclasses.field(default_factory=FullTableName)
+    _name: FullTableName = field(default_factory=FullTableName)
     _if_exists: bool = False
 
     def _render_sql_prefix(self, dialect: DialectProtocol) -> str:
@@ -58,7 +60,7 @@ class BaseDropTableView(BaseQuery):
         return self._name.get_sql(dialect)
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseDrop(BaseQuery, DropProtocol):
     query: QueryProtocol | None = None
 

@@ -1,4 +1,4 @@
-import dataclasses
+from dataclasses import dataclass, field
 
 from ..protocols.dialect import DialectProtocol
 from ..protocols.sql import DescProtocol, ExprProtocol
@@ -6,7 +6,7 @@ from .arg_convertors import to_col_or_expr
 from .base_aliased import BaseAliased
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class FullTableName(BaseAliased):
     table: str = ''
     db: str = ''
@@ -25,9 +25,9 @@ class FullTableName(BaseAliased):
         return dialect.quote_ident(self.table)
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseDesc(DescProtocol):
-    items: tuple[str | int, ...] = dataclasses.field(default_factory=tuple)
+    items: tuple[str | int, ...] = field(default_factory=tuple)
 
     def get_sql(self, dialect: DialectProtocol) -> str:
         items = ()
@@ -37,10 +37,10 @@ class BaseDesc(DescProtocol):
         return ', '.join(items)
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseDistinct(ExprProtocol):
-    _items: tuple[str | ExprProtocol, ...] = dataclasses.field(default_factory=tuple)
-    _on_items: tuple[str | ExprProtocol, ...] = dataclasses.field(default_factory=tuple)
+    _items: tuple[str | ExprProtocol, ...] = field(default_factory=tuple)
+    _on_items: tuple[str | ExprProtocol, ...] = field(default_factory=tuple)
 
     def get_sql(self, dialect: DialectProtocol) -> str:
         on = ''

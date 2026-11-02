@@ -1,4 +1,4 @@
-import dataclasses
+from dataclasses import dataclass, field
 from typing import Self
 
 from ..protocols.dialect import DialectProtocol
@@ -13,13 +13,13 @@ from ..protocols.sql import (
 from .base_expressions import FullTableName
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class Sql92Join(Sql92JoinProtocol):
     alias: str = ''
     join_type: str = ''
-    on_expr: tuple[LogicalOperatorProtocol | PredicateProtocol, ...] = dataclasses.field(default_factory=tuple)
-    using_expr: tuple[str, ...] = dataclasses.field(default_factory=tuple)
-    source_table: FullTableName | SourceProtocol = dataclasses.field(default_factory=FullTableName)
+    on_expr: tuple[LogicalOperatorProtocol | PredicateProtocol, ...] = field(default_factory=tuple)
+    using_expr: tuple[str, ...] = field(default_factory=tuple)
+    source_table: FullTableName | SourceProtocol = field(default_factory=FullTableName)
     from_query: SelectProtocol = None
 
     def as_(self, alias: str) -> Self:

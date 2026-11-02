@@ -69,7 +69,8 @@ class BaseQueryBuilder(QueryBuilderProtocol):
         view: str,
         db: str = '',
         or_replace: bool = False,
-        if_not_exists: bool = False
+        if_not_exists: bool = False,
+        materialized: bool = False
     ) -> CreateViewProtocol:
         return _BaseCreateView(
             dialect=self._dialect,
@@ -77,4 +78,5 @@ class BaseQueryBuilder(QueryBuilderProtocol):
             or_replace=or_replace,
             if_not_exists=if_not_exists,
             query=query,
+            materialized=materialized,
         )

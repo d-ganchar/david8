@@ -1,4 +1,4 @@
-import dataclasses
+from dataclasses import dataclass, field
 from typing import Any, Union
 
 from ..core.base_aliased import Column
@@ -19,17 +19,17 @@ from .base_expressions import FullTableName
 from .base_query import BaseQuery
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseUpdate(BaseQuery, UpdateProtocol):
     dialect: DialectProtocol = None
     alias: str = ''
-    target_table: FullTableName = dataclasses.field(default_factory=FullTableName)
-    where_construction: BaseWhereConstruction = dataclasses.field(default_factory=BaseWhereConstruction)
+    target_table: FullTableName = field(default_factory=FullTableName)
+    where_construction: BaseWhereConstruction = field(default_factory=BaseWhereConstruction)
     set_construction: tuple[
         str,
         [str | int | float | ExprProtocol | SelectProtocol],
         ...
-    ] = dataclasses.field(default_factory=tuple)
+    ] = field(default_factory=tuple)
 
     def table(self, table_name: str, alias: str = '', db_name: str = '') -> 'UpdateProtocol':
         self.target_table.set_names(table_name, db_name)
@@ -81,14 +81,14 @@ class BaseUpdate(BaseQuery, UpdateProtocol):
         return f'{table}{set_columns}{where}'
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseInsert(BaseQuery, InsertProtocol):
     from_query_expr: SelectProtocol | None = None
     dialect: DialectProtocol = None
     alias: str = ''
-    target_table: FullTableName = dataclasses.field(default_factory=FullTableName)
-    _values: tuple[str | float | int | tuple | list] = dataclasses.field(default_factory=tuple)
-    column_set: tuple[str, ...] = dataclasses.field(default_factory=tuple)
+    target_table: FullTableName = field(default_factory=FullTableName)
+    _values: tuple[str | float | int | tuple | list] = field(default_factory=tuple)
+    column_set: tuple[str, ...] = field(default_factory=tuple)
 
     def _get_sql(self, dialect: DialectProtocol) -> str:
         columns = f' ({", ".join(dialect.quote_ident(c) for c in self.column_set)})' if self.column_set else ' '
@@ -170,10 +170,10 @@ class BaseInsert(BaseQuery, InsertProtocol):
         return self.values(cols, data)
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseDelete(BaseQuery, DeleteProtocol):
-    target_table: FullTableName = dataclasses.field(default_factory=FullTableName)
-    where_construction: BaseWhereConstruction = dataclasses.field(default_factory=BaseWhereConstruction)
+    target_table: FullTableName = field(default_factory=FullTableName)
+    where_construction: BaseWhereConstruction = field(default_factory=BaseWhereConstruction)
 
     def where(self, *args: LogicalOperatorProtocol | PredicateProtocol) -> DeleteProtocol:
         self.where_construction.add_conditions(*args)

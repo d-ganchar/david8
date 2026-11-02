@@ -1,13 +1,13 @@
-import dataclasses
 from copy import deepcopy
+from dataclasses import dataclass, field
 from typing import Any
 
 from ..protocols.dialect import ParamStyleProtocol
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseParams(ParamStyleProtocol):
-    _params_bag: dict[str, Any] = dataclasses.field(default_factory=dict)
+    _params_bag: dict[str, Any] = field(default_factory=dict)
 
     def add_param(self, value: Any) -> tuple[str, str]:
         ix = str(len(self._params_bag) + 1)

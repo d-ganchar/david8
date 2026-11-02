@@ -1,4 +1,4 @@
-import dataclasses
+from dataclasses import dataclass
 
 from ..protocols.dialect import DialectProtocol
 from ..protocols.sql import (
@@ -14,7 +14,7 @@ from ..protocols.sql import (
 from .arg_convertors import to_col_or_expr
 
 
-@dataclasses.dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class BaseAliased(AliasedProtocol):
     alias: str = ''
 

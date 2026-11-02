@@ -11,7 +11,7 @@ qb.create_table_as(
 
 See [test_create_table](https://github.com/d-ganchar/david8/blob/main/tests/test_create_table.py)
 
-### CREATE VIEW
+### CREATE [MATERIALIZED] VIEW
 
 ```python
 (
@@ -19,6 +19,7 @@ See [test_create_table](https://github.com/d-ganchar/david8/blob/main/tests/test
     .create_view(
         qb.select('*').from_table('users'),
         'active_users',
+        # materialized=True,  # MATERIALIZED VIEW is False by default
     )
 ).get_sql()
 # CREATE VIEW active_users AS SELECT * FROM users

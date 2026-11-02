@@ -1,10 +1,10 @@
-import dataclasses
+from dataclasses import dataclass
 
 from ..protocols.dialect import DialectProtocol, ParamStyleProtocol
 from .base_expressions import FullTableName
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseDialect(DialectProtocol):
     def __init__(self, param_style: ParamStyleProtocol, is_quote_mode: bool = False):
         self._param_style = param_style

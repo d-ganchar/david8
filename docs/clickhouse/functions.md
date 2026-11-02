@@ -41,6 +41,8 @@ qb = get_qb()
 
 ## Table functions
 
+### url
+
 ```python
 qb.select('*').from_expr(
     url_(
@@ -70,7 +72,11 @@ qb.select('*').from_expr(
     .from_select(qb.select('*').from_table('t'))
 ).get_sql()
 # INSERT INTO FUNCTION url('http://data/path/date=*/country=*/code=*/*.parquet') SELECT * FROM t
+```
 
+### s3, icebergS3
+
+```python
 qb.select('*').from_expr(s3(
     'https://public-datasets.com/test.csv',
     'creds',
@@ -91,7 +97,11 @@ qb.select('*').from_expr(s3(
 
 qb.select('*').from_expr(iceberg_s3(creds='creds', compression_method='gzip', filename='test_table')).get_sql()
 # SELECT * FROM icebergS3(creds, filename='test_table', compression_method='gzip')
+```
 
+### postgresql, redis
+
+```python
 (
     qb
     .select('*')
@@ -115,6 +125,11 @@ qb.select('*').from_expr(iceberg_s3(creds='creds', compression_method='gzip', fi
 ).get_sql()
 # INSERT INTO FUNCTION redis('redis1:6379', 'metrics', 'name String, value UInt8') SELECT name, value FROM t
 
+```
+
+### prometheusQuery, prometheusQueryRange
+
+```python
 (
     qb
     .select('*')
