@@ -1,4 +1,4 @@
-import dataclasses
+from dataclasses import dataclass, field
 
 from ..protocols.dialect import DialectProtocol
 from ..protocols.sql import (
@@ -11,11 +11,11 @@ from ..protocols.sql import (
 )
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseOverClause(OverClauseProtocol, WindowSpecProtocol):
     _window: str = ''
-    _partition_by: list[str | FunctionProtocol] = dataclasses.field(default_factory=list)
-    _order_by: list[str | list[str]] = dataclasses.field(default_factory=list)
+    _partition_by: list[str | FunctionProtocol] = field(default_factory=list)
+    _order_by: list[str | list[str]] = field(default_factory=list)
     _frame_mode: FrameModeProtocol = None
 
     def over(
@@ -64,37 +64,37 @@ class BaseOverClause(OverClauseProtocol, WindowSpecProtocol):
         return f"({window_name}{' '.join(parts)})"
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class UnboundedPrecedingBound(FrameBoundProtocol):
     def get_sql(self, dialect: DialectProtocol) -> str:
         return 'UNBOUNDED PRECEDING'
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class PrecedingBound(FrameBoundProtocol):
     def get_sql(self, dialect: DialectProtocol) -> str:
         return 'PRECEDING'
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class FollowingBound(FrameBoundProtocol):
     def get_sql(self, dialect: DialectProtocol) -> str:
         return 'FOLLOWING'
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class UnboundedFollowingBound(FrameBoundProtocol):
     def get_sql(self, dialect: DialectProtocol) -> str:
         return 'UNBOUNDED FOLLOWING'
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class CurrentRowBound(FrameBoundProtocol):
     def get_sql(self, dialect: DialectProtocol) -> str:
         return 'CURRENT ROW'
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseMode(FrameModeProtocol):
     _name: str
     _start: FrameBoundProtocol

@@ -80,6 +80,89 @@ class TestCreateView(BaseTest):
             ),
             'CREATE VIEW "active_users" AS SELECT "*" FROM "users"',
         ),
+        # MATERIALIZED
+        (
+            BaseTest.qb
+            .create_view(
+                BaseTest.qb.select('*').from_table('users'),
+                'active_users',
+                materialized=True
+            ),
+            'CREATE MATERIALIZED VIEW active_users AS SELECT * FROM users',
+        ),
+        (
+            BaseTest.qb
+            .create_view(
+                BaseTest.qb.select('*').from_table('users'),
+                'active_users',
+                'analytics',
+                materialized=True
+            ),
+            'CREATE MATERIALIZED VIEW analytics.active_users AS SELECT * FROM users',
+        ),
+        (
+            BaseTest.qb
+            .create_view(
+                BaseTest.qb.select('*').from_table('users'),
+                'active_users',
+                if_not_exists=True,
+                materialized=True
+            ),
+            'CREATE MATERIALIZED VIEW IF NOT EXISTS active_users AS SELECT * FROM users',
+        ),
+        (
+            BaseTest.qb
+            .create_view(
+                BaseTest.qb.select('*').from_table('users'),
+                'active_users',
+                or_replace=True,
+                materialized=True
+            ),
+            'CREATE OR REPLACE MATERIALIZED VIEW active_users AS SELECT * FROM users',
+        ),
+        (
+            BaseTest.qb
+            .create_view(
+                BaseTest.qb.select('*').from_table('users'),
+                'active_users',
+                'analytics',
+                or_replace=True,
+                materialized=True
+            ),
+            'CREATE OR REPLACE MATERIALIZED VIEW analytics.active_users AS SELECT * FROM users',
+        ),
+        (
+            BaseTest.qb
+            .create_view(
+                BaseTest.qb.select('*').from_table('users'),
+                'active_users',
+                'analytics',
+                or_replace=True,
+                if_not_exists=True,
+                materialized=True
+            ),
+            'CREATE OR REPLACE MATERIALIZED VIEW analytics.active_users AS SELECT * FROM users',
+        ),
+        (
+            BaseTest.qb
+            .create_view(
+                BaseTest.qb.select('*').from_table('users'),
+                'active_users',
+                or_replace=True,
+                if_not_exists=True,
+                materialized=True
+            ),
+            'CREATE OR REPLACE MATERIALIZED VIEW active_users AS SELECT * FROM users',
+        ),
+        (
+            BaseTest.qb_w
+            .create_view(
+                BaseTest.qb.select('*').from_table('users'),
+                'active_users',
+                materialized=True
+            ),
+            'CREATE MATERIALIZED VIEW "active_users" AS SELECT "*" FROM "users"',
+        ),
     ])
     def test_create_table_as(self, query: CreateTableProtocol, exp_sql: str):
         self.assertEqual(query.get_sql(), exp_sql)

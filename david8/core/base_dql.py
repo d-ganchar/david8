@@ -1,4 +1,4 @@
-import dataclasses
+from dataclasses import dataclass, field
 from typing import Union
 
 from ..core.base_aliased import AliasedProtocol
@@ -18,9 +18,9 @@ from .base_expressions import FullTableName
 from .base_query import BaseQuery
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseWhereConstruction(ExprProtocol):
-    conditions: tuple[ExprProtocol, ...] = dataclasses.field(default_factory=tuple)
+    conditions: tuple[ExprProtocol, ...] = field(default_factory=tuple)
 
     def get_sql(self, dialect: DialectProtocol) -> str:
         if not self.conditions:
@@ -32,27 +32,27 @@ class BaseWhereConstruction(ExprProtocol):
         self.conditions += args
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class BaseSelect(BaseQuery, SelectProtocol):
     source_alias: str = ''
     select_columns: tuple[
         str | AliasedProtocol | ExprProtocol | FunctionProtocol,
         ...
-    ] = dataclasses.field(default_factory=tuple)
+    ] = field(default_factory=tuple)
 
-    where_construction: BaseWhereConstruction = dataclasses.field(default_factory=BaseWhereConstruction)
-    order_by_expressions: tuple[tuple[str | int, str], ...] = dataclasses.field(default_factory=tuple)
-    group_by_expressions: tuple = dataclasses.field(default_factory=tuple)
-    with_queries: tuple = dataclasses.field(default_factory=tuple)
-    having_expressions: tuple[ExprProtocol, ...] = dataclasses.field(default_factory=tuple)
+    where_construction: BaseWhereConstruction = field(default_factory=BaseWhereConstruction)
+    order_by_expressions: tuple[tuple[str | int, str], ...] = field(default_factory=tuple)
+    group_by_expressions: tuple = field(default_factory=tuple)
+    with_queries: tuple = field(default_factory=tuple)
+    having_expressions: tuple[ExprProtocol, ...] = field(default_factory=tuple)
 
     # True = UNION ALL, False - regular union
     # ((True, query1), (False, query2))
-    unions: tuple[tuple[str, SelectProtocol], ...] = dataclasses.field(default_factory=tuple)
+    unions: tuple[tuple[str, SelectProtocol], ...] = field(default_factory=tuple)
     # (('window_name1', WindowSpecProtocol), ('window_name2', WindowSpecProtocol), ...)
-    windows: tuple[tuple[str, WindowSpecProtocol], ...] = dataclasses.field(default_factory=tuple)
-    joins: tuple[JoinProtocol, ...] = dataclasses.field(default_factory=tuple)
-    from_table_cnstr: FullTableName = dataclasses.field(default_factory=FullTableName)
+    windows: tuple[tuple[str, WindowSpecProtocol], ...] = field(default_factory=tuple)
+    joins: tuple[JoinProtocol, ...] = field(default_factory=tuple)
+    from_table_cnstr: FullTableName = field(default_factory=FullTableName)
     from_query_expr: SelectProtocol | SourceProtocol | None = None
     limit_value: int | None = None
     offset_value: int | None = None

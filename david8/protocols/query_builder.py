@@ -34,7 +34,8 @@ class QueryBuilderProtocol(Protocol):
         view: str,
         db: str = '',
         or_replace: bool = False,
-        if_not_exists: bool = False
+        if_not_exists: bool = False,
+        materialized: bool = False
     ) -> CreateViewProtocol: ...
 
     def drop(self) -> DropProtocol: ...

@@ -1,14 +1,14 @@
-import dataclasses
+from dataclasses import dataclass, field
 from typing import Self
 
 from ..protocols.dialect import DialectProtocol
 from ..protocols.sql import ExprProtocol, LiteralJoinProtocol, LogicalOperatorProtocol, PredicateProtocol
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class LiteralJoin(LiteralJoinProtocol):
     _alias: str = ''
-    _on_expr: tuple[LogicalOperatorProtocol | PredicateProtocol, ...] = dataclasses.field(default_factory=tuple)
+    _on_expr: tuple[LogicalOperatorProtocol | PredicateProtocol, ...] = field(default_factory=tuple)
     _expr: ExprProtocol | None = None
 
     def as_(self, alias: str) -> Self:

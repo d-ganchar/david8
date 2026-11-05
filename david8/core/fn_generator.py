@@ -1,4 +1,4 @@
-import dataclasses
+from dataclasses import dataclass, field
 
 from ..expressions import val
 from ..protocols.dialect import DialectProtocol
@@ -16,7 +16,7 @@ from .base_aliased import BaseAliased
 from .base_frames import BaseOverClause
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class Function(BaseAliased, FunctionProtocol):
     name: str
 
@@ -24,7 +24,7 @@ class Function(BaseAliased, FunctionProtocol):
         return f"{self.name}()"
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class SeparatedArgsFn(Function):
     fn_items: tuple[str | int | float | ExprProtocol, ...]
     separator: str = ', '
@@ -45,12 +45,12 @@ class SeparatedArgsFn(Function):
         return f'{self.name}({self.separator.join(items)})'
 
 
-@dataclasses.dataclass(slots=True, kw_only=True)
+@dataclass(slots=True, kw_only=True)
 class FnCallableFactory:
     name: str = ''
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class SeparatedArgsFnFactory(FnCallableFactory):
     separator: str = ', '
 
@@ -58,7 +58,7 @@ class SeparatedArgsFnFactory(FnCallableFactory):
         return SeparatedArgsFn(self.name, fn_items=args, separator=self.separator)
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class OneArgDistinctFn(Function):
     """
     SUM(DISTINCT price)
@@ -73,13 +73,13 @@ class OneArgDistinctFn(Function):
         return f"{name}{dialect.quote_ident(self.column)})"
 
 
-@dataclasses.dataclass
+@dataclass
 class BaseOverClauseFunction(Function, AggFunctionProtocol):
     _window: str = ''
-    _partition_by: list[str | FunctionProtocol] = dataclasses.field(default_factory=list)
-    _order_by: list[str | list[str]] = dataclasses.field(default_factory=list)
+    _partition_by: list[str | FunctionProtocol] = field(default_factory=list)
+    _order_by: list[str | list[str]] = field(default_factory=list)
     _frame_mode: FrameModeProtocol = None
-    _filter: tuple[LogicalOperatorProtocol | PredicateProtocol, ...] = dataclasses.field(default_factory=tuple)
+    _filter: tuple[LogicalOperatorProtocol | PredicateProtocol, ...] = field(default_factory=tuple)
 
     def over(
         self,
@@ -117,59 +117,59 @@ class BaseOverClauseFunction(Function, AggFunctionProtocol):
         return f"{sql}{spec_sql}"
 
 
-@dataclasses.dataclass
+@dataclass
 class OverClauseFunction(BaseOverClauseFunction, OneArgDistinctFn):
     pass
 
 
-@dataclasses.dataclass
+@dataclass
 class OverClause2ArgFunction(BaseOverClauseFunction, SeparatedArgsFn):
     pass
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class ZeroArgAggFactory(FnCallableFactory):
     def __call__(self) -> AggFunctionProtocol:
         return OverClauseFunction(self.name, distinct=False)
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class OneArgDistinctFactory(FnCallableFactory):
     def __call__(self, column: str, distinct: bool = False) -> FunctionProtocol:
         return OneArgDistinctFn(self.name, column, distinct)
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class OneArgDistinctWindowFactory(FnCallableFactory):
     def __call__(self, column: str, distinct: bool = False) -> AggFunctionProtocol:
         return OverClauseFunction(self.name, column, distinct=distinct)
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class OneArgWindowFactory(FnCallableFactory):
     def __call__(self, column: str) -> AggFunctionProtocol:
         return OverClauseFunction(self.name, column)
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class TwoArgWindowFactory(FnCallableFactory):
     def __call__(self, arg1: str | ExprProtocol, arg2: str | ExprProtocol) -> AggFunctionProtocol:
         return OverClause2ArgFunction(name=self.name, fn_items=(arg1, arg2))
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class TwoArgIntWindowFactory(FnCallableFactory):
     def __call__(self, arg1: str | ExprProtocol, arg2: int | ExprProtocol) -> AggFunctionProtocol:
         return OverClause2ArgFunction(name=self.name, fn_items=(arg1, arg2), numbers_as_str=False)
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class StrArgFactory(FnCallableFactory):
     def __call__(self, value: str | ExprProtocol) -> FunctionProtocol:
         return SeparatedArgsFn(self.name, fn_items=(value,))
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class ColStrIntArgFactory(FnCallableFactory):
     def __call__(self, arg1: str | int | ExprProtocol) -> FunctionProtocol:
         return SeparatedArgsFn(
@@ -180,7 +180,7 @@ class ColStrIntArgFactory(FnCallableFactory):
         )
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class FirstCol1StrArgFactory(FnCallableFactory):
     separator: str = ', '
     def __call__(self, col_name: str | ExprProtocol, arg1: str | ExprProtocol) -> FunctionProtocol:
@@ -194,7 +194,7 @@ class FirstCol1StrArgFactory(FnCallableFactory):
         )
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class FirstCol1ValFactory(FnCallableFactory):
     separator: str = ', '
     def __call__(self, col_name: str | ExprProtocol, value: str | float | int | ExprProtocol) -> FunctionProtocol:
@@ -208,7 +208,7 @@ class FirstCol1ValFactory(FnCallableFactory):
         )
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class FirstCol2StrArgFactory(FnCallableFactory):
     def __call__(
         self,
@@ -223,7 +223,7 @@ class FirstCol2StrArgFactory(FnCallableFactory):
         ))
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class FirstCol2IntArgFactory(FnCallableFactory):
     def __call__(
         self,
@@ -238,7 +238,7 @@ class FirstCol2IntArgFactory(FnCallableFactory):
         ))
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class CastFn(Function):
     value: str | ExprProtocol
     cast_type: str
@@ -248,20 +248,20 @@ class CastFn(Function):
         return f"{self.name}({value} AS {self.cast_type})"
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class CastFactory(FnCallableFactory):
     name = 'CAST'
     def __call__(self, value: str | ExprProtocol, cast_type: str) -> FunctionProtocol:
         return CastFn('CAST', value, cast_type)
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class StrIntArgsFactory(FnCallableFactory):
     def __call__(self, *args: str | int | ExprProtocol) -> FunctionProtocol:
         return SeparatedArgsFn(self.name, fn_items=args, numbers_as_str=False)
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class GenerateSeriesFactory(FnCallableFactory):
     def __call__(
         self,

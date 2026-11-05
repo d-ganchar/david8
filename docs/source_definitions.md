@@ -1,3 +1,5 @@
+### Overview
+
 A `Source` is a `Python class` that represents a database table (or view). Each field maps to a column, and 
 `_david8_source` sets the name (with an optional `_david8_db` for the database name). Define a source once, then 
 reuse it across queries - with optional aliasing via `.as_('alias')` for joins and multi-table queries.
@@ -85,4 +87,50 @@ query.get_sql()
 #  INNER JOIN products AS p ON (p.id = o.product_id)
 #  WHERE u.country = %(p1)s
 # {'p1': 'PL'}
+```
+
+### Computed fields
+
+Computed fields allow you to reuse complex expressions across queries, making query construction cleaner and 
+helping to avoid code duplication.
+
+```python
+from dataclasses import dataclass
+
+from david8 import get_default_qb
+from david8.expressions import Source, field_ as f
+from david8.functions import add, mul
+from david8.predicates import eq
+from david8.protocols.sql import AliasedProtocol as Aliased, FunctionProtocol
+
+
+@dataclass(slots=True)
+class Events(Source):
+    _david8_source       = 'events'
+
+    value:       Aliased = f('value')
+    rate:        Aliased = f('rate')
+    coefficient: Aliased = f('coefficient')
+
+    @property
+    def total_value(self) -> FunctionProtocol:
+        return add(self.value, mul(self.rate, self.coefficient))
+
+
+qb = get_default_qb()
+event = Events()
+query = (
+    qb
+    .select(event.total_value.as_('total_value'))
+    .from_source(event)
+    .where(eq(event.total_value, 100))
+)
+
+
+print(query.get_sql())
+print(query.get_parameters())
+# SELECT (value + (rate * coefficient)) AS total_value
+#   FROM events
+#  WHERE (value + (rate * coefficient)) = %(p1)s
+# {'p1': 100}
 ```

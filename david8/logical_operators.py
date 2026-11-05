@@ -1,22 +1,22 @@
-import dataclasses
-from typing import Union
+from collections.abc import Iterable
+from dataclasses import dataclass
 
 from .core.arg_convertors import to_col_or_expr
 from .protocols.dialect import DialectProtocol
 from .protocols.sql import ExprProtocol, LogicalOperatorProtocol
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class _ArgsLogicalOperator(LogicalOperatorProtocol):
     _name: str
-    _conditions: Union[ExprProtocol, 'LogicalOperatorProtocol', ...]
+    _conditions: Iterable[ExprProtocol | LogicalOperatorProtocol]
 
     def get_sql(self, dialect: DialectProtocol) -> str:
         conditions = f' {self._name} '.join(c.get_sql(dialect) for c in self._conditions)
         return f'({conditions})'
 
 
-@dataclasses.dataclass(slots=True)
+@dataclass(slots=True)
 class _NotLogicalOperator(LogicalOperatorProtocol):
     _value: str | ExprProtocol
 

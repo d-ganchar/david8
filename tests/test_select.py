@@ -9,7 +9,7 @@ from david8.expressions import val as v
 from david8.functions import concat, sum_
 from david8.predicates import eq, ne
 from david8.protocols.sql import AliasedProtocol as A
-from david8.protocols.sql import SelectProtocol
+from david8.protocols.sql import FunctionProtocol, SelectProtocol
 from tests.base_test import BaseTest
 
 
@@ -20,6 +20,11 @@ class _UsersTable(Source):
     name: A = f('u_name')
     last_name: A = f('ul_name')
 
+    @property
+    def full_name(self) -> FunctionProtocol:
+        return concat(self.name, v(' '), self.last_name)
+
+
 @dataclass(slots=True)
 class _AccountsTable(Source):
     _david8_source = 'accounts'
@@ -27,6 +32,10 @@ class _AccountsTable(Source):
 
     name: A = f('f_name')
     last_name: A = f('l_name')
+
+    @property
+    def full_name(self) -> FunctionProtocol:
+        return concat(self.name, v(' '), self.last_name)
 
 
 class TestSelect(BaseTest):
@@ -156,18 +165,18 @@ class TestSelect(BaseTest):
             "WHERE concat(f_name, ' ', l_name) != %(p1)s",
         ),
     ])
-    def test_table_source(self, source: Source, exp_sql: str):
+    def test_table_source(self, source: _UsersTable, exp_sql: str):
         query = (
             self
             .qb
             .select(
                 source.name.as_('user_name'),
                 source.last_name.as_('user_last_name'),
-                concat(source.name, v(' '), source.last_name).as_('full_user_name'),
+                source.full_name.as_('full_user_name'),
             )
             .from_source(source)
-            .where(ne(concat(source.name, v(' '), source.last_name), ''))
+            .where(ne(source.full_name, ' '))
         )
 
         self.assertEqual(query.get_sql(), exp_sql)
-        self.assertEqual(query.get_parameters(), {'p1': ''})
+        self.assertEqual(query.get_parameters(), {'p1': ' '})

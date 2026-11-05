@@ -83,8 +83,8 @@ jobs:
           STATUS="in_progress"
           CONCLUSION=""
           
-          for i in {1..20}; do
-            echo "Attempt $i/20..."
+          for i in {1..30}; do
+            echo "Attempt $i/30..."
             sleep 5
           
             RUN_DATA=$(curl -s \
